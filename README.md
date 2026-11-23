@@ -1,5 +1,18 @@
 # Supply Chain Guardian — hackathon build kit
 
+> **Implemented so far (Day 1): the fast path.** SBOM, dependency graph, OSV vulnerabilities,
+> suspicious-change detection and an evidence dashboard, in one stdlib Python script.
+> Full instructions: [`fastpath/README.md`](fastpath/README.md).
+>
+> ```bash
+> bash scripts/make_demo_target.sh     # once: builds ./target (Windows: see fastpath/README.md)
+> python fastpath/build.py             # ~20 s, writes fastpath/out/
+> start fastpath/out/guardian.html     # Windows (macOS: open, Linux: xdg-open)
+> ```
+>
+> The AI agents, remediation and validation described below are the Day 2 plan and are not
+> built yet.
+
 Everything needed to build the Bosch "Software Supply Chain Guardian" in two days with Claude
 Code: the plan, the system design, step-by-step prompts, Claude Code configuration (rules,
 subagents, skills, safety hook), a ready-made demo target with planted risks, research notes,
