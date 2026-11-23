@@ -172,6 +172,26 @@ exploitability (research 04 §1.7), so one ranked list can mix CVEs and anomalie
 
 Bands: critical ≥ 85, high 65–84, medium 40–64, low 15–39, info < 15.
 
+### Implemented rubric (phase 8, `guardian/prioritise.py`)
+
+Non-CVE anomalies, one row per finding type. Rows marked * extend research 04 §1.7.
+
+| Type | Severity | Exploitability (hostile-signal strength) | Reachability | Exposure |
+|---|---|---|---|---|
+| look-alike name (`typosquat`) | .85 | edit distance 1 and new → .8, else .5 | install script → 1.0; imported → .8; lockfile only → .4 | install script → 1.0; else prod/dev as for CVEs |
+| unsafe install script | .7 | URL or network signal → .8; other signals → .6; none → .5 | as above | as above |
+| suspicious update | .7 | install hook added → .8; size jump only → .6 | as above | as above |
+| non-registry origin* | .6 | .3 | as above | as above |
+| unexpected dependency* | .5 | .3 | as above | as above |
+| unsafe CI pattern* | .7 | `curl \| sh` → .6; `write-all` only → .3 | workflow with write permissions or secrets → 1.0, else .5 | 1.0 (runner holds credentials) |
+| unpinned CI component | .5 | action advisory in KEV → 1.0 (verified); OSV advisory → .8; none → .3 | as above | 1.0 |
+| untrusted image | .4 | .3 | 1.0 (base of the runtime) | prod |
+| lockfile drift | .35 | .3 | — | — |
+| new / changed dependency* | .2 | .15 | as for packages | as for packages |
+
+Fix availability is 1.0 (remove, replace or pin) for every anomaly. Grades: rubric constants are
+`heuristic`; facts read from the lockfile (install script) are `verified`.
+
 ## 7. Data contracts
 
 `guardian/contracts.py` (pydantic v2) holds the objects that cross stage boundaries: `Evidence`,

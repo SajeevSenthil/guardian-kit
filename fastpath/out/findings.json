@@ -5,7 +5,7 @@
   "head": "tampered",
   "base_sha": "ba8089c",
   "head_sha": "05b9d85",
-  "generated": "2026-11-23T12:19:44+00:00",
+  "generated": "2026-11-23T17:26:36+00:00",
   "osv": {
    "status": "evaluated",
    "packages_queried": 801,
@@ -178,6 +178,8 @@
     "SNYK-JS-BSON-561052"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "0.4.23",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-v8w9-2789-6hhr (fetched 2026-11-23T09:20:46)",
@@ -217,6 +219,8 @@
     "CVE-2017-1000228"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "1.0.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-3w5v-p54c-f74x (fetched 2026-11-23T09:20:38)",
@@ -255,6 +259,8 @@
     "CVE-2022-29078"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "1.0.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-phwq-j96m-2c2q (fetched 2026-11-23T09:20:44)",
@@ -293,6 +299,8 @@
     "CVE-2017-1000228"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "0.8.8",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-3w5v-p54c-f74x (fetched 2026-11-23T09:20:38)",
@@ -332,6 +340,8 @@
     "CVE-2022-29078"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "0.8.8",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-phwq-j96m-2c2q (fetched 2026-11-23T09:20:44)",
@@ -372,6 +382,8 @@
     "SNYK-JS-EXPRESSFILEUPLOAD-595969"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "0.0.5",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-9wcg-jrwf-8gg7 (fetched 2026-11-23T09:20:41)",
@@ -412,6 +424,8 @@
     "CVE-2025-7783"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:H/SI:H/SA:N",
+   "installed_version": "2.3.3",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-fjxv-7rqg-78g4 (fetched 2026-11-23T09:20:42)",
@@ -453,6 +467,8 @@
     "CVE-2026-33937"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.0.14",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-2w6w-674q-4c4q (fetched 2026-11-23T09:20:38)",
@@ -492,6 +508,8 @@
     "CVE-2021-23383"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.0.14",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-765h-qjxv-5f44 (fetched 2026-11-23T09:20:40)",
@@ -531,6 +549,8 @@
     "CVE-2026-106446"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.0.14",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-8r5x-fm3f-whwj (fetched 2026-11-23T09:20:41)",
@@ -570,6 +590,8 @@
     "CVE-2021-23369"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.0.14",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-f2jv-r9rf-7988 (fetched 2026-11-23T09:20:42)",
@@ -609,6 +631,8 @@
     "CVE-2026-106445"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+   "installed_version": "4.0.14",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-p8wg-vrv2-v86f (fetched 2026-11-23T09:20:44)",
@@ -649,6 +673,8 @@
     "CVE-2019-19919"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.0.14",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-w457-6q6x-cgp9 (fetched 2026-11-23T09:20:46)",
@@ -688,6 +714,8 @@
     "CVE-2021-3918"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "0.2.3",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-896r-f27r-55mw (fetched 2026-11-23T09:20:41)",
@@ -732,6 +760,8 @@
     "SNYK-JS-LODASH-450202"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "installed_version": "4.17.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-jf85-cpcp-j695 (fetched 2026-11-23T09:20:43)",
@@ -771,6 +801,8 @@
     "CVE-2021-44906"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "1.2.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xvch-5gv4-984h (fetched 2026-11-23T09:20:47)",
@@ -812,6 +844,8 @@
     "CVE-2019-17426"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+   "installed_version": "4.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-8687-vv9j-hgph (fetched 2026-11-23T09:20:41)",
@@ -853,6 +887,8 @@
     "CVE-2023-3696"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:H",
+   "installed_version": "4.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-9m93-w8w6-76hh (fetched 2026-11-23T09:20:41)",
@@ -892,6 +928,8 @@
     "CVE-2022-24304"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-h8hf-x3f4-xwgp (fetched 2026-11-23T09:20:43)",
@@ -933,6 +971,8 @@
     "CVE-2026-125120"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-pcrw-h46h-c93h (fetched 2026-11-23T09:20:44)",
@@ -974,6 +1014,8 @@
     "CVE-2025-23061"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:H/A:H",
+   "installed_version": "4.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-vg7j-7cwx-8wgw (fetched 2026-11-23T09:20:46)",
@@ -1013,6 +1055,8 @@
     "CVE-2021-44906"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "0.0.10",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xvch-5gv4-984h (fetched 2026-11-23T09:20:47)",
@@ -1054,6 +1098,8 @@
     "CVE-2025-9288"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "installed_version": "2.4.11",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-95m3-7q98-8xr5 (fetched 2026-11-23T09:20:41)",
@@ -1094,6 +1140,8 @@
     "CVE-2021-44906"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "0.0.8",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xvch-5gv4-984h (fetched 2026-11-23T09:20:47)",
@@ -1134,6 +1182,8 @@
     "CVE-2022-33171"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "0.2.24",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-fx4w-v43j-vc45 (fetched 2026-11-23T09:20:42)",
@@ -1172,6 +1222,8 @@
     "CVE-2020-8158"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "0.2.24",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-pf2j-9qmp-jqr2 (fetched 2026-11-23T09:20:44)",
@@ -1211,6 +1263,8 @@
     "CVE-2021-44906"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "1.2.5",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xvch-5gv4-984h (fetched 2026-11-23T09:20:47)",
@@ -1251,6 +1305,8 @@
     "CVE-2021-23358"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "1.9.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-cf4h-3jhx-xvhq (fetched 2026-11-23T09:20:42)",
@@ -1480,6 +1536,8 @@
     "CVE-2026-77301"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "0.4.7",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-7q85-xj36-vmfc (fetched 2026-11-23T09:20:40)",
@@ -1518,6 +1576,8 @@
     "CVE-2026-114102"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "0.4.7",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-8238-w5pm-2374 (fetched 2026-11-23T09:20:41)",
@@ -1556,6 +1616,8 @@
     "CVE-2026-102282"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N",
+   "installed_version": "0.4.7",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-j5f4-cc29-5x44 (fetched 2026-11-23T09:20:43)",
@@ -1594,6 +1656,8 @@
     "CVE-2026-92000"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "0.4.7",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-rcw4-f5rp-g42v (fetched 2026-11-23T09:20:45)",
@@ -1632,6 +1696,8 @@
     "CVE-2026-39244"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "0.4.7",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xcpc-8h2w-3j85 (fetched 2026-11-23T09:20:47)",
@@ -1671,6 +1737,8 @@
     "CVE-2026-111181"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "1.9.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-27r3-jxmh-p828 (fetched 2026-11-23T09:20:38)",
@@ -1709,6 +1777,8 @@
     "CVE-2024-45590"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "1.9.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-qwcr-r2fm-qrc7 (fetched 2026-11-23T09:20:45)",
@@ -1749,6 +1819,8 @@
     "CVE-2026-13149"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "1.1.11",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-3jxr-9vmj-r5cp (fetched 2026-11-23T09:20:38)",
@@ -1792,6 +1864,8 @@
     "CVE-2026-102276"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "1.1.11",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-6j4f-fj2g-mc7p (fetched 2026-11-23T09:20:40)",
@@ -1835,6 +1909,8 @@
     "CVE-2026-14257"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "1.1.11",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-mh99-v99m-4gvg (fetched 2026-11-23T09:20:44)",
@@ -1878,6 +1954,8 @@
     "CVE-2026-102278"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "1.1.11",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-qhr7-859c-m2p7 (fetched 2026-11-23T09:20:45)",
@@ -1921,6 +1999,8 @@
     "CVE-2026-69152"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "1.1.11",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-rgw5-rvv9-x895 (fetched 2026-11-23T09:20:45)",
@@ -1961,6 +2041,8 @@
     "CVE-2025-9287"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "installed_version": "1.0.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-cpq7-6gpm-g9rc (fetched 2026-11-23T09:20:42)",
@@ -2005,6 +2087,8 @@
     "CVE-2021-3807"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "5.0.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-93q8-gq69-wqmw (fetched 2026-11-23T09:20:41)",
@@ -2050,6 +2134,8 @@
     "CVE-2020-7774"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "4.0.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-c4w7-xm78-47vh (fetched 2026-11-23T09:20:42)",
@@ -2092,6 +2178,8 @@
     "SNYK-JS-INI-1048974"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "1.3.5",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-qqgx-2p2h-9c37 (fetched 2026-11-23T09:20:45)",
@@ -2133,6 +2221,8 @@
     "CVE-2024-21538"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "4.0.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-3xgq-45jj-v275 (fetched 2026-11-23T09:20:38)",
@@ -2171,6 +2261,8 @@
     "CVE-2022-24434"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "0.3.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-wm7h-9275-46v2 (fetched 2026-11-23T09:20:46)",
@@ -2210,6 +2302,8 @@
    "advisory": "GHSA-h6ch-v84p-w6p9",
    "aliases": [],
    "severity": "HIGH",
+   "cvss": null,
+   "installed_version": "1.4.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-h6ch-v84p-w6p9 (fetched 2026-11-23T09:20:43)",
@@ -2250,6 +2344,8 @@
     "CVE-2021-4264"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "2.5.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-c6rp-wrp9-qr4q (fetched 2026-11-23T09:20:42)",
@@ -2288,6 +2384,8 @@
     "CVE-2017-1000189"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "1.0.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-6x77-rpqf-j6mw (fetched 2026-11-23T09:20:40)",
@@ -2326,6 +2424,8 @@
     "CVE-2017-1000189"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "0.8.8",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-6x77-rpqf-j6mw (fetched 2026-11-23T09:20:40)",
@@ -2363,6 +2463,8 @@
    "advisory": "GHSA-vjh7-7g9h-fjfh",
    "aliases": [],
    "severity": "CRITICAL",
+   "cvss": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:N/VA:N/SC:H/SI:H/SA:N",
+   "installed_version": "6.4.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-vjh7-7g9h-fjfh (fetched 2026-11-23T09:20:46)",
@@ -2402,6 +2504,8 @@
     "CVE-2022-27261"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "installed_version": "0.0.5",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-w4m6-x6c2-j5c9 (fetched 2026-11-23T09:20:46)",
@@ -2441,6 +2545,8 @@
     "CVE-2017-20165"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "2.2.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-9vvw-cc9w-f27h (fetched 2026-11-23T09:20:41)",
@@ -2480,6 +2586,8 @@
     "CVE-2016-10539"
    ],
    "severity": "HIGH",
+   "cvss": null,
+   "installed_version": "0.5.3",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-7mc5-chhp-fmc3 (fetched 2026-11-23T09:20:40)",
@@ -2523,6 +2631,8 @@
     "CVE-2017-1000048"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "2.4.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-gqgv-6jq5-jjj9 (fetched 2026-11-23T09:20:43)",
@@ -2570,6 +2680,8 @@
     "CVE-2022-24999"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "2.4.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-hrpp-h998-j3pp (fetched 2026-11-23T09:20:43)",
@@ -2609,6 +2721,8 @@
     "CVE-2026-96780"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "installed_version": "1.5.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-62ch-8vmq-8xm7 (fetched 2026-11-23T09:20:39)",
@@ -2650,6 +2764,8 @@
     "CVE-2017-20165"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "2.2.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-9vvw-cc9w-f27h (fetched 2026-11-23T09:20:41)",
@@ -2692,6 +2808,8 @@
     "CVE-2026-12143"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "installed_version": "2.3.3",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-hmw2-7cc7-3qxx (fetched 2026-11-23T09:20:43)",
@@ -2733,6 +2851,8 @@
     "CVE-2017-16119"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "0.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-9qj9-36jm-prpv (fetched 2026-11-23T09:20:42)",
@@ -2771,6 +2891,8 @@
    "advisory": "GHSA-2cf5-4w76-r9qv",
    "aliases": [],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:C/C:L/I:H/A:L",
+   "installed_version": "4.0.14",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-2cf5-4w76-r9qv (fetched 2026-11-23T09:20:38)",
@@ -2812,6 +2934,8 @@
     "SNYK-JS-HANDLEBARS-534478"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:L/A:L",
+   "installed_version": "4.0.14",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-3cqr-58rm-57f8 (fetched 2026-11-23T09:20:38)",
@@ -2851,6 +2975,8 @@
     "CVE-2026-33938"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.0.14",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-3mfm-83xf-c92r (fetched 2026-11-23T09:20:38)",
@@ -2891,6 +3017,8 @@
     "SNYK-JS-HANDLEBARS-480388"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "4.0.14",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-62gr-4qp9-h98f (fetched 2026-11-23T09:20:40)",
@@ -2930,6 +3058,8 @@
     "CVE-2026-33939"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "4.0.14",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-9cx6-37pm-9jff (fetched 2026-11-23T09:20:41)",
@@ -2968,6 +3098,8 @@
    "advisory": "GHSA-g9r4-xpmj-mj65",
    "aliases": [],
    "severity": "HIGH",
+   "cvss": null,
+   "installed_version": "4.0.14",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-g9r4-xpmj-mj65 (fetched 2026-11-23T09:20:42)",
@@ -3006,6 +3138,8 @@
    "advisory": "GHSA-q2c6-c6pm-g3gh",
    "aliases": [],
    "severity": "HIGH",
+   "cvss": null,
+   "installed_version": "4.0.14",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-q2c6-c6pm-g3gh (fetched 2026-11-23T09:20:44)",
@@ -3045,6 +3179,8 @@
     "CVE-2026-33940"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.0.14",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xhpv-hc6g-r9c6 (fetched 2026-11-23T09:20:47)",
@@ -3084,6 +3220,8 @@
     "CVE-2026-33941"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:C/C:H/I:H/A:H",
+   "installed_version": "4.0.14",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xjpj-3mr7-gcpf (fetched 2026-11-23T09:20:47)",
@@ -3124,6 +3262,8 @@
     "CVE-2021-43138"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+   "installed_version": "2.6.3",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-fwr7-v2mv-hh25 (fetched 2026-11-23T09:20:42)",
@@ -3164,6 +3304,8 @@
     "CVE-2026-4800"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.21",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-r5fr-rjxr-66jc (fetched 2026-11-23T09:20:45)",
@@ -3205,6 +3347,8 @@
     "CVE-2015-8315"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "0.6.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-3fx5-fwvr-xrjg (fetched 2026-11-23T09:20:38)",
@@ -3245,6 +3389,8 @@
     "SNYK-JS-INI-1048974"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "1.1.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-qqgx-2p2h-9c37 (fetched 2026-11-23T09:20:45)",
@@ -3285,6 +3431,8 @@
     "CVE-2026-84375"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "3.13.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-2883-xcg3-v3hh (fetched 2026-11-23T09:20:38)",
@@ -3325,6 +3473,8 @@
     "CVE-2026-59869"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "3.13.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-52cp-r559-cp3m (fetched 2026-11-23T09:20:39)",
@@ -3363,6 +3513,8 @@
    "advisory": "GHSA-5p4m-2wfm-xmqj",
    "aliases": [],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "3.13.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-5p4m-2wfm-xmqj (fetched 2026-11-23T09:20:39)",
@@ -3402,6 +3554,8 @@
     "CVE-2020-13110"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+   "installed_version": "0.0.24",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-m2mx-rfpw-jghv (fetched 2026-11-23T09:20:44)",
@@ -3443,6 +3597,8 @@
     "CVE-2021-23337"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-35jh-r3h4-6jhm (fetched 2026-11-23T09:20:38)",
@@ -3481,6 +3637,8 @@
     "CVE-2018-16487"
    ],
    "severity": "HIGH",
+   "cvss": null,
+   "installed_version": "4.17.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-4xc9-xhrj-v574 (fetched 2026-11-23T09:20:39)",
@@ -3519,6 +3677,8 @@
     "CVE-2020-8203"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "installed_version": "4.17.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-p6mc-m468-83gw (fetched 2026-11-23T09:20:44)",
@@ -3557,6 +3717,8 @@
     "CVE-2026-4800"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-r5fr-rjxr-66jc (fetched 2026-11-23T09:20:45)",
@@ -3595,6 +3757,8 @@
     "CVE-2022-21681"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "0.3.5",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-5v2h-r2cx-5xgj (fetched 2026-11-23T09:20:39)",
@@ -3633,6 +3797,8 @@
     "CVE-2022-21680"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "0.3.5",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-rrrm-qjm4-v8hf (fetched 2026-11-23T09:20:45)",
@@ -3671,6 +3837,8 @@
     "CVE-2017-16114"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "0.3.5",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-x5pg-88wf-qq4p (fetched 2026-11-23T09:20:46)",
@@ -3710,6 +3878,8 @@
     "CVE-2017-16138"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "1.3.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-wrvr-8mpx-r7pp (fetched 2026-11-23T09:20:46)",
@@ -3757,6 +3927,8 @@
     "CVE-2026-27904"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "3.0.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-23c5-xmqv-rm74 (fetched 2026-11-23T09:20:38)",
@@ -3803,6 +3975,8 @@
     "CVE-2026-26996"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "installed_version": "3.0.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-3ppc-4f35-3m26 (fetched 2026-11-23T09:20:38)",
@@ -3849,6 +4023,8 @@
     "CVE-2026-27903"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "3.0.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-7r86-cg39-jmmj (fetched 2026-11-23T09:20:40)",
@@ -3888,6 +4064,8 @@
     "CVE-2022-3517"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "3.0.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-f8q6-p94x-37v3 (fetched 2026-11-23T09:20:42)",
@@ -3927,6 +4105,8 @@
     "CVE-2017-18214"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "2.15.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-446m-mv8f-q348 (fetched 2026-11-23T09:20:39)",
@@ -3965,6 +4145,8 @@
     "CVE-2022-24785"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "installed_version": "2.15.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-8hfj-j24r-96c4 (fetched 2026-11-23T09:20:41)",
@@ -4006,6 +4188,8 @@
     "CVE-2026-125117"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:H",
+   "installed_version": "4.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-8332-j7wj-wjw4 (fetched 2026-11-23T09:20:41)",
@@ -4046,6 +4230,8 @@
     "CVE-2022-2564"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:H",
+   "installed_version": "4.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-f825-f98c-gj3g (fetched 2026-11-23T09:20:42)",
@@ -4088,6 +4274,8 @@
     "CVE-2024-53900"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-m7xq-9374-9rvx (fetched 2026-11-23T09:20:44)",
@@ -4130,6 +4318,8 @@
     "CVE-2026-42334"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "installed_version": "4.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-wpg9-53fq-2r8h (fetched 2026-11-23T09:20:46)",
@@ -4166,6 +4356,8 @@
    "advisory": "GHSA-mh5c-679w-hh4r",
    "aliases": [],
    "severity": "HIGH",
+   "cvss": null,
+   "installed_version": "2.0.46",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-mh5c-679w-hh4r (fetched 2026-11-23T09:20:44)",
@@ -4205,6 +4397,8 @@
     "CVE-2018-16490"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "installed_version": "0.1.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-h466-j336-74wx (fetched 2026-11-23T09:20:43)",
@@ -4245,6 +4439,8 @@
     "CVE-2017-20165"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "2.2.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-9vvw-cc9w-f27h (fetched 2026-11-23T09:20:41)",
@@ -4285,6 +4481,8 @@
     "CVE-2016-10539"
    ],
    "severity": "HIGH",
+   "cvss": null,
+   "installed_version": "0.4.9",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-7mc5-chhp-fmc3 (fetched 2026-11-23T09:20:40)",
@@ -4327,6 +4525,8 @@
     "GHSA-pch5-whg9-qr2r"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+   "installed_version": "1.0.6",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-4c7m-wxvm-r7gc (fetched 2026-11-23T09:20:39)",
@@ -4369,6 +4569,8 @@
     "CVE-2015-8855"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "1.1.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-x6fg-f45m-jf5q (fetched 2026-11-23T09:20:46)",
@@ -4408,6 +4610,8 @@
     "CVE-2022-2216"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "5.0.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-7f3x-x4pr-wqhj (fetched 2026-11-23T09:20:40)",
@@ -4449,6 +4653,8 @@
     "CVE-2022-2900"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+   "installed_version": "5.0.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-j9fq-vwqv-2fm2 (fetched 2026-11-23T09:20:43)",
@@ -4492,6 +4698,8 @@
     "GHSA-9wv6-86v2-598j"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "0.1.3",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-37ch-88jc-xwx2 (fetched 2026-11-23T09:20:38)",
@@ -4537,6 +4745,8 @@
     "GHSA-37ch-88jc-xwx2"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "0.1.3",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-9wv6-86v2-598j (fetched 2026-11-23T09:20:42)",
@@ -4576,6 +4786,8 @@
     "CVE-2024-52798"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "0.1.3",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-rhx6-c78j-4q9w (fetched 2026-11-23T09:20:45)",
@@ -4615,6 +4827,8 @@
     "CVE-2025-6545"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:H/VA:N/SC:H/SI:H/SA:H",
+   "installed_version": "3.0.17",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-h7cp-r72f-jxh6 (fetched 2026-11-23T09:20:43)",
@@ -4655,6 +4869,8 @@
     "CVE-2025-6547"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:H/VA:N/SC:H/SI:H/SA:H",
+   "installed_version": "3.0.17",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-v62p-rq8g-8h59 (fetched 2026-11-23T09:20:45)",
@@ -4698,6 +4914,8 @@
     "CVE-2017-1000048"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "2.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-gqgv-6jq5-jjj9 (fetched 2026-11-23T09:20:43)",
@@ -4745,6 +4963,8 @@
     "CVE-2022-24999"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "2.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-hrpp-h998-j3pp (fetched 2026-11-23T09:20:43)",
@@ -4792,6 +5012,8 @@
     "CVE-2022-24999"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "6.5.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-hrpp-h998-j3pp (fetched 2026-11-23T09:20:43)",
@@ -4835,6 +5057,8 @@
     "CVE-2022-25883"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "5.7.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-c2qf-rxjj-qqgw (fetched 2026-11-23T09:20:42)",
@@ -4876,6 +5100,8 @@
     "CVE-2017-20165"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "2.2.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-9vvw-cc9w-f27h (fetched 2026-11-23T09:20:41)",
@@ -4916,6 +5142,8 @@
     "CVE-2026-9277"
    ],
    "severity": "CRITICAL",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "1.6.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-w7jw-789q-3m8p (fetched 2026-11-23T09:20:46)",
@@ -4955,6 +5183,8 @@
     "CVE-2014-3744"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "installed_version": "0.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-69rr-wvh9-6c4q (fetched 2026-11-23T09:20:40)",
@@ -4994,6 +5224,8 @@
     "CVE-2017-16138"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "1.2.11",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-wrvr-8mpx-r7pp (fetched 2026-11-23T09:20:46)",
@@ -5033,6 +5265,8 @@
     "CVE-2016-10539"
    ],
    "severity": "HIGH",
+   "cvss": null,
+   "installed_version": "0.2.8",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-7mc5-chhp-fmc3 (fetched 2026-11-23T09:20:40)",
@@ -5072,6 +5306,8 @@
     "CVE-2025-60542"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
+   "installed_version": "0.2.24",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-q2pj-6v73-8rgj (fetched 2026-11-23T09:20:44)",
@@ -5113,6 +5349,8 @@
     "CVE-2021-3807"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "4.1.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-93q8-gq69-wqmw (fetched 2026-11-23T09:20:41)",
@@ -5157,6 +5395,8 @@
     "CVE-2020-7774"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "4.0.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-c4w7-xm78-47vh (fetched 2026-11-23T09:20:42)",
@@ -5197,6 +5437,8 @@
     "CVE-2026-27601"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "1.9.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-qpx9-hpmf-5gmw (fetched 2026-11-23T09:20:45)",
@@ -5236,6 +5478,8 @@
     "CVE-2025-12758"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "13.5.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-vghf-hv5q-vc2g (fetched 2026-11-23T09:20:46)",
@@ -5277,6 +5521,8 @@
     "CVE-2021-3807"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "4.1.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-93q8-gq69-wqmw (fetched 2026-11-23T09:20:41)",
@@ -5402,6 +5648,8 @@
     "CVE-2021-23337"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-35jh-r3h4-6jhm (fetched 2026-11-23T09:20:38)",
@@ -5443,6 +5691,8 @@
     "CVE-2020-8203"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-p6mc-m468-83gw (fetched 2026-11-23T09:20:44)",
@@ -5484,6 +5734,8 @@
     "CVE-2026-4800"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-r5fr-rjxr-66jc (fetched 2026-11-23T09:20:45)",
@@ -5527,6 +5779,8 @@
     "CVE-2022-25883"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "6.3.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-c2qf-rxjj-qqgw (fetched 2026-11-23T09:20:42)",
@@ -5567,6 +5821,8 @@
     "CVE-2021-23337"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-35jh-r3h4-6jhm (fetched 2026-11-23T09:20:38)",
@@ -5609,6 +5865,8 @@
     "CVE-2020-8203"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-p6mc-m468-83gw (fetched 2026-11-23T09:20:44)",
@@ -5651,6 +5909,8 @@
     "CVE-2026-4800"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-r5fr-rjxr-66jc (fetched 2026-11-23T09:20:45)",
@@ -5693,6 +5953,8 @@
     "CVE-2018-1002204"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N",
+   "installed_version": "0.4.7",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-3v6h-hqm4-2rg6 (fetched 2026-11-23T09:20:38)",
@@ -5731,6 +5993,8 @@
     "CVE-2026-114103"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "0.4.7",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-c6fg-446q-cg94 (fetched 2026-11-23T09:20:42)",
@@ -5769,6 +6033,8 @@
     "CVE-2026-114104"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "installed_version": "0.4.7",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-p634-w6r4-rjp2 (fetched 2026-11-23T09:20:44)",
@@ -5808,6 +6074,8 @@
     "CVE-2025-69873"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N/E:P",
+   "installed_version": "6.10.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-2g4f-4pwh-qvx6 (fetched 2026-11-23T09:20:38)",
@@ -5850,6 +6118,8 @@
     "CVE-2020-15366"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "6.10.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-v88g-cgmw-v5xw (fetched 2026-11-23T09:20:46)",
@@ -5895,6 +6165,8 @@
     "CVE-2026-33750"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:H",
+   "installed_version": "1.1.11",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-f886-m6hf-6m8v (fetched 2026-11-23T09:20:42)",
@@ -5938,6 +6210,8 @@
     "CVE-2026-102277"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "1.1.11",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-q2hr-2g5m-vwhr (fetched 2026-11-23T09:20:44)",
@@ -5978,6 +6252,8 @@
     "CVE-2024-4068"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "3.0.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-grv7-fg5c-xmjg (fetched 2026-11-23T09:20:43)",
@@ -6018,6 +6294,8 @@
     "CVE-2023-46234"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "installed_version": "4.0.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-x9w5-v3q2-3rhw (fetched 2026-11-23T09:20:47)",
@@ -6058,6 +6336,8 @@
     "CVE-2019-2391"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N",
+   "installed_version": "0.4.23",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-4jwp-vfvf-657p (fetched 2026-11-23T09:20:39)",
@@ -6097,6 +6377,8 @@
     "CVE-2021-23518"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "1.0.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-wg6g-ppvx-927h (fetched 2026-11-23T09:20:46)",
@@ -6136,6 +6418,8 @@
     "CVE-2021-23406"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "1.0.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-9j49-mfvp-vmhm (fetched 2026-11-23T09:20:41)",
@@ -6179,6 +6463,8 @@
     "CVE-2020-8116"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "4.2.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-ff7x-qrg7-qggm (fetched 2026-11-23T09:20:42)",
@@ -6219,6 +6505,8 @@
     "CVE-2021-23337"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-35jh-r3h4-6jhm (fetched 2026-11-23T09:20:38)",
@@ -6260,6 +6548,8 @@
     "CVE-2020-8203"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-p6mc-m468-83gw (fetched 2026-11-23T09:20:44)",
@@ -6301,6 +6591,8 @@
     "CVE-2026-4800"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-r5fr-rjxr-66jc (fetched 2026-11-23T09:20:45)",
@@ -6342,6 +6634,8 @@
     "CVE-2024-33883"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "1.0.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-ghr5-ch3p-vcr6 (fetched 2026-11-23T09:20:43)",
@@ -6380,6 +6674,8 @@
     "CVE-2017-1000188"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "installed_version": "1.0.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-hwcf-pp87-7x6p (fetched 2026-11-23T09:20:43)",
@@ -6418,6 +6714,8 @@
     "CVE-2024-33883"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "0.8.8",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-ghr5-ch3p-vcr6 (fetched 2026-11-23T09:20:43)",
@@ -6457,6 +6755,8 @@
     "CVE-2017-1000188"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "installed_version": "0.8.8",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-hwcf-pp87-7x6p (fetched 2026-11-23T09:20:43)",
@@ -6496,6 +6796,8 @@
     "CVE-2020-13822"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:L",
+   "installed_version": "6.4.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-vh7m-p724-62c2 (fetched 2026-11-23T09:20:46)",
@@ -6538,6 +6840,8 @@
     "CVE-2024-21538"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "6.0.5",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-3xgq-45jj-v275 (fetched 2026-11-23T09:20:38)",
@@ -6581,6 +6885,8 @@
     "CVE-2024-29041"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "installed_version": "4.12.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-rv95-896h-c2vc (fetched 2026-11-23T09:20:45)",
@@ -6619,6 +6925,8 @@
     "CVE-2017-20162"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "0.7.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-w9mr-4mfr-499f (fetched 2026-11-23T09:20:46)",
@@ -6659,6 +6967,8 @@
     "CVE-2026-82417"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "2.4.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-4mjr-xmp4-gh2g (fetched 2026-11-23T09:20:39)",
@@ -6698,6 +7008,8 @@
     "CVE-2025-15284"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "2.4.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-6rw7-vpxm-498p (fetched 2026-11-23T09:20:40)",
@@ -6737,6 +7049,8 @@
     "CVE-2017-20162"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "0.7.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-w9mr-4mfr-499f (fetched 2026-11-23T09:20:46)",
@@ -6779,6 +7093,8 @@
     "SNYK-JS-INI-1048974"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "1.3.5",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-qqgx-2p2h-9c37 (fetched 2026-11-23T09:20:45)",
@@ -6821,6 +7137,8 @@
     "CVE-2021-23337"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-35jh-r3h4-6jhm (fetched 2026-11-23T09:20:38)",
@@ -6862,6 +7180,8 @@
     "CVE-2020-8203"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-p6mc-m468-83gw (fetched 2026-11-23T09:20:44)",
@@ -6903,6 +7223,8 @@
     "CVE-2026-4800"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-r5fr-rjxr-66jc (fetched 2026-11-23T09:20:45)",
@@ -6944,6 +7266,8 @@
     "CVE-2026-33916"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "installed_version": "4.0.14",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-2qvq-rjwj-gvw9 (fetched 2026-11-23T09:20:38)",
@@ -6981,6 +7305,8 @@
    "advisory": "GHSA-f52g-6jhx-586p",
    "aliases": [],
    "severity": "MEDIUM",
+   "cvss": null,
+   "installed_version": "4.0.14",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-f52g-6jhx-586p (fetched 2026-11-23T09:20:42)",
@@ -7020,6 +7346,8 @@
     "CVE-2026-106444"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "installed_version": "4.0.14",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xw65-4hp5-5hc7 (fetched 2026-11-23T09:20:47)",
@@ -7059,6 +7387,8 @@
     "CVE-2025-13465"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L",
+   "installed_version": "4.17.21",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xxjr-mmjv-4gpg (fetched 2026-11-23T09:20:47)",
@@ -7098,6 +7428,8 @@
     "CVE-2021-32822"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:L/I:N/A:N",
+   "installed_version": "4.0.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-7f5c-rpf4-86p8 (fetched 2026-11-23T09:20:40)",
@@ -7134,6 +7466,8 @@
    "advisory": "GHSA-7wwv-vh3v-89cq",
    "aliases": [],
    "severity": "MEDIUM",
+   "cvss": null,
+   "installed_version": "9.18.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-7wwv-vh3v-89cq (fetched 2026-11-23T09:20:41)",
@@ -7175,6 +7509,8 @@
     "CVE-2020-26237"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:C/C:N/I:H/A:N",
+   "installed_version": "9.18.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-vfrc-7r7c-w9mx (fetched 2026-11-23T09:20:46)",
@@ -7215,6 +7551,8 @@
     "CVE-2022-25881"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "4.1.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-rc47-6667-2j5j (fetched 2026-11-23T09:20:45)",
@@ -7259,6 +7597,8 @@
     "CVE-2017-20162"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "0.6.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-w9mr-4mfr-499f (fetched 2026-11-23T09:20:46)",
@@ -7301,6 +7641,8 @@
     "CVE-2021-3807"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "4.1.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-93q8-gq69-wqmw (fetched 2026-11-23T09:20:41)",
@@ -7342,6 +7684,8 @@
     "CVE-2021-23337"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-35jh-r3h4-6jhm (fetched 2026-11-23T09:20:38)",
@@ -7382,6 +7726,8 @@
     "CVE-2020-8203"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-p6mc-m468-83gw (fetched 2026-11-23T09:20:44)",
@@ -7422,6 +7768,8 @@
     "CVE-2026-4800"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-r5fr-rjxr-66jc (fetched 2026-11-23T09:20:45)",
@@ -7460,6 +7808,8 @@
     "CVE-2024-29415"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "1.1.5",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-2p57-rm9w-gvfp (fetched 2026-11-23T09:20:38)",
@@ -7505,6 +7855,8 @@
     "SNYK-JS-JQUERY-174006"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "installed_version": "2.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-6c3j-c64m-qhgq (fetched 2026-11-23T09:20:40)",
@@ -7544,6 +7896,8 @@
     "CVE-2020-11022"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:H/I:L/A:N",
+   "installed_version": "2.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-gxr4-xjj5-5px2 (fetched 2026-11-23T09:20:43)",
@@ -7583,6 +7937,8 @@
     "CVE-2020-11023"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:H/I:L/A:N/E:H",
+   "installed_version": "2.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-jpcq-cgw6-v4j6 (fetched 2026-11-23T09:20:43)",
@@ -7622,6 +7978,8 @@
     "CVE-2015-9251"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "installed_version": "2.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-rmxg-73gg-4p98 (fetched 2026-11-23T09:20:45)",
@@ -7661,6 +8019,8 @@
     "CVE-2026-53550"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "3.13.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-h67p-54hq-rp68 (fetched 2026-11-23T09:20:43)",
@@ -7701,6 +8061,8 @@
     "CVE-2025-64718"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "installed_version": "3.13.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-mh29-5h37-fv8m (fetched 2026-11-23T09:20:44)",
@@ -7740,6 +8102,8 @@
     "CVE-2020-28500"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "4.17.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-29mw-wpgm-hmr9 (fetched 2026-11-23T09:20:38)",
@@ -7778,6 +8142,8 @@
     "CVE-2018-3721"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+   "installed_version": "4.17.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-fvqr-27wr-82fm (fetched 2026-11-23T09:20:42)",
@@ -7817,6 +8183,8 @@
     "SNYK-JS-LODASH-73639"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "4.17.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-x5rq-j2xg-h7qm (fetched 2026-11-23T09:20:46)",
@@ -7855,6 +8223,8 @@
     "CVE-2025-13465"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L",
+   "installed_version": "4.17.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xxjr-mmjv-4gpg (fetched 2026-11-23T09:20:47)",
@@ -7891,6 +8261,8 @@
     "CVE-2020-8203"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "installed_version": "4.3.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-p6mc-m468-83gw (fetched 2026-11-23T09:20:44)",
@@ -7931,6 +8303,8 @@
     "CVE-2017-1000427"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "installed_version": "0.3.5",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-7px7-7xjx-hxm8 (fetched 2026-11-23T09:20:40)",
@@ -7969,6 +8343,8 @@
     "CVE-2018-25110"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "installed_version": "0.3.5",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-p9wx-2529-fp83 (fetched 2026-11-23T09:20:44)",
@@ -8007,6 +8383,8 @@
     "CVE-2016-10531"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "installed_version": "0.3.5",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-vfvf-mqq8-rwqc (fetched 2026-11-23T09:20:46)",
@@ -8046,6 +8424,8 @@
     "CVE-2020-7598"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "1.2.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-vh95-rmgr-6w4m (fetched 2026-11-23T09:20:46)",
@@ -8089,6 +8469,8 @@
     "CVE-2020-8244"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:L",
+   "installed_version": "2.2.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-pp7h-53gx-mx7r (fetched 2026-11-23T09:20:44)",
@@ -8132,6 +8514,8 @@
     "CVE-2026-73562"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L",
+   "installed_version": "4.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-664h-wqgq-64gw (fetched 2026-11-23T09:20:40)",
@@ -8173,6 +8557,8 @@
     "CVE-2026-125118"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L",
+   "installed_version": "4.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-6972-9mcm-vhwj (fetched 2026-11-23T09:20:40)",
@@ -8210,6 +8596,8 @@
    "advisory": "GHSA-r5xw-q988-826m",
    "aliases": [],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:L/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "installed_version": "4.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-r5xw-q988-826m (fetched 2026-11-23T09:20:45)",
@@ -8251,6 +8639,8 @@
     "CVE-2026-125116"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:L",
+   "installed_version": "4.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-wr5m-5jph-8m96 (fetched 2026-11-23T09:20:46)",
@@ -8289,6 +8679,8 @@
     "CVE-2017-20162"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "0.7.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-w9mr-4mfr-499f (fetched 2026-11-23T09:20:46)",
@@ -8328,6 +8720,8 @@
     "CVE-2026-5078"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "installed_version": "1.10.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-4vj7-5mj6-jm8m (fetched 2026-11-23T09:20:39)",
@@ -8366,6 +8760,8 @@
     "CVE-2026-87859"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "installed_version": "1.10.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-9f6g-j8ch-79g4 (fetched 2026-11-23T09:20:41)",
@@ -8404,6 +8800,8 @@
     "CVE-2026-15603"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "installed_version": "1.10.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-jxfw-x594-9x9m (fetched 2026-11-23T09:20:43)",
@@ -8442,6 +8840,8 @@
     "CVE-2021-23438"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "0.1.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-p92x-r36w-9395 (fetched 2026-11-23T09:20:44)",
@@ -8481,6 +8881,8 @@
     "CVE-2020-35149"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "installed_version": "1.6.3",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-45q2-34rf-mr94 (fetched 2026-11-23T09:20:39)",
@@ -8520,6 +8922,8 @@
     "CVE-2017-20162"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "0.7.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-w9mr-4mfr-499f (fetched 2026-11-23T09:20:46)",
@@ -8561,6 +8965,8 @@
     "CVE-2017-20162"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "0.7.3",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-w9mr-4mfr-499f (fetched 2026-11-23T09:20:46)",
@@ -8599,6 +9005,8 @@
     "CVE-2022-21803"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "0.10.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-6xwr-q98w-rvg7 (fetched 2026-11-23T09:20:40)",
@@ -8640,6 +9048,8 @@
     "SNYK-JS-INI-1048974"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "1.3.5",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-qqgx-2p2h-9c37 (fetched 2026-11-23T09:20:45)",
@@ -8684,6 +9094,8 @@
     "CVE-2021-3807"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "4.1.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-93q8-gq69-wqmw (fetched 2026-11-23T09:20:41)",
@@ -8730,6 +9142,8 @@
     "CVE-2022-25883"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "6.3.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-c2qf-rxjj-qqgw (fetched 2026-11-23T09:20:42)",
@@ -8774,6 +9188,8 @@
     "CVE-2022-25883"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "6.3.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-c2qf-rxjj-qqgw (fetched 2026-11-23T09:20:42)",
@@ -8818,6 +9234,8 @@
     "CVE-2022-25883"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "5.7.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-c2qf-rxjj-qqgw (fetched 2026-11-23T09:20:42)",
@@ -8859,6 +9277,8 @@
     "CVE-2022-25883"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "6.3.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-c2qf-rxjj-qqgw (fetched 2026-11-23T09:20:42)",
@@ -8903,6 +9323,8 @@
     "CVE-2021-3807"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "5.0.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-93q8-gq69-wqmw (fetched 2026-11-23T09:20:41)",
@@ -8944,6 +9366,8 @@
    "advisory": "GHSA-57cf-349j-352g",
    "aliases": [],
    "severity": "MEDIUM",
+   "cvss": null,
+   "installed_version": "0.0.24",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-57cf-349j-352g (fetched 2026-11-23T09:20:39)",
@@ -8983,6 +9407,8 @@
     "CVE-2020-7598"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "0.0.10",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-vh95-rmgr-6w4m (fetched 2026-11-23T09:20:46)",
@@ -9024,6 +9450,8 @@
     "CVE-2021-23406"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "3.0.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-9j49-mfvp-vmhm (fetched 2026-11-23T09:20:41)",
@@ -9065,6 +9493,8 @@
     "CVE-2022-0624"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "4.0.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-3j8f-xvm3-ffx4 (fetched 2026-11-23T09:20:38)",
@@ -9107,6 +9537,8 @@
     "CVE-2022-0722"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "installed_version": "5.0.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-4p35-cfcx-8653 (fetched 2026-11-23T09:20:39)",
@@ -9150,6 +9582,8 @@
     "CVE-2026-33671"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "2.3.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-c2c7-rcm5-vvqj (fetched 2026-11-23T09:20:42)",
@@ -9191,6 +9625,8 @@
     "CVE-2025-15284"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "2.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-6rw7-vpxm-498p (fetched 2026-11-23T09:20:40)",
@@ -9231,6 +9667,8 @@
     "SNYK-JS-INI-1048974"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "1.3.5",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-qqgx-2p2h-9c37 (fetched 2026-11-23T09:20:45)",
@@ -9273,6 +9711,8 @@
     "CVE-2023-28155"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "installed_version": "2.88.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-p8p7-x288-28g6 (fetched 2026-11-23T09:20:44)",
@@ -9313,6 +9753,8 @@
     "CVE-2026-82417"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "6.5.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-4mjr-xmp4-gh2g (fetched 2026-11-23T09:20:39)",
@@ -9354,6 +9796,8 @@
     "CVE-2025-15284"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "6.5.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-6rw7-vpxm-498p (fetched 2026-11-23T09:20:40)",
@@ -9395,6 +9839,8 @@
     "CVE-2017-20162"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "0.7.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-w9mr-4mfr-499f (fetched 2026-11-23T09:20:46)",
@@ -9435,6 +9881,8 @@
     "CVE-2026-13311"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "1.6.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-395f-4hp3-45gv (fetched 2026-11-23T09:20:38)",
@@ -9474,6 +9922,8 @@
     "CVE-2022-24441"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+   "installed_version": "1.278.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-4vrv-93c7-m92j (fetched 2026-11-23T09:20:39)",
@@ -9512,6 +9962,8 @@
     "CVE-2022-40764"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "1.278.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-hpqj-7cj6-hfj8 (fetched 2026-11-23T09:20:43)",
@@ -9550,6 +10002,8 @@
     "CVE-2021-23337"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-35jh-r3h4-6jhm (fetched 2026-11-23T09:20:38)",
@@ -9590,6 +10044,8 @@
     "CVE-2020-8203"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-p6mc-m468-83gw (fetched 2026-11-23T09:20:44)",
@@ -9630,6 +10086,8 @@
     "CVE-2026-4800"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-r5fr-rjxr-66jc (fetched 2026-11-23T09:20:45)",
@@ -9672,6 +10130,8 @@
     "CVE-2022-25883"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "6.3.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-c2qf-rxjj-qqgw (fetched 2026-11-23T09:20:42)",
@@ -9712,6 +10172,8 @@
     "CVE-2022-40764"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "1.11.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-hpqj-7cj6-hfj8 (fetched 2026-11-23T09:20:43)",
@@ -9751,6 +10213,8 @@
     "CVE-2024-48964"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H",
+   "installed_version": "3.2.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-qqqw-gm93-qf6m (fetched 2026-11-23T09:20:45)",
@@ -9790,6 +10254,8 @@
     "CVE-2021-23337"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-35jh-r3h4-6jhm (fetched 2026-11-23T09:20:38)",
@@ -9830,6 +10296,8 @@
     "CVE-2020-8203"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-p6mc-m468-83gw (fetched 2026-11-23T09:20:44)",
@@ -9870,6 +10338,8 @@
     "CVE-2026-4800"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-r5fr-rjxr-66jc (fetched 2026-11-23T09:20:45)",
@@ -9910,6 +10380,8 @@
     "CVE-2026-44705"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N/E:P",
+   "installed_version": "0.1.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-ph9p-34f9-6g65 (fetched 2026-11-23T09:20:44)",
@@ -9950,6 +10422,8 @@
     "CVE-2021-23337"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-35jh-r3h4-6jhm (fetched 2026-11-23T09:20:38)",
@@ -9990,6 +10464,8 @@
     "CVE-2020-8203"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-p6mc-m468-83gw (fetched 2026-11-23T09:20:44)",
@@ -10030,6 +10506,8 @@
     "CVE-2026-4800"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-r5fr-rjxr-66jc (fetched 2026-11-23T09:20:45)",
@@ -10070,6 +10548,8 @@
     "CVE-2021-23337"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-35jh-r3h4-6jhm (fetched 2026-11-23T09:20:38)",
@@ -10110,6 +10590,8 @@
     "CVE-2020-8203"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-p6mc-m468-83gw (fetched 2026-11-23T09:20:44)",
@@ -10150,6 +10632,8 @@
     "CVE-2026-4800"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-r5fr-rjxr-66jc (fetched 2026-11-23T09:20:45)",
@@ -10190,6 +10674,8 @@
     "CVE-2024-48963"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H",
+   "installed_version": "1.7.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-69f9-h8f9-7vjf (fetched 2026-11-23T09:20:40)",
@@ -10231,6 +10717,8 @@
     "CVE-2022-25883"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "6.3.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-c2qf-rxjj-qqgw (fetched 2026-11-23T09:20:42)",
@@ -10273,6 +10761,8 @@
     "CVE-2022-25883"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "6.3.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-c2qf-rxjj-qqgw (fetched 2026-11-23T09:20:42)",
@@ -10313,6 +10803,8 @@
     "CVE-2026-44705"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N/E:P",
+   "installed_version": "0.1.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-ph9p-34f9-6g65 (fetched 2026-11-23T09:20:44)",
@@ -10356,6 +10848,8 @@
     "CVE-2021-3807"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "4.1.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-93q8-gq69-wqmw (fetched 2026-11-23T09:20:41)",
@@ -10396,6 +10890,8 @@
     "CVE-2021-23337"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-35jh-r3h4-6jhm (fetched 2026-11-23T09:20:38)",
@@ -10435,6 +10931,8 @@
     "CVE-2020-8203"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-p6mc-m468-83gw (fetched 2026-11-23T09:20:44)",
@@ -10474,6 +10972,8 @@
     "CVE-2026-4800"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-r5fr-rjxr-66jc (fetched 2026-11-23T09:20:45)",
@@ -10515,6 +11015,8 @@
     "CVE-2022-25883"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "6.3.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-c2qf-rxjj-qqgw (fetched 2026-11-23T09:20:42)",
@@ -10554,6 +11056,8 @@
     "CVE-2017-16224"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "installed_version": "0.2.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-72fg-jqhx-c68p (fetched 2026-11-23T09:20:40)",
@@ -10595,6 +11099,8 @@
     "CVE-2021-3807"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "3.0.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-93q8-gq69-wqmw (fetched 2026-11-23T09:20:41)",
@@ -10638,6 +11144,8 @@
     "CVE-2020-7598"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "0.0.8",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-vh95-rmgr-6w4m (fetched 2026-11-23T09:20:46)",
@@ -10679,6 +11187,8 @@
     "CVE-2024-21538"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "5.1.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-3xgq-45jj-v275 (fetched 2026-11-23T09:20:38)",
@@ -10722,6 +11232,8 @@
     "CVE-2026-44705"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N/E:P",
+   "installed_version": "0.0.33",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-ph9p-34f9-6g65 (fetched 2026-11-23T09:20:44)",
@@ -10762,6 +11274,8 @@
     "CVE-2026-114141"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "installed_version": "3.0.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-4qx8-w7c3-pj3p (fetched 2026-11-23T09:20:39)",
@@ -10803,6 +11317,8 @@
     "CVE-2026-77465"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "3.0.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-82x6-q7mm-w9cf (fetched 2026-11-23T09:20:41)",
@@ -10844,6 +11360,8 @@
     "CVE-2026-114143"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "installed_version": "3.0.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-9j65-hcg3-gc64 (fetched 2026-11-23T09:20:41)",
@@ -10885,6 +11403,8 @@
     "CVE-2026-114144"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "installed_version": "3.0.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-9qmh-m7c6-f92p (fetched 2026-11-23T09:20:41)",
@@ -10926,6 +11446,8 @@
     "CVE-2026-114142"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:H/SC:N/SI:N/SA:N",
+   "installed_version": "3.0.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-h895-cgqg-jf52 (fetched 2026-11-23T09:20:43)",
@@ -10967,6 +11489,8 @@
     "CVE-2026-63376"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:L",
+   "installed_version": "3.0.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-v5mp-jgw5-2x6j (fetched 2026-11-23T09:20:45)",
@@ -11008,6 +11532,8 @@
     "CVE-2023-26136"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
+   "installed_version": "2.4.3",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-72xf-g2v4-qvf3 (fetched 2026-11-23T09:20:40)",
@@ -11050,6 +11576,8 @@
     "CVE-2026-73651"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:H/UI:R/S:U/C:H/I:H/A:N",
+   "installed_version": "0.2.24",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-2rp8-mm9q-fp49 (fetched 2026-11-23T09:20:38)",
@@ -11086,6 +11614,8 @@
    "advisory": "GHSA-9ggv-8w38-r7pm",
    "aliases": [],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "installed_version": "0.2.24",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-9ggv-8w38-r7pm (fetched 2026-11-23T09:20:41)",
@@ -11127,6 +11657,8 @@
     "CVE-2026-41988"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "installed_version": "3.3.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-w5hq-g745-h8pq (fetched 2026-11-23T09:20:46)",
@@ -11166,6 +11698,8 @@
     "CVE-2025-56200"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "installed_version": "13.5.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-9965-vmph-33xx (fetched 2026-11-23T09:20:41)",
@@ -11204,6 +11738,8 @@
     "CVE-2021-3765"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "13.5.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-qgmg-gppg-76g5 (fetched 2026-11-23T09:20:45)",
@@ -11240,6 +11776,8 @@
    "advisory": "GHSA-xx4c-jj58-r7x6",
    "aliases": [],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "13.5.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xx4c-jj58-r7x6 (fetched 2026-11-23T09:20:47)",
@@ -11278,6 +11816,8 @@
     "CVE-2023-0842"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "installed_version": "0.4.23",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-776f-qx25-q3cc (fetched 2026-11-23T09:20:40)",
@@ -11319,6 +11859,8 @@
     "CVE-2020-7774"
    ],
    "severity": "HIGH",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "3.2.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-c4w7-xm78-47vh (fetched 2026-11-23T09:20:42)",
@@ -11505,6 +12047,8 @@
     "CVE-2020-28500"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-29mw-wpgm-hmr9 (fetched 2026-11-23T09:20:38)",
@@ -11546,6 +12090,8 @@
     "CVE-2025-13465"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xxjr-mmjv-4gpg (fetched 2026-11-23T09:20:47)",
@@ -11587,6 +12133,8 @@
     "CVE-2020-28500"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-29mw-wpgm-hmr9 (fetched 2026-11-23T09:20:38)",
@@ -11629,6 +12177,8 @@
     "CVE-2025-13465"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xxjr-mmjv-4gpg (fetched 2026-11-23T09:20:47)",
@@ -11671,6 +12221,8 @@
     "CVE-2022-22984"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "2.0.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-4x6g-3cmx-w76r (fetched 2026-11-23T09:20:39)",
@@ -11713,6 +12265,8 @@
     "CVE-2020-8244"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:L",
+   "installed_version": "3.0.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-pp7h-53gx-mx7r (fetched 2026-11-23T09:20:44)",
@@ -11755,6 +12309,8 @@
     "CVE-2026-2739"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "4.11.8",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-378v-28hj-76wf (fetched 2026-11-23T09:20:38)",
@@ -11797,6 +12353,8 @@
     "CVE-2026-12590"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "1.9.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-v422-hmwv-36x6 (fetched 2026-11-23T09:20:45)",
@@ -11838,6 +12396,8 @@
     "CVE-2025-5889"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "1.1.11",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-v6h2-p8h4-qcjw (fetched 2026-11-23T09:20:46)",
@@ -11878,6 +12438,8 @@
     "CVE-2024-47764"
    ],
    "severity": "LOW",
+   "cvss": null,
+   "installed_version": "0.1.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-pxg6-pf52-xh8x (fetched 2026-11-23T09:20:44)",
@@ -11920,6 +12482,8 @@
     "CVE-2017-16137"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "4.1.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-gxpj-cx7g-858c (fetched 2026-11-23T09:20:43)",
@@ -11962,6 +12526,8 @@
     "CVE-2026-24001"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N/E:U",
+   "installed_version": "1.4.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-73rr-hh4g-fpgx (fetched 2026-11-23T09:20:40)",
@@ -12002,6 +12568,8 @@
     "CVE-2020-28500"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-29mw-wpgm-hmr9 (fetched 2026-11-23T09:20:38)",
@@ -12043,6 +12611,8 @@
     "CVE-2025-13465"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xxjr-mmjv-4gpg (fetched 2026-11-23T09:20:47)",
@@ -12084,6 +12654,8 @@
     "CVE-2023-0842"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "installed_version": "0.4.19",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-776f-qx25-q3cc (fetched 2026-11-23T09:20:40)",
@@ -12125,6 +12697,8 @@
     "CVE-2024-48949"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "installed_version": "6.4.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-434g-2637-qmqr (fetched 2026-11-23T09:20:39)",
@@ -12166,6 +12740,8 @@
     "CVE-2024-42461"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "installed_version": "6.4.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-49q7-c7j4-3p7m (fetched 2026-11-23T09:20:39)",
@@ -12205,6 +12781,8 @@
     "CVE-2025-14505"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "6.4.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-848j-6mx2-7j84 (fetched 2026-11-23T09:20:41)",
@@ -12246,6 +12824,8 @@
     "CVE-2024-42460"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "installed_version": "6.4.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-977x-g7h5-7qgw (fetched 2026-11-23T09:20:41)",
@@ -12287,6 +12867,8 @@
     "CVE-2024-42459"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "installed_version": "6.4.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-f7q4-pwc6-w24p (fetched 2026-11-23T09:20:42)",
@@ -12328,6 +12910,8 @@
     "CVE-2024-48948"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:L",
+   "installed_version": "6.4.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-fc9h-whq2-v747 (fetched 2026-11-23T09:20:42)",
@@ -12369,6 +12953,8 @@
     "CVE-2020-28498"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:N/A:N",
+   "installed_version": "6.4.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-r9p9-mrjm-926w (fetched 2026-11-23T09:20:45)",
@@ -12411,6 +12997,8 @@
     "CVE-2024-43796"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:L/A:L",
+   "installed_version": "4.12.4",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-qw6h-vgh9-j6wx (fetched 2026-11-23T09:20:45)",
@@ -12447,6 +13035,8 @@
    "advisory": "GHSA-q3w9-g74q-vp5f",
    "aliases": [],
    "severity": "LOW",
+   "cvss": null,
+   "installed_version": "0.0.5",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-q3w9-g74q-vp5f (fetched 2026-11-23T09:20:45)",
@@ -12485,6 +13075,8 @@
     "CVE-2024-47764"
    ],
    "severity": "LOW",
+   "cvss": null,
+   "installed_version": "0.4.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-pxg6-pf52-xh8x (fetched 2026-11-23T09:20:44)",
@@ -12527,6 +13119,8 @@
     "CVE-2017-16137"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "2.2.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-gxpj-cx7g-858c (fetched 2026-11-23T09:20:43)",
@@ -12569,6 +13163,8 @@
     "CVE-2017-16137"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "2.2.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-gxpj-cx7g-858c (fetched 2026-11-23T09:20:43)",
@@ -12610,6 +13206,8 @@
     "CVE-2022-33987"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "installed_version": "6.7.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-pfrx-2q88-qq97 (fetched 2026-11-23T09:20:44)",
@@ -12652,6 +13250,8 @@
     "CVE-2020-28500"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-29mw-wpgm-hmr9 (fetched 2026-11-23T09:20:38)",
@@ -12693,6 +13293,8 @@
     "CVE-2025-13465"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xxjr-mmjv-4gpg (fetched 2026-11-23T09:20:47)",
@@ -12732,6 +13334,8 @@
    "advisory": "GHSA-442j-39wm-28r2",
    "aliases": [],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "installed_version": "4.0.14",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-442j-39wm-28r2 (fetched 2026-11-23T09:20:39)",
@@ -12772,6 +13376,8 @@
     "CVE-2021-23362"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "2.8.5",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-43f8-2h32-f4cj (fetched 2026-11-23T09:20:39)",
@@ -12815,6 +13421,8 @@
     "CVE-2017-16137"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "3.2.6",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-gxpj-cx7g-858c (fetched 2026-11-23T09:20:43)",
@@ -12856,6 +13464,8 @@
     "CVE-2020-28500"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-29mw-wpgm-hmr9 (fetched 2026-11-23T09:20:38)",
@@ -12896,6 +13506,8 @@
     "CVE-2025-13465"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xxjr-mmjv-4gpg (fetched 2026-11-23T09:20:47)",
@@ -12937,6 +13549,8 @@
     "CVE-2023-42282"
    ],
    "severity": "LOW",
+   "cvss": null,
+   "installed_version": "1.1.5",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-78xj-cgh5-2h22 (fetched 2026-11-23T09:20:40)",
@@ -12979,6 +13593,8 @@
     "CVE-2022-48285"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "3.2.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-36fh-84j7-cv5h (fetched 2026-11-23T09:20:38)",
@@ -13020,6 +13636,8 @@
     "CVE-2021-23413"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "3.2.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-jg8v-48h5-wgxg (fetched 2026-11-23T09:20:43)",
@@ -13063,6 +13681,8 @@
     "CVE-2017-16137"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "2.2.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-gxpj-cx7g-858c (fetched 2026-11-23T09:20:43)",
@@ -13105,6 +13725,8 @@
     "GHSA-4c7m-wxvm-r7gc"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "installed_version": "1.0.6",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-pch5-whg9-qr2r (fetched 2026-11-23T09:20:44)",
@@ -13148,6 +13770,8 @@
     "CVE-2022-33987"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "installed_version": "9.6.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-pfrx-2q88-qq97 (fetched 2026-11-23T09:20:44)",
@@ -13190,6 +13814,8 @@
     "CVE-2025-7339"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:L/I:L/A:N",
+   "installed_version": "1.0.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-76c9-3jph-rj3q (fetched 2026-11-23T09:20:40)",
@@ -13229,6 +13855,8 @@
     "CVE-2022-2218"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "installed_version": "5.0.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-jpp7-7chh-cf67 (fetched 2026-11-23T09:20:43)",
@@ -13270,6 +13898,8 @@
     "CVE-2022-3224"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "installed_version": "5.0.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-pqw5-jmp5-px4v (fetched 2026-11-23T09:20:44)",
@@ -13311,6 +13941,8 @@
     "CVE-2022-2217"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "installed_version": "5.0.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-q6wq-5p59-983w (fetched 2026-11-23T09:20:45)",
@@ -13352,6 +13984,8 @@
     "CVE-2021-23343"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "1.0.6",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-hj48-42vr-x3v9 (fetched 2026-11-23T09:20:43)",
@@ -13392,6 +14026,8 @@
     "CVE-2026-102414"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "3.0.17",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-477h-4r7f-fvrx (fetched 2026-11-23T09:20:39)",
@@ -13434,6 +14070,8 @@
     "CVE-2026-33672"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "installed_version": "2.3.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-3v7f-55p6-f55p (fetched 2026-11-23T09:20:38)",
@@ -13475,6 +14113,8 @@
     "CVE-2024-43799"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:L/A:L",
+   "installed_version": "0.12.3",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-m6fv-jmcg-4jfg (fetched 2026-11-23T09:20:44)",
@@ -13517,6 +14157,8 @@
     "CVE-2017-16137"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "2.2.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-gxpj-cx7g-858c (fetched 2026-11-23T09:20:43)",
@@ -13558,6 +14200,8 @@
     "CVE-2024-43800"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:L/A:L",
+   "installed_version": "1.9.3",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-cm22-4g7w-348p (fetched 2026-11-23T09:20:42)",
@@ -13597,6 +14241,8 @@
     "CVE-2022-22984"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "1.278.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-4x6g-3cmx-w76r (fetched 2026-11-23T09:20:39)",
@@ -13636,6 +14282,8 @@
     "GO-2025-3789"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:L/AC:H/PR:H/UI:R/S:C/C:H/I:H/A:H",
+   "installed_version": "1.278.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-6hwc-9h8r-3vmf (fetched 2026-11-23T09:20:40)",
@@ -13677,6 +14325,8 @@
     "CVE-2017-16137"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "3.2.6",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-gxpj-cx7g-858c (fetched 2026-11-23T09:20:43)",
@@ -13717,6 +14367,8 @@
     "CVE-2020-28500"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-29mw-wpgm-hmr9 (fetched 2026-11-23T09:20:38)",
@@ -13757,6 +14409,8 @@
     "CVE-2025-13465"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xxjr-mmjv-4gpg (fetched 2026-11-23T09:20:47)",
@@ -13797,6 +14451,8 @@
     "CVE-2022-22984"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "1.33.1",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-4x6g-3cmx-w76r (fetched 2026-11-23T09:20:39)",
@@ -13836,6 +14492,8 @@
     "CVE-2022-22984"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "3.2.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-4x6g-3cmx-w76r (fetched 2026-11-23T09:20:39)",
@@ -13878,6 +14536,8 @@
     "CVE-2017-16137"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "3.2.6",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-gxpj-cx7g-858c (fetched 2026-11-23T09:20:43)",
@@ -13918,6 +14578,8 @@
     "CVE-2022-22984"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "2.7.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-4x6g-3cmx-w76r (fetched 2026-11-23T09:20:39)",
@@ -13957,6 +14619,8 @@
     "CVE-2020-28500"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-29mw-wpgm-hmr9 (fetched 2026-11-23T09:20:38)",
@@ -13997,6 +14661,8 @@
     "CVE-2025-13465"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xxjr-mmjv-4gpg (fetched 2026-11-23T09:20:47)",
@@ -14040,6 +14706,8 @@
     "CVE-2017-16137"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "3.2.6",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-gxpj-cx7g-858c (fetched 2026-11-23T09:20:43)",
@@ -14081,6 +14749,8 @@
     "CVE-2025-54798"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:L/A:N",
+   "installed_version": "0.1.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-52f5-9888-hmc6 (fetched 2026-11-23T09:20:39)",
@@ -14121,6 +14791,8 @@
     "CVE-2020-28500"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-29mw-wpgm-hmr9 (fetched 2026-11-23T09:20:38)",
@@ -14161,6 +14833,8 @@
     "CVE-2025-13465"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xxjr-mmjv-4gpg (fetched 2026-11-23T09:20:47)",
@@ -14204,6 +14878,8 @@
     "CVE-2017-16137"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "3.2.6",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-gxpj-cx7g-858c (fetched 2026-11-23T09:20:43)",
@@ -14244,6 +14920,8 @@
     "CVE-2020-28500"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-29mw-wpgm-hmr9 (fetched 2026-11-23T09:20:38)",
@@ -14284,6 +14962,8 @@
     "CVE-2025-13465"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xxjr-mmjv-4gpg (fetched 2026-11-23T09:20:47)",
@@ -14327,6 +15007,8 @@
     "CVE-2017-16137"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "3.2.6",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-gxpj-cx7g-858c (fetched 2026-11-23T09:20:43)",
@@ -14367,6 +15049,8 @@
     "CVE-2022-22984"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "1.16.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-4x6g-3cmx-w76r (fetched 2026-11-23T09:20:39)",
@@ -14409,6 +15093,8 @@
     "CVE-2017-16137"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "3.2.6",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-gxpj-cx7g-858c (fetched 2026-11-23T09:20:43)",
@@ -14452,6 +15138,8 @@
     "CVE-2017-16137"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "3.2.6",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-gxpj-cx7g-858c (fetched 2026-11-23T09:20:43)",
@@ -14492,6 +15180,8 @@
     "CVE-2022-22984"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:L",
+   "installed_version": "2.11.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-4x6g-3cmx-w76r (fetched 2026-11-23T09:20:39)",
@@ -14531,6 +15221,8 @@
     "CVE-2025-54798"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:L/A:N",
+   "installed_version": "0.1.0",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-52f5-9888-hmc6 (fetched 2026-11-23T09:20:39)",
@@ -14574,6 +15266,8 @@
     "CVE-2017-16137"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "3.2.6",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-gxpj-cx7g-858c (fetched 2026-11-23T09:20:43)",
@@ -14617,6 +15311,8 @@
     "CVE-2017-16137"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "3.2.6",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-gxpj-cx7g-858c (fetched 2026-11-23T09:20:43)",
@@ -14659,6 +15355,8 @@
     "CVE-2026-24001"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N/E:U",
+   "installed_version": "4.0.2",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-73rr-hh4g-fpgx (fetched 2026-11-23T09:20:40)",
@@ -14698,6 +15396,8 @@
     "CVE-2020-28500"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-29mw-wpgm-hmr9 (fetched 2026-11-23T09:20:38)",
@@ -14737,6 +15437,8 @@
     "CVE-2025-13465"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L",
+   "installed_version": "4.17.15",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-xxjr-mmjv-4gpg (fetched 2026-11-23T09:20:47)",
@@ -14776,6 +15478,8 @@
     "CVE-2025-54798"
    ],
    "severity": "LOW",
+   "cvss": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:L/A:N",
+   "installed_version": "0.0.33",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-52f5-9888-hmc6 (fetched 2026-11-23T09:20:39)",
@@ -14816,6 +15520,8 @@
     "CVE-2023-26115"
    ],
    "severity": "MEDIUM",
+   "cvss": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "installed_version": "1.2.3",
    "evidence": [
     {
      "source": "api.osv.dev/v1/vulns/GHSA-j8xg-fqg3-53r7 (fetched 2026-11-23T09:20:43)",

@@ -374,6 +374,7 @@ def build(base, head, offline):
             f = F.add(category="vulnerability", type="known_vulnerability", component=n["purl"], risk=risk, rule=rule,
                       title="%s %s" % (v["id"], v["summary"][:90]), new_in_head=n["isNew"] or n["changed"],
                       claim="VERIFIED", fixed=v["fixed"], advisory=v["id"], aliases=v["aliases"], severity=v["severity"],
+                      cvss=v["cvss"], installed_version=n["version"],
                       evidence=[{"source": "api.osv.dev/v1/vulns/%s (fetched %s)" % (v["id"], v["fetched"][:19]),
                                  "line": None, "excerpt": "severity=%s; aliases=%s; fixed=%s; cvss=%s" % (
                                      v["severity"], ",".join(v["aliases"][:3]) or "-", ",".join(v["fixed"]) or "none", v["cvss"] or "-")},
@@ -617,6 +618,9 @@ def build(base, head, offline):
     }
     json.dump({k: doc[k] for k in ("meta", "counts", "commits", "removed", "findings")},
               open(os.path.join(OUT, "findings.json"), "w", encoding="utf-8"), indent=1)
+    # the dependency graph (nodes + edges) for Day-2 stages (reachability, scoring, remediation)
+    json.dump({"meta": doc["meta"], "nodes": doc["nodes"], "edges": doc["edges"]},
+              open(os.path.join(OUT, "graph.json"), "w", encoding="utf-8"))
     tpl = open(os.path.join(HERE, "template.html"), encoding="utf-8").read()
     vis = open(os.path.join(OUT, "vis-network.min.js"), encoding="utf-8").read()
     html = tpl.replace("/*__DATA__*/null", json.dumps(doc).replace("</", "<\\/")).replace("<!--__VIS__-->", "<script>" + vis + "</script>")
