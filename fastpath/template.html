@@ -112,14 +112,17 @@ function status(n){
 function flagged(n){ return status(n) !== "clean" || n.isNew || n.changed; }
 
 // ---- header
-$("#sub").textContent = `./target  ${M.base} (${M.base_sha}) → ${M.head} (${M.head_sha}) · generated ${M.generated} · no LLM`;
-const vb = C.vulns_by_risk;
+$("#sub").textContent = `./target  ${M.base} (${M.base_sha}) → ${M.head} (${M.head_sha}) · generated ${M.generated} · deterministic detection`;
+const vb = C.vulns_by_risk, fmt = n => n.toLocaleString("en-US");
 const stats = [
-  ["components", C.components], ["direct", C.direct], ["transitive", C.transitive],
+  ["packages", `${fmt(C.packages)}`, "", `(${fmt(C.install_paths)} install paths)`], ["direct", C.direct], ["transitive", C.transitive],
   ...(vb ? ["critical","high","medium","low"].map(k => ["vulns " + k, vb[k]||0, "orange"]) : [["vulnerabilities", "not evaluated", "orange"]]),
-  ["suspicious changes", C.suspicious_changes, "red"], ["new / changed pkgs", `${C.new} / ${C.changed}`]
+  ["new since baseline", C.suspicious_new, "red"], ["already present", C.suspicious_present]
 ];
-$("#counts").innerHTML = stats.map(([k,v,c]) => `<div class="stat ${c||""}"><b>${esc(v)}</b><span>${esc(k)}</span></div>`).join("");
+$("#counts").innerHTML = stats.map(([k,v,c,x]) => `<div class="stat ${c||""}"><b>${esc(v)}${x ? ` <small style="font-size:17px;font-weight:500">${esc(x)}</small>` : ""}</b><span>${esc(k)}</span></div>`).join("");
+const TYPE_LABEL = {typosquat: "look-alike name"};
+const typeName = t => TYPE_LABEL[t] || t;
+const isSus = f => !["known_vulnerability","new_dependency","changed_dependency"].includes(f.type);
 
 // ---- graph
 const colors = () => ({sus:css("--red"), vuln:css("--orange"), clean:css("--grey"), app:css("--app"), file:css("--file")});
@@ -127,8 +130,8 @@ function visNode(n){
   const col = colors(), st = status(n);
   let bg = n.kind==="app" ? col.app : st==="sus" ? col.sus : st==="vuln" ? col.vuln : (n.kind==="file" ? col.file : col.clean);
   if (n.kind==="file" && st==="clean") bg = col.file;
-  const big = n.kind!=="pkg" || st==="sus" || n.direct || n.isNew || n.changed || (st==="vuln" && topVuln(n));
-  const label = !big ? undefined : n.kind==="pkg" ? `${n.name}@${n.version}` : n.kind==="file" ? n.name.split("/").pop() : n.name;
+  const big = hasLabel(n);
+  const label = !big ? undefined : fullLabel(n);
   return {
     id:n.id, label, shape: n.kind==="file" ? "box" : "dot",
     size: n.kind==="app" ? 34 : st==="sus" ? 26 : st==="vuln" ? 18 : n.direct ? 14 : 9,
@@ -140,6 +143,9 @@ function visNode(n){
           ...(n.kind==="file" ? {color:"#fff", strokeWidth:0} : {})},
   };
 }
+// labels only for flagged nodes (suspicious, new/changed, files with findings, critical vulns); others on hover
+function hasLabel(n){ return n.kind==="app" || status(n)==="sus" || n.isNew || n.changed || (n.kind==="file" && nodeFindings(n).length>0) || (status(n)==="vuln" && topVuln(n)); }
+function fullLabel(n){ return n.kind==="pkg" ? `${n.name}@${n.version}` : n.kind==="file" ? n.name.split("/").pop() : n.name; }
 function topVuln(n){ return nodeFindings(n).some(f => f.type==="known_vulnerability" && f.risk==="critical"); }
 function focusSet(allVulns){
   const keep = new Set([""]);
@@ -162,18 +168,21 @@ function render(){
   nodesDS.clear(); edgesDS.clear();
   // deterministic radial tree layout over the shortest-path tree
   const kids = {}, parentOf = id => { const p = N[id].path; return p && p.length > 1 ? p[p.length-2] : null; };
-  ns.forEach(n => { const p = parentOf(n.id); if (p !== null && ids.has(p)) (kids[p] = kids[p] || []).push(n.id); });
+  // files get their own inner ring so they never stack with direct dependencies
+  ns.forEach(n => { const p = parentOf(n.id); if (n.kind!=="file" && p !== null && ids.has(p)) (kids[p] = kids[p] || []).push(n.id); });
+  const files = ns.filter(n => n.kind==="file").sort((a,b) => (status(b)==="sus") - (status(a)==="sus") || a.name.localeCompare(b.name));
   const rank = id => { const s = status(N[id]); return s==="sus" ? 0 : s==="vuln" ? 2 : N[id].kind==="file" ? 1 : 3; };
   Object.values(kids).forEach(a => a.sort((x,y) => rank(x)-rank(y) || N[x].name.localeCompare(N[y].name)));
   const w = {}; const weight = id => w[id] ??= (status(N[id])==="sus" ? 4 : 1) + 0.7 * (kids[id]||[]).reduce((s,k) => s + weight(k), 0);
-  const pos = {}, n1 = (kids[""]||[]).length, r1 = Math.max(320, n1 * 95 / (2*Math.PI));
-  const rad = d => d===0 ? 0 : r1 + (d-1) * (mode==="all" ? 260 : 240);
+  const pos = {}, n1 = (kids[""]||[]).length, r1 = Math.max(520, n1 * 120 / (2*Math.PI));
+  const rad = d => d===0 ? 0 : r1 + (d-1) * (mode==="all" ? 260 : 260);
+  files.forEach((n, i) => { const a = -Math.PI/2 + (i - (files.length-1)/2) * (2*Math.PI/Math.max(files.length, 6)) ; pos[n.id] = {x: 0.5*r1*Math.cos(a), y: 0.5*r1*Math.sin(a)}; });
   (function place(id, a0, a1, d){
     const a = (a0+a1)/2; pos[id] = {x: rad(d)*Math.cos(a), y: rad(d)*Math.sin(a)};
     let cur = a0; const tot = (kids[id]||[]).reduce((s,k) => s + weight(k), 0) || 1;
     (kids[id]||[]).forEach(k => { const span = (a1-a0) * weight(k) / tot; place(k, cur, cur+span, d + 1); cur += span; });
   })("", -Math.PI, Math.PI, 0);
-  ns.forEach(n => { if (!pos[n.id]) pos[n.id] = {x: 0, y: (R*6)}; });
+  ns.forEach(n => { if (!pos[n.id]) pos[n.id] = {x: 0, y: r1*3}; });
   nodesDS.add(ns.map(n => ({...visNode(n), x: pos[n.id].x, y: pos[n.id].y})));
   edgesDS.add(D.edges.filter(([a,b]) => ids.has(a) && ids.has(b)).map(([a,b],i) => {
     const hot = susEdges.has(a+"→"+b);
@@ -188,6 +197,8 @@ net = new vis.Network($("#graph"), {nodes:nodesDS, edges:edgesDS}, {
   edges:{smooth:false}
 });
 net.on("click", p => { if (p.nodes.length) showNode(p.nodes[0]); });
+net.on("hoverNode", p => { const n = N[p.node]; if (n && !hasLabel(n)) nodesDS.update({id: n.id, label: fullLabel(n)}); });
+net.on("blurNode", p => { const n = N[p.node]; if (n && !hasLabel(n)) nodesDS.update({id: n.id, label: undefined}); });
 function setMode(m){ mode=m; [["focus","#vFocus"],["vulns","#vVul"],["all","#vAll"]].forEach(([k,s]) => $(s).classList.toggle("on", k===m)); render(); }
 $("#vFocus").onclick = () => setMode("focus");
 $("#vVul").onclick = () => setMode("vulns");
@@ -196,11 +207,11 @@ $("#vFit").onclick = () => net.fit({animation:true});
 $("#vFit").textContent = "Fit all";
 
 // ---- side panel
-function evHTML(e){ return `<div class="ev"><div class="src">${esc(e.source)}${e.line ? `, line ${e.line}` : ""}</div><code>${esc(e.excerpt)}</code></div>`; }
+function evHTML(e){ return `<div class="ev"><div class="src"><span class="claim">${esc(e.kind||"verified")}</span> ${esc(e.source)}${e.line ? `, line ${e.line}` : ""}</div><code>${esc(e.excerpt)}</code></div>`; }
 function pathHTML(p){ return `<div class="path">${(p||[]).map(x => `<span>${esc(x)}</span>`).join("")}</div>`; }
 function findingHTML(f, full){
   return `<div class="item r-${f.risk}" data-node="${esc(f.nodeId)}">
-    <div><span class="badge b-${f.risk}">${f.risk}</span><span class="badge b-type">${esc(f.type)}</span>${f.new_in_head ? '<span class="badge b-new">new</span>' : ""}<span class="claim">${esc(f.claim)}</span></div>
+    <div><span class="badge b-${f.risk}">${f.risk}</span><span class="badge b-type">${esc(typeName(f.type))}</span>${f.new_in_head ? '<span class="badge b-new">new</span>' : ""}<span class="claim">${esc(f.claim)}</span></div>
     <div class="comp" style="margin-top:4px">${esc(f.component)}</div>
     <div>${esc(f.title)}</div>
     ${f.commit ? `<div class="muted">introduced by commit <b>${esc(f.commit.sha)}</b> “${esc(f.commit.subject)}”</div>` : ""}
@@ -251,26 +262,27 @@ function showTab(t){
   if (t==="in"){
     const direct = D.nodes.filter(n => n.direct).sort((a,b) => a.name.localeCompare(b.name));
     s.innerHTML = `<h2>What is in it</h2>${osvWarn}
-      <div class="muted">${C.components} components from package-lock.json @ ${esc(M.head)}: ${C.direct} direct, ${C.transitive} transitive; ${C.prod} prod, ${C.dev} dev. CycloneDX SBOMs: sbom.base.cdx.json, sbom.head.cdx.json. Vulnerability data: OSV (${esc(M.osv.status)}${M.osv.advisories!=null ? ", " + M.osv.advisories + " advisories" : ""}).</div>
+      <div class="muted">${fmt(C.packages)} packages (${fmt(C.install_paths)} install paths) from package-lock.json @ ${esc(M.head)}: ${C.direct} direct, ${C.transitive} transitive; install paths: ${C.prod} prod, ${C.dev} dev. CycloneDX SBOMs: sbom.base.cdx.json, sbom.head.cdx.json. Vulnerability data: OSV (${esc(M.osv.status)}${M.osv.advisories!=null ? ", " + M.osv.advisories + " advisories" : ""}).</div>
       <h3>direct dependencies (${direct.length})</h3>
       ${direct.map(n => { const st = status(n); return `<div class="item ${st==="sus"?"r-high":st==="vuln"?"r-medium":""}" data-node="${esc(n.id)}">
         <span class="comp">${esc(n.name)}@${esc(n.version)}</span> ${n.dev ? '<span class="badge b-type">dev</span>' : ""}${n.isNew ? '<span class="badge b-new">new</span>' : ""}${n.changed ? '<span class="badge b-new">changed</span>' : ""}
         ${n.vulns ? `<span class="muted"> · ${n.vulns.length} advisories</span>` : ""}${!n.registry ? '<span class="muted"> · non-registry origin</span>' : ""}</div>`; }).join("")}`;
   } else if (t==="changed"){
-    const ch = D.findings.filter(f => f.new_in_head && f.type!=="known_vulnerability").sort((a,b) => RO[a.risk]-RO[b.risk]);
+    const ch = D.findings.filter(f => f.new_in_head && isSus(f)).sort((a,b) => RO[a.risk]-RO[b.risk]);
     const byCommit = {};
     ch.forEach(f => { const k = f.commit ? f.commit.sha : "—"; (byCommit[k] = byCommit[k] || []).push(f); });
     s.innerHTML = `<h2>What changed</h2>
-      <div class="muted">${D.commits.length} commits ${esc(M.base)}..${esc(M.head)} · ${C.new} new, ${C.changed} changed, ${C.removed} removed packages</div>
+      <div class="muted">${D.commits.length} commits ${esc(M.base)}..${esc(M.head)} · ${C.new} new, ${C.changed} changed, ${C.removed} removed packages · <b>${C.suspicious_new} suspicious findings new since baseline</b></div>
       ${D.commits.map(c => `<h3>${esc(c.sha)} — ${esc(c.subject)}</h3>${(byCommit[c.sha]||[]).map(f => findingHTML(f,false)).join("") || '<div class="muted">no findings linked</div>'}`).join("")}
       ${byCommit["—"] ? `<h3>not linked to a commit</h3>${byCommit["—"].map(f => findingHTML(f,false)).join("")}` : ""}
       ${D.removed.length ? `<h3>removed packages</h3>${D.removed.map(r => `<div class="comp">${esc(r.name)}@${esc(r.version)}</div>`).join("")}` : ""}`;
   } else {
-    const rk = D.findings.filter(f => !["new_dependency","changed_dependency"].includes(f.type));
-    const sus = rk.filter(f => f.type!=="known_vulnerability").sort((a,b) => (b.new_in_head-a.new_in_head) || RO[a.risk]-RO[b.risk]);
-    const vul = rk.filter(f => f.type==="known_vulnerability").sort((a,b) => RO[a.risk]-RO[b.risk]);
+    const sus = D.findings.filter(isSus).sort((a,b) => RO[a.risk]-RO[b.risk]);
+    const vul = D.findings.filter(f => f.type==="known_vulnerability").sort((a,b) => RO[a.risk]-RO[b.risk]);
+    const sNew = sus.filter(f => f.new_in_head), sOld = sus.filter(f => !f.new_in_head);
     s.innerHTML = `<h2>What is risky</h2>${osvWarn}
-      <h3>supply-chain and configuration findings (${sus.length})</h3>${sus.map(f => findingHTML(f,false)).join("")}
+      <h3>supply-chain findings new since baseline (${C.suspicious_new})</h3>${sNew.map(f => findingHTML(f,false)).join("")}
+      <h3>already present in baseline (${C.suspicious_present})</h3>${sOld.map(f => findingHTML(f,false)).join("")}
       <h3>known vulnerabilities (${M.osv.status==="evaluated" ? vul.length : "not evaluated"})</h3>${vul.map(f => findingHTML(f,false)).join("")}`;
   }
   bindItems();

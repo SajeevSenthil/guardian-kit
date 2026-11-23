@@ -413,9 +413,10 @@ def build(base, head, offline):
                 d, other, src = near[0]
                 attach(nid, F.add(category="change", type="typosquat", risk="high",
                                   rule="new name within edit distance %d of '%s' (%s) -> high" % (d, other, src),
-                                  title="name '%s' resembles '%s' (edit distance %d)" % (n["name"], other, d),
-                                  evidence=ev + [{"source": "guardian/data/popular_npm_names.txt" if src != "dependency" else "package-lock.json @ %s" % head,
-                                                  "line": None, "excerpt": "%s  vs  %s  (distance %d, %s)" % (n["name"], other, d, src)}], **common))
+                                  title="look-alike name: '%s' resembles '%s' (edit distance %d)" % (n["name"], other, d),
+                                  evidence=ev + [{"source": "computed: edit distance against %s" % ("guardian/data/popular_npm_names.txt" if src != "dependency" else "dependency names in package-lock.json @ %s" % head),
+                                                  "line": None, "kind": "computed",
+                                                  "excerpt": "%s  vs  %s  (distance %d, %s)" % (n["name"], other, d, src)}], **common))
         # origin
         if not n["registry"]:
             attach(nid, F.add(category="change", type="non_registry_origin", risk="medium",
@@ -453,7 +454,9 @@ def build(base, head, offline):
                                           title="%s -> %s: tarball %d -> %d bytes (x%.1f), new files: %s" % (
                                               bnode["version"], n["version"], binfo["size"], info["size"], growth, ", ".join(newfiles) or "none"),
                                           evidence=[{"source": "%s @ %s" % (binfo["tarball"], base), "line": None, "excerpt": "%d bytes; files: %s" % (binfo["size"], ", ".join(sorted(binfo["files"])))},
-                                                    {"source": "%s @ %s" % (info["tarball"], head), "line": None, "excerpt": "%d bytes; files: %s" % (info["size"], ", ".join(sorted(info["files"])))}],
+                                                    {"source": "%s @ %s" % (info["tarball"], head), "line": None, "excerpt": "%d bytes; files: %s" % (info["size"], ", ".join(sorted(info["files"])))},
+                                                    {"source": "computed: size ratio and file-set difference", "line": None, "kind": "computed",
+                                                     "excerpt": "x%.1f size; new files: %s; install hook added: %s" % (growth, ", ".join(newfiles) or "none", "yes" if newhook else "no")}],
                                           **common))
 
     # unused new import (new require() of a new direct dependency whose binding is never used)
@@ -480,6 +483,11 @@ def build(base, head, offline):
         edges.append(["", nid])
         return nid
 
+    pending = []  # file-based findings, merged by (file, type, new_in_head) below
+
+    def pend(nid, f):
+        pending.append((nid, f))
+
     for rel in ("Dockerfile",):
         txt_h, txt_b = read(rh, rel), read(rb, rel) or ""
         if txt_h is None:
@@ -496,7 +504,7 @@ def build(base, head, offline):
                 tag = img.split(":", 1)[1] if ":" in img else "latest"
                 floating = not re.fullmatch(r"\d+\.\d+\.\d+.*", tag)
                 risk = "high" if changed and floating else ("medium" if floating else "low")
-                attach(nid, F.add(category="change" if changed else "config", type="untrusted_image", component="Dockerfile FROM " + img,
+                pend(nid, dict(category="change" if changed else "config", type="untrusted_image", component="Dockerfile FROM " + img,
                                   risk=risk, rule="base image without digest%s%s -> %s" % (", floating tag" if floating else "", ", changed since " + base if changed else "", risk),
                                   title="FROM %s (no digest%s)%s" % (img, ", floating tag" if floating else "", "; was " + ", ".join(base_froms) if changed else ""),
                                   new_in_head=changed, claim="VERIFIED",
@@ -504,7 +512,7 @@ def build(base, head, offline):
                                   evidence=[{"source": "%s @ %s" % (rel, head), "line": i, "excerpt": l.strip()}] +
                                            ([{"source": "%s @ %s" % (rel, base), "line": line_of(txt_b, base_froms[0])[0], "excerpt": "FROM " + base_froms[0]}] if changed and base_froms else [])))
             if re.search(r"\bnpm (update|install)\b", l) and "npm ci" not in l:
-                attach(nid, F.add(category="config", type="lockfile_drift", component=rel, risk="low",
+                pend(nid, dict(category="config", type="lockfile_drift", component=rel, risk="low",
                                   rule="image installs with npm update/install, not from the lockfile -> low",
                                   title="image does not install from the lockfile", new_in_head=l.strip() not in txt_b, claim="VERIFIED",
                                   evidence=[{"source": "%s @ %s" % (rel, head), "line": i, "excerpt": l.strip()}]))
@@ -524,7 +532,7 @@ def build(base, head, offline):
                 first = act.split("/")[0] in ("actions", "github")
                 risk = "low" if first else ("high" if new else "medium")
                 adv = None if first else osv_action(act)
-                f = F.add(category=cat, type="unpinned_ci_component", component="%s@%s" % (act, ref), risk=risk,
+                f = dict(category=cat, type="unpinned_ci_component", component="%s@%s" % (act, ref), risk=risk,
                           rule="action pinned to mutable ref '%s', not a commit SHA; %s%s -> %s" % (ref, "first-party" if first else "third-party", ", new" if new else "", risk),
                           title="uses %s@%s (mutable ref)" % (act, ref), **com)
                 if adv:
@@ -533,13 +541,40 @@ def build(base, head, offline):
                     f["title"] += " — OSV lists %d advisory(ies) for this action (version match not evaluated)" % len(adv)
                 elif adv is None and not first:
                     f["evidence"].append({"source": "api.osv.dev", "line": None, "excerpt": "advisory lookup not evaluated (network/cache miss)"})
-                attach(nid, f)
+                pend(nid, f)
             if re.search(r"permissions:\s*write-all", s):
-                attach(nid, F.add(category=cat, type="unsafe_ci_pattern", component=rel, risk="high",
+                pend(nid, dict(category=cat, type="unsafe_ci_pattern", component=rel, risk="high",
                                   rule="permissions: write-all -> high", title="workflow token has write-all permissions", **com))
             if re.search(r"(curl|wget)\b.*\|\s*(ba|z)?sh\b", s):
-                attach(nid, F.add(category=cat, type="unsafe_ci_pattern", component=rel, risk="high",
+                pend(nid, dict(category=cat, type="unsafe_ci_pattern", component=rel, risk="high",
                                   rule="remote script piped to a shell -> high", title="downloads and pipes a remote script into a shell", **com))
+
+    # merge duplicate file findings: same file + same type (+ same new/preexisting status)
+    groups = {}
+    for nid, f in pending:
+        groups.setdefault((nid, f["type"], f["new_in_head"]), []).append(f)
+    for (nid, typ, _new), fs in groups.items():
+        fs.sort(key=lambda f: RISK_ORDER[f["risk"]])
+        top = fs[0]
+        rel = nodes[nid]["name"]
+        merged = dict(top)
+        merged["component"] = rel if (rel.startswith(".github/") or len(fs) > 1) else top["component"]
+        if len(fs) > 1:
+            titles = list(dict.fromkeys(f["title"] for f in fs))
+            merged["title"] = "; ".join(titles)
+            merged["rule"] = top["rule"] + " (highest of %d merged occurrences)" % len(fs)
+            merged["evidence"] = [e for f in fs for e in f["evidence"]]
+            merged["merged"] = len(fs)
+            merged["commit"] = next((f["commit"] for f in fs if f.get("commit")), None)
+        attach(nid, F.add(**merged))
+
+    # claim labels: "verified" = statement read directly from a file or OSV;
+    # "computed" = derived by code (edit distance, size ratio, usage count)
+    COMPUTED = {"typosquat", "suspicious_update", "unexpected_dependency"}
+    for f in F.items:
+        f["claim"] = "computed" if f["type"] in COMPUTED else "verified"
+        for e in f["evidence"]:
+            e.setdefault("kind", "verified")
 
     findings = sorted(F.items, key=lambda f: (RISK_ORDER[f["risk"]], f["category"] != "change", f["id"]))
     pk = [n for n in nodes.values() if n["kind"] == "pkg"]
@@ -547,8 +582,13 @@ def build(base, head, offline):
     for f in F.items:
         if f["type"] == "known_vulnerability":
             sev[f["risk"]] = sev.get(f["risk"], 0) + 1
+    uniq = {n["purl"] for n in pk}
+    uniq_direct = {n["purl"] for n in pk if n["direct"]}
+    sus = [f for f in F.items if f["type"] not in ("known_vulnerability", "new_dependency", "changed_dependency")]
     counts = {
-        "components": len(pk), "direct": sum(n["direct"] for n in pk), "transitive": sum(not n["direct"] for n in pk),
+        "packages": len(uniq), "install_paths": len(pk), "direct": len(uniq_direct), "transitive": len(uniq - uniq_direct),
+        "suspicious_new": sum(f["new_in_head"] for f in sus), "suspicious_present": sum(not f["new_in_head"] for f in sus),
+        "components": len(pk),
         "prod": sum(not n["dev"] for n in pk), "dev": sum(n["dev"] for n in pk),
         "new": sum(n["isNew"] for n in pk), "changed": sum(n["changed"] for n in pk), "removed": len(removed),
         "vulnerable_components": len(vulns) if osv_meta["status"] == "evaluated" else None,
@@ -571,7 +611,8 @@ def build(base, head, offline):
     vis = open(os.path.join(OUT, "vis-network.min.js"), encoding="utf-8").read()
     html = tpl.replace("/*__DATA__*/null", json.dumps(doc).replace("</", "<\\/")).replace("<!--__VIS__-->", "<script>" + vis + "</script>")
     open(os.path.join(OUT, "guardian.html"), "w", encoding="utf-8").write(html)
-    print("components=%(components)d direct=%(direct)d transitive=%(transitive)d suspicious=%(suspicious_changes)d" % counts,
+    print("packages=%(packages)d install_paths=%(install_paths)d direct=%(direct)d transitive=%(transitive)d "
+          "suspicious_new=%(suspicious_new)d suspicious_present=%(suspicious_present)d" % counts,
           "vulns=%s" % counts["vulns_by_risk"], "osv=%s" % osv_meta["status"], "findings=%d" % len(findings))
     return doc
 
