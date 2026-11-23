@@ -1,0 +1,39 @@
+{
+ "counts": {
+  "old": 981,
+  "new": 982
+ },
+ "added": [
+  {
+   "purl": "pkg:npm/guardian-demo-strfmt@1.0.1",
+   "name": "guardian-demo-strfmt",
+   "version": "1.0.1",
+   "resolved": "file:vendor/guardian-demo-strfmt-1.0.1.tgz",
+   "introducedBy": [
+    "pkg:npm/goof@1.0.1"
+   ],
+   "flags": [
+    "non-registry-source",
+    "install-script"
+   ]
+  },
+  {
+   "purl": "pkg:npm/lodahs@4.17.21",
+   "name": "lodahs",
+   "version": "4.17.21",
+   "resolved": "file:vendor/lodahs-4.17.21.tgz",
+   "introducedBy": [
+    "pkg:npm/goof@1.0.1"
+   ],
+   "flags": [
+    "non-registry-source",
+    "install-script",
+    "name-resembles:lodash"
+   ]
+  }
+ ],
+ "removed": [
+  "pkg:npm/guardian-demo-strfmt@1.0.0"
+ ],
+ "changedSamePurl": []
+}

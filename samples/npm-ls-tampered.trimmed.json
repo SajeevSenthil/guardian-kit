@@ -1,0 +1,34 @@
+{
+ "_note": "trimmed sample of: npm ls --all --json --package-lock-only (tampered branch); 4 of 36 direct deps kept, depth cut at 2",
+ "version": "1.0.1",
+ "name": "goof",
+ "dependencies": {
+  "adm-zip": {
+   "version": "0.4.7",
+   "resolved": "https://registry.npmjs.org/adm-zip/-/adm-zip-0.4.7.tgz",
+   "overridden": false
+  },
+  "humanize-ms": {
+   "version": "1.0.1",
+   "resolved": "https://registry.npmjs.org/humanize-ms/-/humanize-ms-1.0.1.tgz",
+   "overridden": false,
+   "dependencies": {
+    "ms": {
+     "version": "0.6.2",
+     "resolved": "https://registry.npmjs.org/ms/-/ms-0.6.2.tgz",
+     "overridden": false
+    }
+   }
+  },
+  "lodahs": {
+   "version": "4.17.21",
+   "resolved": "file:/tmp/claude-0/-home-claude/82544a26-ee6d-52cd-972a-f66cf3699140/scratchpad/sim/tampered/vendor/lodahs-4.17.21.tgz",
+   "overridden": false
+  },
+  "lodash": {
+   "version": "4.17.4",
+   "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.4.tgz",
+   "overridden": false
+  }
+ }
+}

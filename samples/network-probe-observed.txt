@@ -1,0 +1,14 @@
+# Observed 2026-11-23 from the verification sandbox (curl through the session egress proxy, one probe per host).
+# Only the reasons marked (confirmed) were read from curl's error text; the rest returned no HTTP response
+# (curl code 000) and the reason was not captured.
+WORKS  github.com git smart-HTTP (git clone / git ls-remote of public repos)              HTTP 200
+403    github.com/<repo>/releases/latest (7 tool repos)                                    HTTP 403
+403    github.com/<repo>/archive/refs/heads/main.tar.gz, codeload.github.com               HTTP 403
+403    api.github.com via gh api ("GitHub access to this repository is not enabled for this session")
+FAIL   registry.npmjs.org, pypi.org   direct: "Could not resolve host" (confirmed; hosts are on NO_PROXY, sandbox DNS does not resolve)
+FAIL   pypi.org forced through proxy: "CONNECT tunnel failed, response 403" (confirmed)
+FAIL   api.osv.dev: "CONNECT tunnel failed, response 403" (confirmed)
+000    files.pythonhosted.org, proxy.golang.org, index.crates.io (forced through proxy)
+000    api.first.org, www.cisa.gov, api.deps.dev, api.npmjs.org
+000    get.anchore.io, grype.anchore.io, get.trivy.dev, ghcr.io, mirror.gcr.io, registry-1.docker.io, public.ecr.aws, semgrep.dev
+000    golang.org, sum.golang.org, gopkg.in, crates.io, static.crates.io, cache.nixos.org, archive.ubuntu.com, deb.debian.org, nodejs.org, storage.googleapis.com

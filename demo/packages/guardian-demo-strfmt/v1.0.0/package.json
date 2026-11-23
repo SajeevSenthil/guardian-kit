@@ -1,0 +1,8 @@
+{
+  "name": "guardian-demo-strfmt",
+  "version": "1.0.0",
+  "description": "DEMO ONLY - harmless helper for the Supply Chain Guardian demo. Never publish.",
+  "main": "index.js",
+  "private": true,
+  "license": "MIT"
+}

@@ -1,0 +1,77 @@
+# Every requirement from the organiser's slides, with how we prove it.
+# /checkpoint reads this file, runs or inspects each `check`, and prints a table.
+# Update `status` (todo | partial | done | waived) and `evidence` (file, command or screenshot)
+# as phases complete. Never mark `done` without evidence.
+
+day1:
+  - {id: D1-1.1, text: "Analyze package manifests and lockfiles", phase: 2, check: "guardian discover prints manifest + lockfile parsed for base and head", status: todo, evidence: ""}
+  - {id: D1-1.2, text: "Identify direct and transitive dependencies", phase: 2, check: "inventory.head.json has direct flag; counts printed", status: todo, evidence: ""}
+  - {id: D1-1.3, text: "Capture component names and versions", phase: 2, check: "every component has name + version or is listed as unknown", status: todo, evidence: ""}
+  - {id: D1-2.1, text: "Generate or consume an SBOM (CycloneDX or SPDX)", phase: 2, check: "runs/<id>/sbom.head.cdx.json validates as CycloneDX", status: todo, evidence: ""}
+  - {id: D1-2.2, text: "Build the dependency graph", phase: 2, check: "guardian paths <run> <pkg>; UI Inventory tree", status: todo, evidence: ""}
+  - {id: D1-2.3, text: "Identify where each component originates", phase: 2, check: "origin + trusted/untrusted/unknown per component", status: todo, evidence: ""}
+  - {id: D1-2.4, text: "Inspect at least one container image or CI/CD workflow", phase: 2, check: "Dockerfile and workflow inventory present (we do both)", status: todo, evidence: ""}
+  - {id: D1-3.1, text: "Correlate components with known vulnerabilities", phase: 3, check: "guardian vulns <run>", status: todo, evidence: ""}
+  - {id: D1-3.2, text: "Capture CVE, severity and available fixes", phase: 3, check: "table columns advisory, severity, fix", status: todo, evidence: ""}
+  - {id: D1-3.3, text: "Trace vulnerable transitive dependencies back to their source", phase: 3, check: "direct parent + full path on each transitive finding", status: todo, evidence: ""}
+  - {id: D1-4.1, text: "Identify at least one supply-chain anomaly", phase: 4, check: "guardian scorecard <run>: GT-C1..C7", status: todo, evidence: ""}
+  - {id: D1-5.1, text: "Show what was detected", phase: 6, check: "UI Findings page", status: todo, evidence: ""}
+  - {id: D1-5.2, text: "Which component is affected", phase: 6, check: "component purl on every finding", status: todo, evidence: ""}
+  - {id: D1-5.3, text: "Dependency path", phase: 6, check: "path breadcrumb on finding detail", status: todo, evidence: ""}
+  - {id: D1-5.4, text: "Supporting evidence", phase: 6, check: "evidence drawer with command, excerpt, hash", status: todo, evidence: ""}
+  - {id: D1-5.5, text: "Initial risk level", phase: 4, check: "initial_severity on every finding with its rule", status: todo, evidence: ""}
+  - {id: D1-CP, text: "Checkpoint: what is in the application, what changed, what appears risky", phase: 7, check: "3-minute rehearsal from docs/DEMO.md", status: todo, evidence: ""}
+
+day2:
+  - {id: D2-1.1, text: "Combine severity with exploitability, reachability and exposure", phase: 8, check: "guardian explain <run> F-xxxx shows all factors", status: todo, evidence: ""}
+  - {id: D2-1.2, text: "Consider whether the dependency is used in production", phase: 8, check: "prod/dev scope drives exposure", status: todo, evidence: ""}
+  - {id: D2-1.3, text: "Distinguish urgent risks from lower-priority findings", phase: 8, check: "bands + funnel; reachable outranks unreachable", status: todo, evidence: ""}
+  - {id: D2-1.4, text: "Provide an explainable risk score and confidence level", phase: 8, check: "score, range, confidence, explanation text", status: todo, evidence: ""}
+  - {id: D2-2.1, text: "Analyze at least one non-CVE supply-chain risk", phase: 9, check: "Investigation tab on a change finding", status: todo, evidence: ""}
+  - {id: D2-2.2, text: "Compare package versions, manifests or lockfiles", phase: 9, check: "capability diff 1.0.0 -> 1.0.1; lockfile diff", status: todo, evidence: ""}
+  - {id: D2-2.3, text: "Identify suspicious scripts, provenance gaps or integrity changes", phase: 9, check: "install-script, origin and integrity findings", status: todo, evidence: ""}
+  - {id: D2-2.4, text: "Clearly separate verified evidence from AI-generated inference", phase: 5, check: "Verified facts / AI assessment columns in UI + report; ledger tests (agents cannot write facts)", status: todo, evidence: ""}
+  - {id: D2-3.1, text: "Recommend: upgrade / replace or remove / pin / update base image / block / escalate", phase: 10, check: "candidate list covers these kinds", status: todo, evidence: ""}
+  - {id: D2-3.2, text: "Include expected risk reduction, compatibility impact and rollback option", phase: 10, check: "plan fields populated", status: todo, evidence: ""}
+  - {id: D2-4.1, text: "Apply the remediation in a controlled branch or sandbox", phase: 11, check: "throwaway clone under runs/<id>/work/, branch guardian/fix-*; ./target untouched", status: todo, evidence: ""}
+  - {id: D2-4.2, text: "Build the application", phase: 11, check: "build check with log evidence", status: todo, evidence: ""}
+  - {id: D2-4.3, text: "Run unit and integration tests", phase: 11, check: "baseline + post-fix smoke test with several route checks (goof ships no unit tests; say so)", status: todo, evidence: ""}
+  - {id: D2-4.4, text: "Rescan the resulting artifact", phase: 11, check: "rescan check", status: todo, evidence: ""}
+  - {id: D2-4.5, text: "Compare before-and-after SBOM", phase: 11, check: "sbom_diff check; sbom.after.cdx.json", status: todo, evidence: ""}
+  - {id: D2-4.6, text: "Detect newly introduced vulnerabilities or dependencies", phase: 11, check: "new_findings check; the failed first candidate in the loop", status: todo, evidence: ""}
+  - {id: D2-5.1, text: "Report: original finding and supporting evidence", phase: 12, check: "report section", status: todo, evidence: ""}
+  - {id: D2-5.2, text: "Report: recommended and approved action", phase: 12, check: "report section with approver + plan hash", status: todo, evidence: ""}
+  - {id: D2-5.3, text: "Report: build and test results", phase: 12, check: "report section", status: todo, evidence: ""}
+  - {id: D2-5.4, text: "Report: before-and-after risk status", phase: 12, check: "report section", status: todo, evidence: ""}
+  - {id: D2-5.5, text: "Report: remaining or accepted risk", phase: 12, check: "report section", status: todo, evidence: ""}
+  - {id: D2-5.6, text: "Report: final confidence and audit trail", phase: 12, check: "report section + guardian audit verify", status: todo, evidence: ""}
+  - {id: D2-FLOW, text: "Prioritized Risk -> Recommended Fix -> Human Approval -> Build & Test -> Rescan -> Verified Remediation", phase: 15, check: "e2e test + demo rehearsal", status: todo, evidence: ""}
+
+rules:
+  - {id: R-1, text: "Free, open-source application from a public repository", check: "README names snyk-labs/nodejs-goof, commit, Apache-2.0", status: todo, evidence: ""}
+  - {id: R-2, text: "Realistic dependency tree with direct and transitive dependencies", check: "component counts in README", status: todo, evidence: ""}
+  - {id: R-3, text: "Containerized and runnable locally", check: "smoke test passes", status: todo, evidence: ""}
+  - {id: R-4, text: "Build, test and scan locally", check: "phase 0 + phase 11", status: todo, evidence: ""}
+  - {id: R-5, text: "Document repository, setup steps, dependencies and tools used", check: "README sections", status: todo, evidence: ""}
+  - {id: R-6, text: "No scanning or attacking real production systems", check: "tools only take paths under ./target or the run dir; app bound to 127.0.0.1; hook blocks common network scanners", status: todo, evidence: ""}
+  - {id: R-7, text: "No access outside the authorized sandbox", check: "read-only public advisory/registry lookups only; documented list of hosts", status: todo, evidence: ""}
+  - {id: R-8, text: "No publishing malicious or modified packages to public registries", check: "seeds are private file: tarballs; hook blocks publish", status: todo, evidence: ""}
+  - {id: R-9, text: "No real credentials, secrets or access tokens exposed or used", check: "redaction tests; grep runs/ for key patterns", status: todo, evidence: ""}
+  - {id: R-10, text: "No automatic merge, deploy or release without human approval", check: "approval-hash test; target has no git remote; no code path pushes or opens a PR; hook blocks git push and gh pr", status: todo, evidence: ""}
+  - {id: R-11, text: "No impact on other teams or shared infrastructure", check: "everything local; unique compose project names", status: todo, evidence: ""}
+
+deliverables:
+  - {id: DEL-1, text: "Working prototype demonstrating the complete Guardian workflow", check: "e2e test", status: todo, evidence: ""}
+  - {id: DEL-2, text: "Architecture overview: agents, tools, data sources, AI interactions, approval points, evidence storage", check: "docs/ARCHITECTURE.md + exported diagram", status: todo, evidence: ""}
+  - {id: DEL-3, text: "Source code, configuration, setup instructions, sample policies, prompts, known limitations", check: "README, guardian.toml, policy/, guardian/agents/prompts/, docs/KNOWN_LIMITATIONS.md", status: todo, evidence: ""}
+  - {id: DEL-4, text: "Live demonstration: discovery, detection, prioritization, remediation, approval, validation", check: "demo/RUNBOOK.md + recorded replay", status: todo, evidence: ""}
+  - {id: DEL-5, text: "Guardian report, human-readable and machine-readable, with all five listed contents", check: "guardian report <run>", status: todo, evidence: ""}
+  - {id: DEL-6, text: "Responsible AI & security note", check: "docs/RESPONSIBLE_AI.md with pointers to code/tests", status: todo, evidence: ""}
+
+stretch:
+  - {id: S-1, text: "Reachability analysis adjusts risk priority", phase: 8, check: "tiers + file:line witness; VEX only for human-confirmed not-affected", status: todo, evidence: ""}
+  - {id: S-2, text: "Automated remediation: update or PR with fix, rationale, validation, rollback", phase: 13, check: "guardian pr writes a patch file + PR text to disk (opens nothing)", status: todo, evidence: ""}
+  - {id: S-3, text: "Provenance verification (Cosign, Sigstore, in-toto, SLSA)", phase: 13, check: "guardian provenance on one signed image", status: todo, evidence: ""}
+  - {id: S-4, text: "Advanced package risk detection", phase: 13, check: "capability diff (real) + packument anomalies (synthetic fixture)", status: todo, evidence: ""}
+  - {id: S-5, text: "Policy-as-code (OPA, Conftest)", phase: 10, check: "gate fails on head (new violations), passes on the fixed state; conftest verify green", status: todo, evidence: ""}
+  - {id: S-6, text: "Continuous monitoring and automatic reassessment", phase: 13, check: "guardian monitor --as-of replay", status: todo, evidence: ""}

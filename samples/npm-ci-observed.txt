@@ -1,0 +1,26 @@
+# Observed 2026-11-23, npm 10.9.9 / node v22.23.5, registry unreachable (DNS), so --offline.
+# 1) Pruned copy of the tampered lockfile (only root + node_modules/lodahs + legacy dependencies.lodahs, entries copied verbatim)
+$ npm ci --offline --no-audit --no-fund
+added 1 package in 175ms                      # exit 0, wall 0.22s
+$ cat /tmp/guardian-demo-postinstall.txt
+DEMO: postinstall executed at 2026-11-23T07:54:12.588Z; would-have-targeted 13 env var NAMES (values never read); collector http://collector.example.invalid/ingest was NOT contacted.
+$ node -e "console.log(require('lodahs').trim('  hi  '))"
+hi
+$ npm ci --offline --no-audit --no-fund --ignore-scripts      # second copy
+added 1 package in 188ms                      # marker file mtime unchanged -> postinstall skipped; require('lodahs') still works
+# 2) Same pruned lockfile with integrity replaced by sha512-AAAA...==
+$ npm ci --offline --no-audit --no-fund
+npm warn tarball tarball data for lodahs@file:<workdir>/vendor/lodahs-4.17.21.tgz (sha512-AAAA...==) seems to be corrupted. Trying again.
+npm error code EINTEGRITY
+npm error sha512-AAAA...== integrity checksum failed when using sha512: wanted sha512-AAAA...== but got sha512-YxXxT8/Oo3dO/Ov/ZkECf+JIv+ePpAYXGijqiVChzpAP6z+rFFV8//0jN48jYhnEYv3jNvU6tOpmH+6bANfs2g==. (956 bytes)
+# 3) Full tampered tree and full tampered-integrity tree (NOT verifiable here)
+$ npm ci --no-audit --no-fund --ignore-scripts
+npm error network request to https://registry.npmjs.org/nyc/-/nyc-11.9.0.tgz failed, reason: getaddrinfo ENOTFOUND registry.npmjs.org
+$ npm ci --offline --no-audit --no-fund --ignore-scripts
+npm error code ENOTCACHED
+npm error request to https://registry.npmjs.org/nyc/-/nyc-11.9.0.tgz failed: cache mode is 'only-if-cached' but no cached response is available.
+# 4) npm explain needs an installed tree
+$ npm explain lodahs --package-lock-only        # no node_modules present
+npm error No dependencies found matching lodahs
+$ docker build -t guardian-probe .
+ERROR: failed to connect to the docker API at unix:///var/run/docker.sock ... no such file or directory

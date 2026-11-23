@@ -1,0 +1,166 @@
+# Ground truth for the seeded demo target (scripts/make_demo_target.sh).
+# `guardian scorecard` compares a run's findings against this file and prints
+# detected / missed / unexpected, so the team can show recall live instead of claiming it.
+#
+# status: seeded   = planted by make_demo_target.sh, verified present in the generated repo
+#         upstream = already in snyk-labs/nodejs-goof at the pinned commit
+#         expected = believed true, MUST be confirmed on Day 1 (then change to confirmed)
+#
+# Matching rule for the scorecard: a ground-truth entry counts as detected when a finding
+# exists with the same `type` whose component purl / file matches `component` (name and
+# version, or file path). `changes` entries must additionally have new_in_head = true.
+# `preexisting` entries must have new_in_head = false. With base == head there are no
+# `changes` findings at all, but `preexisting` ones are still reported.
+#
+# Hold-outs: this file lists the seeds the detectors may be developed against. After the
+# detectors are frozen (end of phase 7), add two more seeds from docs/research/03 section 4
+# that the detectors have never seen and report that result unedited. That hold-out number,
+# and the run on a second application, are the honest measure; this file alone is not.
+
+target:
+  upstream: https://github.com/snyk-labs/nodejs-goof
+  commit: add14ba59e98240d9e00a235dd7d42cd61ae9912
+  base_ref: guardian-baseline
+  head_ref: tampered
+
+changes:            # what the "what changed?" view must show (base_ref -> head_ref)
+  - id: GT-C1
+    status: seeded
+    type: typosquat
+    component: pkg:npm/lodahs@4.17.21
+    file: package.json, package-lock.json, vendor/lodahs-4.17.21.tgz
+    commit_subject: "feat: add string helper utility"
+    signals:
+      - name is one transposition away from lodash, which is already a direct dependency
+      - resolved from a file: tarball, not the npm registry
+      - version string copies the popular package's latest 4.x version
+    mirrors: "npm typosquats of lodash/crossenv style; look-alike of a top-10 package"
+    safe_fix: remove the dependency and its require() line
+  - id: GT-C2
+    status: seeded
+    type: unsafe_install_script
+    component: pkg:npm/lodahs@4.17.21
+    file: vendor/lodahs-4.17.21.tgz -> package/scripts/setup.js
+    signals:
+      - postinstall script
+      - enumerates environment variable names matching TOKEN|SECRET|KEY|PASSWORD
+      - contains a hard-coded http:// collector URL
+      - writes to the temp directory
+    note: harmless by construction; never contacts the network
+  - id: GT-C3
+    status: seeded
+    type: unexpected_dependency
+    component: pkg:npm/lodahs@4.17.21
+    signals:
+      - new direct dependency introduced together with a new require() in routes/index.js
+      - the imported binding (strutil) is never used
+  - id: GT-C4
+    status: seeded
+    type: untrusted_image
+    component: Dockerfile FROM node:18
+    commit_subject: "chore: use node 18 base image"
+    signals:
+      - floating major tag, no digest
+      - changed from an exact version (node:18.13.0) to a floating one
+    safe_fix: pin an official image by digest
+  - id: GT-C5
+    status: seeded
+    type: unpinned_ci_component
+    component: tj-actions/changed-files@v45
+    file: .github/workflows/changed-files.yml
+    signals:
+      - third-party action referenced by mutable tag, not a commit SHA
+      - action has a published compromise advisory (CVE-2025-30066) - confirm with OSV/GHSA on Day 1
+    mirrors: "tj-actions/changed-files compromise, March 2025"
+    safe_fix: remove the workflow or pin to a reviewed full-length commit SHA
+  - id: GT-C6
+    status: seeded
+    type: unsafe_ci_pattern
+    component: .github/workflows/changed-files.yml
+    signals:
+      - "permissions: write-all"
+      - "curl ... | bash from a remote host"
+  - id: GT-C7
+    status: seeded
+    type: suspicious_update
+    component: pkg:npm/guardian-demo-strfmt@1.0.1   # was 1.0.0 on base_ref
+    commit_subject: "chore: bump guardian-demo-strfmt to 1.0.1"
+    signals:
+      - patch release adds a preinstall script (node setup.mjs)
+      - new file math_init.js is ~99 KB on a single base64 line
+      - tarball size grows about 5x
+      - new reference to a remote URL in setup.mjs
+    mirrors: "2025-2026 npm worm droppers (preinstall + setup script + large payload file)"
+    safe_fix: pin back to 1.0.0 and block the 1.0.1 hash by policy
+
+optional_changes:   # only on branch tampered-integrity (static analysis; npm ci fails on purpose)
+  - id: GT-O1
+    status: seeded
+    type: integrity_change
+    component: pkg:npm/lodash@4.17.4
+    signals:
+      - lockfile integrity differs from base_ref for the same name@version
+      - lockfile integrity differs from the registry's dist.integrity / dist.shasum
+
+preexisting:        # risks already in upstream goof; good material for Day 1 and Day 2
+  - id: GT-P1
+    status: upstream
+    type: unpinned_ci_component
+    component: snyk/actions/setup@master
+    file: .github/workflows/*.yml
+  - id: GT-P2
+    status: upstream
+    type: lockfile_drift
+    component: Dockerfile
+    signals:
+      - "RUN npm update followed by npm install: the image does not install from the lockfile"
+  - id: GT-P3
+    status: upstream
+    type: lockfile_drift
+    component: package.json
+    signals:
+      - "dependencies declared as `latest` (method-override, morgan): the manifest does not pin what the lockfile resolved"
+  - id: GT-P4
+    status: upstream
+    type: untrusted_image
+    component: docker-compose.yml
+    signals:
+      - "mongo:3 and mysql:5 are end-of-life major tags without digests"
+
+vulnerabilities:    # anchors for prioritisation. Counts are NOT asserted here; measure them.
+  - id: GT-V1
+    status: expected
+    component: pkg:npm/lodash@4.17.4
+    advisories: []   # FILL ON DAY 1 from OSV: the lodash prototype-pollution advisories that name
+                     # `merge` (believed to be CVE-2018-3721 / CVE-2018-16487; NOT confirmed).
+                     # CVE-2019-10744 is the `defaultsDeep` advisory: do not pair it with this
+                     # call site unless the advisory text says merge is affected.
+    reachability: "routes/index.js calls _.merge(message, req.body.message, ...) with request data (line 362 at the seeded commit; verified by grep when this kit was built)"
+    purpose: the "reachable from user input, prod, fix available" example
+  - id: GT-V2
+    status: expected
+    component: pkg:npm/marked@0.3.5
+    reachability: "imported in app.js and used to render user-supplied todo text"
+    purpose: the "reachable from user input" example
+  - id: GT-V3
+    status: expected
+    component: "a vulnerable package that no application file imports (candidates: npmconf, tap)"
+    reachability: "not require()d by any application file at the pinned commit; verify with the import graph. Do not use cfenv (imported by mongoose-db.js) or mysql (loaded dynamically by typeorm)."
+    purpose: the "high CVSS but not reachable -> ranked low, VEX not_affected CANDIDATE pending human confirmation" example
+  - id: GT-V4
+    status: expected
+    component: "a vulnerability that exists only under devDependencies (browserify, nodemon, snyk)"
+    purpose: the "dev-only -> lower exposure" example
+
+negative_controls:  # things that must NOT be flagged as anomalies (shows precision)
+  - id: GT-N1
+    component: pkg:npm/lodash@4.17.4
+    must_not_have: typosquat
+  - id: GT-N2
+    component: pkg:npm/guardian-demo-strfmt@1.0.0
+    ref: guardian-baseline
+    must_not_have: [unsafe_install_script, suspicious_update]
+  - id: GT-N3
+    component: actions/checkout
+    must_not_have: known_malicious
+    note: "being tag-pinned (@v3) is still a valid low-severity unpinned_ci_component finding"

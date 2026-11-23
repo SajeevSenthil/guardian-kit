@@ -1,0 +1,11 @@
+{
+  "name": "lodahs",
+  "version": "4.17.21",
+  "description": "DEMO ONLY - harmless look-alike of lodash used to exercise the Supply Chain Guardian. Never publish.",
+  "main": "index.js",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "postinstall": "node scripts/setup.js"
+  }
+}

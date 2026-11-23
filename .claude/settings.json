@@ -1,0 +1,54 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv run pytest *)",
+      "Bash(uv run ruff *)",
+      "Bash(uv run guardian *)",
+      "Bash(uv sync *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git show *)",
+      "Bash(git worktree *)",
+      "Bash(syft *)",
+      "Bash(grype *)",
+      "Bash(osv-scanner *)",
+      "Bash(trivy *)",
+      "Bash(hadolint *)",
+      "Bash(zizmor *)",
+      "Bash(conftest *)",
+      "Bash(semgrep *)"
+    ],
+    "ask": [
+      "Bash(uv add *)",
+      "Bash(docker *)",
+      "Bash(npm install *)",
+      "Bash(npm ci *)",
+      "Bash(gh *)"
+    ],
+    "deny": [
+      "Bash(npm publish *)",
+      "Bash(git push *)",
+      "Bash(docker push *)",
+      "Bash(gh pr merge *)",
+      "Read(./.env)",
+      "Read(./.env.*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/block_out_of_scope.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

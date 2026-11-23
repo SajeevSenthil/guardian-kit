@@ -1,0 +1,52 @@
+# Guardian configuration (starter). Loaded by guardian/config.py.
+
+[run]
+default_mode = "live"            # live | replay | offline
+top_n_for_agents = 10            # findings sent to Risk Analyst + Refuter
+agent_concurrency = 3
+
+[models]                         # aliases keep this portable; pin full ids for the final demo
+change_detective = "sonnet"
+risk_analyst = "sonnet"
+refuter = "opus"                 # deliberately a different model from the analyst
+remediation_planner = "sonnet"
+diagnostician = "sonnet"
+reporter = "haiku"               # optional stretch agent (phase 13)
+
+[score.weights]                  # must sum to 100
+severity = 30
+exploitability = 25
+reachability = 20
+exposure = 15
+fix_availability = 10
+
+[score.priors]                   # used when a factor is unknown (never zero)
+severity = 0.6
+exploitability = 0.4
+reachability = 0.5
+exposure = 0.6
+fix_availability = 0.6
+
+[score.bands]
+critical = 85
+high = 65
+medium = 40
+low = 15
+
+[context]                        # application context the team asserts (shown as an assumption)
+internet_facing = true
+service_name = "goof"
+
+[trust]
+npm_registries = ["https://registry.npmjs.org/"]
+image_registries = ["docker.io/library"]
+allowed_install_scripts = []     # package names whose install scripts a human reviewed
+popular_names_path = "guardian/data/popular_npm_names.txt"
+api_hosts = ["api.osv.dev", "api.first.org", "www.cisa.gov", "registry.npmjs.org", "api.npmjs.org", "api.deps.dev"]
+min_release_age_days = 7         # cool-down for brand-new versions
+
+[limits]
+tool_timeout_s = 180
+build_timeout_s = 600
+agent_max_turns = 12
+agent_max_budget_usd = 0.60

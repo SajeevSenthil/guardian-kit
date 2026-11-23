@@ -1,0 +1,115 @@
+{
+ "_note": "trimmed sample of scripts/lockfile_sbom_diff.py sbom <tampered> (981 components, 982 dependency nodes in the full file)",
+ "bomFormat": "CycloneDX",
+ "specVersion": "1.5",
+ "version": 1,
+ "metadata": {
+  "tools": [
+   {
+    "name": "guardian-lockfile-sbom",
+    "version": "0.1"
+   }
+  ],
+  "component": {
+   "type": "application",
+   "bom-ref": "pkg:npm/goof@1.0.1",
+   "name": "goof",
+   "version": "1.0.1"
+  }
+ },
+ "components": [
+  {
+   "type": "library",
+   "bom-ref": "pkg:npm/lodahs@4.17.21",
+   "name": "lodahs",
+   "version": "4.17.21",
+   "purl": "pkg:npm/lodahs@4.17.21",
+   "scope": "required",
+   "properties": [
+    {
+     "name": "guardian:lockPath",
+     "value": "node_modules/lodahs"
+    },
+    {
+     "name": "guardian:resolved",
+     "value": "file:vendor/lodahs-4.17.21.tgz"
+    },
+    {
+     "name": "guardian:registrySource",
+     "value": "false"
+    },
+    {
+     "name": "guardian:hasInstallScript",
+     "value": "true"
+    },
+    {
+     "name": "guardian:integrity",
+     "value": "sha512-YxXxT8/Oo3dO/Ov/ZkECf+JIv+ePpAYXGijqiVChzpAP6z+rFFV8//0jN48jYhnEYv3jNvU6tOpmH+6bANfs2g=="
+    },
+    {
+     "name": "guardian:dev",
+     "value": "false"
+    }
+   ]
+  },
+  {
+   "type": "library",
+   "bom-ref": "pkg:npm/lodash@4.17.4",
+   "name": "lodash",
+   "version": "4.17.4",
+   "purl": "pkg:npm/lodash@4.17.4",
+   "scope": "required",
+   "properties": [
+    {
+     "name": "guardian:lockPath",
+     "value": "node_modules/lodash"
+    },
+    {
+     "name": "guardian:resolved",
+     "value": "https://registry.npmjs.org/lodash/-/lodash-4.17.4.tgz"
+    },
+    {
+     "name": "guardian:registrySource",
+     "value": "true"
+    },
+    {
+     "name": "guardian:hasInstallScript",
+     "value": "false"
+    },
+    {
+     "name": "guardian:integrity",
+     "value": "sha1-eCA6TRwyiuHYbcpkYONptX9AVa4="
+    },
+    {
+     "name": "guardian:dev",
+     "value": "false"
+    }
+   ],
+   "externalReferences": [
+    {
+     "type": "distribution",
+     "url": "https://registry.npmjs.org/lodash/-/lodash-4.17.4.tgz"
+    }
+   ]
+  }
+ ],
+ "dependencies": [
+  {
+   "ref": "pkg:npm/goof@1.0.1",
+   "dependsOn": [
+    "pkg:npm/lodahs@4.17.21",
+    "pkg:npm/lodash@4.17.4",
+    "pkg:npm/adm-zip@0.4.7",
+    "pkg:npm/body-parser@1.9.0",
+    "pkg:npm/browserify@13.3.0",
+    "pkg:npm/cfenv@1.2.2",
+    "pkg:npm/consolidate@0.14.5",
+    "...trimmed"
+   ]
+  },
+  {
+   "ref": "pkg:npm/lodahs@4.17.21",
+   "dependsOn": []
+  }
+ ]
+}

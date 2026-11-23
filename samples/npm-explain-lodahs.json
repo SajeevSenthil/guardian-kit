@@ -1,0 +1,24 @@
+[
+  {
+    "name": "lodahs",
+    "version": "4.17.21",
+    "location": "node_modules/lodahs",
+    "isWorkspace": false,
+    "dependents": [
+      {
+        "type": "prod",
+        "name": "lodahs",
+        "spec": "file:vendor/lodahs-4.17.21.tgz",
+        "from": {
+          "location": "<workdir>/min-scripts"
+        }
+      }
+    ],
+    "dev": false,
+    "optional": false,
+    "devOptional": false,
+    "peer": false,
+    "bundled": false,
+    "overridden": false
+  }
+]
