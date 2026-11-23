@@ -61,6 +61,30 @@ table.kv td:first-child{color:var(--muted);width:150px}
 .claim{font-size:13px;font-weight:700;letter-spacing:.05em;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px}
 .back{font:inherit;font-size:17px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:4px 12px;cursor:pointer}
 .warn{background:#fff3cd;color:#5c4400;border-radius:8px;padding:8px 12px;margin:8px 0}
+aside a{color:#1a5fd0;font-weight:600}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) aside a{color:#8ab4ff} }
+:root[data-theme="dark"] aside a{color:#8ab4ff}
+.tabs{flex-wrap:wrap;align-items:stretch}
+.tab .n{font-weight:500;color:var(--muted);font-size:16px;margin-left:4px}
+.sep{width:2px;background:var(--line);margin:10px 8px}
+.search{font:inherit;font-size:18px;width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);margin:6px 0 10px}
+.fbar{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px}
+.fbtn{font:inherit;font-size:16px;padding:4px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.fbtn.on{background:var(--app);color:#fff;border-color:var(--app)}
+details.grp{border:1px solid var(--line);border-radius:8px;margin:6px 0}
+details.grp>summary{cursor:pointer;padding:8px 12px;font-weight:600;font-size:18px}
+details.grp>div{padding:0 8px 8px}
+.row{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;padding:6px 8px;border-radius:6px;cursor:pointer;border-left:6px solid transparent}
+.row:hover{background:var(--chip)}
+.row.r-critical{border-left-color:var(--crit)} .row.r-high{border-left-color:var(--high)} .row.r-medium{border-left-color:var(--med)} .row.r-low{border-left-color:var(--low)} .row.r-sus{border-left-color:var(--red)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}
+.chip{font-family:ui-monospace,Consolas,monospace;font-size:15px;background:var(--chip);border:1px solid var(--line);border-radius:6px;padding:2px 8px;cursor:pointer}
+.chip:hover{border-color:var(--app)}
+.trace{border:2px solid var(--app);border-radius:10px;padding:10px 12px;margin:10px 0}
+.trace .path{font-size:18px}
+.bars{display:grid;grid-template-columns:110px 1fr 60px;gap:4px 10px;align-items:center;font-size:17px}
+.bars .bar{height:16px;background:var(--app);border-radius:4px}
+.hint{font-size:16px;color:var(--muted);margin:2px 0 8px}
 @media (max-width:900px){ main{flex-direction:column;height:auto} #graphwrap{height:60vh;flex:none} aside{max-width:none} }
 </style>
 </head>
@@ -72,6 +96,11 @@ table.kv td:first-child{color:var(--muted);width:150px}
     <button class="tab on" data-tab="in">What is in it</button>
     <button class="tab" data-tab="changed">What changed</button>
     <button class="tab" data-tab="risky">What is risky</button>
+    <span class="sep"></span>
+    <button class="tab" data-tab="direct">Direct</button>
+    <button class="tab" data-tab="transitive">Transitive</button>
+    <button class="tab" data-tab="vulns">Vulnerabilities</button>
+    <button class="tab" data-tab="sabotage">Sabotage</button>
   </nav>
 </header>
 <main>
@@ -161,8 +190,30 @@ D.nodes.forEach(n => { if (status(n)==="sus" && n.path) for (let i=1;i<n.path.le
 const nodesDS = new vis.DataSet(), edgesDS = new vis.DataSet();
 let net, mode = "focus", coreIds = null;
 function fitCore(){ net.fit(coreIds ? {nodes: coreIds, animation:false} : {animation:false}); }
+function edgeStyle(a,b){ const hot = susEdges.has(a+"→"+b);
+  return {color:{color: hot ? colors().sus : css("--grey"), opacity: hot ? 1 : .35}, width: hot ? 5 : 1}; }
+// packages opened from a list stay visible (with their full path) in the focused views
+const extra = new Set();
+let hlEdges = [], hlNodes = new Set();
+function ensureVisible(id){
+  if (nodesDS.get(id)) return false;
+  (N[id].path || [id]).forEach(p => extra.add(p));
+  render(); return true;
+}
+// highlight the dependency path app → … → id in blue, and label every node on it
+function highlightPath(id){
+  hlEdges.forEach(eid => { if (edgesDS.get(eid)) { const [a,b] = eid.split("→"); edgesDS.update({id:eid, ...edgeStyle(a,b)}); } });
+  hlNodes.forEach(nid => { const n = N[nid]; if (n && !hasLabel(n) && nodesDS.get(nid)) nodesDS.update({id:nid, label: undefined}); });
+  hlEdges = []; hlNodes = new Set();
+  const p = N[id] && N[id].path; if (!p) return;
+  for (let i = 0; i < p.length; i++){
+    if (nodesDS.get(p[i])) { hlNodes.add(p[i]); if (!hasLabel(N[p[i]])) nodesDS.update({id:p[i], label: fullLabel(N[p[i]])}); }
+    if (i > 0) { const eid = p[i-1]+"→"+p[i]; if (edgesDS.get(eid)) { edgesDS.update({id:eid, color:{color:css("--app"), opacity:1}, width:8}); hlEdges.push(eid); } }
+  }
+}
 function render(){
   const keep = mode==="focus" ? focusSet(false) : mode==="vulns" ? focusSet(true) : null;
+  if (keep) extra.forEach(x => keep.add(x));
   const ns = D.nodes.filter(n => !keep || keep.has(n.id));
   const ids = new Set(ns.map(n => n.id));
   nodesDS.clear(); edgesDS.clear();
@@ -184,11 +235,9 @@ function render(){
   })("", -Math.PI, Math.PI, 0);
   ns.forEach(n => { if (!pos[n.id]) pos[n.id] = {x: 0, y: r1*3}; });
   nodesDS.add(ns.map(n => ({...visNode(n), x: pos[n.id].x, y: pos[n.id].y})));
-  edgesDS.add(D.edges.filter(([a,b]) => ids.has(a) && ids.has(b)).map(([a,b],i) => {
-    const hot = susEdges.has(a+"→"+b);
-    return {id:a+"→"+b, from:a, to:b, arrows:{to:{enabled:true, scaleFactor:.5}},
-            color:{color: hot ? colors().sus : css("--grey"), opacity: hot ? 1 : .35}, width: hot ? 5 : 1};
-  }));
+  edgesDS.add(D.edges.filter(([a,b]) => ids.has(a) && ids.has(b)).map(([a,b]) =>
+    ({id:a+"→"+b, from:a, to:b, arrows:{to:{enabled:true, scaleFactor:.5}}, ...edgeStyle(a,b)})));
+  hlEdges = []; hlNodes = new Set();
   coreIds = mode==="all" ? null : ns.filter(n => n.kind==="app" || (n.path && n.path.length<=2) || status(n)==="sus").map(n => n.id);
   setTimeout(fitCore, 0);
 }
@@ -198,8 +247,8 @@ net = new vis.Network($("#graph"), {nodes:nodesDS, edges:edgesDS}, {
 });
 net.on("click", p => { if (p.nodes.length) showNode(p.nodes[0]); });
 net.on("hoverNode", p => { const n = N[p.node]; if (n && !hasLabel(n)) nodesDS.update({id: n.id, label: fullLabel(n)}); });
-net.on("blurNode", p => { const n = N[p.node]; if (n && !hasLabel(n)) nodesDS.update({id: n.id, label: undefined}); });
-function setMode(m){ mode=m; [["focus","#vFocus"],["vulns","#vVul"],["all","#vAll"]].forEach(([k,s]) => $(s).classList.toggle("on", k===m)); render(); }
+net.on("blurNode", p => { const n = N[p.node]; if (n && !hasLabel(n) && !hlNodes.has(n.id)) nodesDS.update({id: n.id, label: undefined}); });
+function setMode(m){ mode=m; extra.clear(); [["focus","#vFocus"],["vulns","#vVul"],["all","#vAll"]].forEach(([k,s]) => $(s).classList.toggle("on", k===m)); render(); }
 $("#vFocus").onclick = () => setMode("focus");
 $("#vVul").onclick = () => setMode("vulns");
 $("#vAll").onclick = () => setMode("all");
@@ -223,15 +272,41 @@ function findingHTML(f, full){
   </div>`;
 }
 function bindItems(){
-  document.querySelectorAll("#side .item[data-node]").forEach(el => el.onclick = () => {
+  document.querySelectorAll("#side [data-node]").forEach(el => el.onclick = ev => {
+    ev.stopPropagation();
     const id = el.dataset.node; if (!(id in N)) return;
-    if (!nodesDS.get(id)) { $("#vAll").onclick(); }
-    showNode(id);
+    if (ensureVisible(id)) setTimeout(() => showNode(id), 40); else showNode(id);
   });
 }
+// ---- dependency relationships (for tracing transitive packages)
+const PARENTS = {}, CHILDREN = {}, VIA = {};
+D.edges.forEach(([a,b]) => { (PARENTS[b] = PARENTS[b] || []).push(a); (CHILDREN[a] = CHILDREN[a] || []).push(b); });
+const PKGS = D.nodes.filter(n => n.kind==="pkg");
+PKGS.forEach(n => { if (!n.direct) { const k = n.path && n.path.length > 2 ? n.path[1] : "(none)"; (VIA[k] = VIA[k] || []).push(n.id); } });
+const label = id => N[id] ? fullLabel(N[id]) : id;
+const chip = id => `<span class="chip" data-node="${esc(id)}">${esc(label(id))}</span>`;
+const vulnCount = n => (n.vulns || []).length;
+// unique (package, advisory) vulnerability pairs; highest risk across install paths
+const VP = {};
+D.findings.filter(f => f.type==="known_vulnerability").forEach(f => {
+  const k = f.component + "|" + f.advisory;
+  const v = VP[k] ??= {f, risk: f.risk, nodes: []};
+  if (RO[f.risk] < RO[v.risk]) v.risk = f.risk;
+  v.nodes.push(f.nodeId);
+});
+const VPL = Object.values(VP).map(v => {
+  v.nodes.sort((a,b) => (N[a].path||[]).length - (N[b].path||[]).length);
+  v.direct = v.nodes.some(id => N[id].direct); return v;
+}).sort((a,b) => RO[a.risk]-RO[b.risk] || a.f.component.localeCompare(b.f.component));
 function showNode(id){
   const n = N[id]; if (!n) return;
-  try { net.selectNodes([id]); net.focus(id, {scale:1.1, animation:{duration:400}}); } catch(e) {}
+  highlightPath(id);
+  try {
+    net.selectNodes([id]);
+    const onPath = (n.path || []).filter(p => nodesDS.get(p));
+    if (onPath.length > 2) net.fit({nodes: onPath, animation:false});   // frame the whole app → package path
+    else net.focus(id, {scale:1.0, animation:{duration:400}});
+  } catch(e) {}
   const fs = nodeFindings(n).sort((a,b) => RO[a.risk]-RO[b.risk]);
   const pathNames = (n.path||[]).map(p => N[p].kind==="pkg" ? `${N[p].name}@${N[p].version}` : N[p].name);
   $("#side").innerHTML = `<button class="back" id="back">← back to list</button>
@@ -248,11 +323,54 @@ function showNode(id){
      `<tr><td>kind</td><td>${n.kind==="app" ? "application root" : "repository file"}</td></tr>
       <tr><td>since baseline</td><td>${n.isNew ? "<b>new</b>" : n.changed ? "<b>changed</b>" : "unchanged"}</td></tr>`}
    </table>
-   <h3>dependency path</h3>${pathHTML(pathNames)}
+   ${traceHTML(n, pathNames)}
    <h3>findings (${fs.length})</h3>
    ${fs.length ? fs.map(f => findingHTML(f, true)).join("") : `<div class="muted">No findings for this component.${n.vulnStatus && n.vulnStatus!=="evaluated" ? " Vulnerabilities: " + esc(n.vulnStatus) + " — this is unknown, not clean." : ""}</div>`}`;
   $("#back").onclick = () => showTab(curTab);
 }
+function traceHTML(n, pathNames){
+  const par = (PARENTS[n.id] || []), kids = (CHILDREN[n.id] || []);
+  const cap = (a, k) => a.slice(0, k).map(chip).join("") + (a.length > k ? `<span class="muted">+${a.length-k} more</span>` : "");
+  if (n.kind==="app") return `<div class="trace"><b>The application root.</b> It declares ${kids.filter(k => N[k].kind==="pkg").length} direct dependencies; everything else is transitive.</div>`;
+  if (n.kind==="file") return `<h3>dependency path</h3>${pathHTML(pathNames)}`;
+  const depth = n.path ? n.path.length - 1 : null;
+  let how;
+  if (!n.path) how = `<b>Not reachable from the app</b> through the lockfile's dependency edges.`;
+  else if (n.direct) {
+    const sub = VIA[n.id] || [], vul = sub.filter(id => vulnCount(N[id]) > 0).length;
+    how = `<b>Direct dependency:</b> the app's package.json asks for it.<br>It brings in <b>${sub.length}</b> transitive install path(s)${sub.length ? `, <b>${vul}</b> of them with known vulnerabilities` : ""}.`;
+  } else {
+    how = `<b>Transitive dependency</b> (${depth} steps from the app). The app never asked for it:<br>it is brought in by the direct dependency ${chip(n.path[1])}${n.path.length > 3 ? `, via ${n.path.slice(2, -1).map(chip).join(" → ")}` : ""}.`;
+  }
+  return `<div class="trace">${how}
+     <h3 style="margin-top:10px">dependency path <span class="muted" style="text-transform:none">(highlighted in blue on the graph)</span></h3>${pathHTML(pathNames)}</div>
+   <h3>required by (${par.length}) <span class="muted" style="text-transform:none">packages that depend on this one</span></h3><div class="chips">${cap(par, 24)}</div>
+   <h3>depends on (${kids.length})</h3><div class="chips">${kids.length ? cap(kids, 24) : '<span class="muted">nothing (leaf package)</span>'}</div>`;
+}
+function searchBox(ph){ return `<input class="search" id="q" placeholder="${esc(ph)}" autocomplete="off">`; }
+function bindSearch(){
+  const q = $("#q"); if (!q) return;
+  q.oninput = () => {
+    const t = q.value.trim().toLowerCase();
+    document.querySelectorAll("#side [data-s]").forEach(el => el.style.display = !t || el.dataset.s.includes(t) ? "" : "none");
+    document.querySelectorAll("#side details.grp").forEach(g => {
+      const any = [...g.querySelectorAll("[data-s]")].some(el => el.style.display !== "none");
+      g.style.display = any ? "" : "none"; if (t) g.open = any;
+    });
+  };
+}
+const pkgRow = (n, extraHTML) => { const st = status(n);
+  return `<div class="row ${st==="sus" ? "r-sus" : st==="vuln" ? "r-medium" : ""}" data-node="${esc(n.id)}" data-s="${esc((n.name+"@"+n.version).toLowerCase())}">
+    <span class="comp">${esc(n.name)}@${esc(n.version)}</span>
+    ${n.dev ? '<span class="badge b-type">dev</span>' : '<span class="badge b-type">prod</span>'}${n.isNew ? '<span class="badge b-new">new</span>' : ""}${n.changed ? '<span class="badge b-new">changed</span>' : ""}
+    ${vulnCount(n) ? `<span class="badge b-medium">${vulnCount(n)} vuln</span>` : ""}${n.install ? '<span class="badge b-high">install script</span>' : ""}${!n.registry ? `<span class="muted">${n.resolved ? "non-registry" : "bundled (no origin)"}</span>` : ""}
+    ${extraHTML || ""}</div>`; };
+function vulnRow(v){ const f = v.f, n = N[v.nodes[0]], cve = (f.aliases||[]).find(a => a.startsWith("CVE")) || "";
+  return `<div class="row r-${v.risk}" data-node="${esc(v.nodes[0])}" data-s="${esc((f.component+" "+f.advisory+" "+cve).toLowerCase())}" data-risk="${v.risk}" data-scope="${v.direct ? "direct" : "transitive"}">
+    <span class="badge b-${v.risk}">${v.risk}</span><span class="comp">${esc(n.name)}@${esc(n.version)}</span>
+    <span class="badge b-type">${v.direct ? "direct" : "transitive"}</span>
+    <span class="muted">${esc(f.advisory)}${cve ? " · " + esc(cve) : ""} · fix: ${f.fixed && f.fixed.length ? esc(f.fixed.join(", ")) : "<b>none</b>"}${!v.direct && n.path ? " · via " + esc(label(n.path[1])) : ""}${v.nodes.length > 1 ? ` · ${v.nodes.length} install paths` : ""}</span>
+    <div style="flex-basis:100%;font-size:16px">${esc(f.title.slice(f.advisory.length + 1))}</div></div>`; }
 let curTab = "in";
 function showTab(t){
   curTab = t;
@@ -260,13 +378,61 @@ function showTab(t){
   const s = $("#side");
   const osvWarn = M.osv.status!=="evaluated" ? `<div class="warn">Vulnerabilities <b>not evaluated</b>: ${esc(M.osv.reason||"")}. This is unknown, not zero.</div>` : "";
   if (t==="in"){
-    const direct = D.nodes.filter(n => n.direct).sort((a,b) => a.name.localeCompare(b.name));
+    const depth = {}; PKGS.forEach(n => { const d = n.path ? n.path.length - 1 : "none"; depth[d] = (depth[d]||0) + 1; });
+    const dmax = Math.max(...Object.values(depth));
+    const reg = PKGS.filter(n => n.registry).length, loc = PKGS.filter(n => (n.resolved||"").startsWith("file:")).length, bun = PKGS.filter(n => !n.resolved).length;
     s.innerHTML = `<h2>What is in it</h2>${osvWarn}
-      <div class="muted">${fmt(C.packages)} packages (${fmt(C.install_paths)} install paths) from package-lock.json @ ${esc(M.head)}: ${C.direct} direct, ${C.transitive} transitive; install paths: ${C.prod} prod, ${C.dev} dev. CycloneDX SBOMs: sbom.base.cdx.json, sbom.head.cdx.json. Vulnerability data: OSV (${esc(M.osv.status)}${M.osv.advisories!=null ? ", " + M.osv.advisories + " advisories" : ""}).</div>
-      <h3>direct dependencies (${direct.length})</h3>
-      ${direct.map(n => { const st = status(n); return `<div class="item ${st==="sus"?"r-high":st==="vuln"?"r-medium":""}" data-node="${esc(n.id)}">
-        <span class="comp">${esc(n.name)}@${esc(n.version)}</span> ${n.dev ? '<span class="badge b-type">dev</span>' : ""}${n.isNew ? '<span class="badge b-new">new</span>' : ""}${n.changed ? '<span class="badge b-new">changed</span>' : ""}
-        ${n.vulns ? `<span class="muted"> · ${n.vulns.length} advisories</span>` : ""}${!n.registry ? '<span class="muted"> · non-registry origin</span>' : ""}</div>`; }).join("")}`;
+      <div class="muted">From package-lock.json @ ${esc(M.head)}. CycloneDX SBOMs: sbom.base.cdx.json, sbom.head.cdx.json.</div>
+      <table class="kv" style="margin-top:8px">
+        <tr><td>packages</td><td><b>${fmt(C.packages)}</b> unique name@version · ${fmt(C.install_paths)} install paths</td></tr>
+        <tr><td>direct</td><td><b>${C.direct}</b> (the app asks for them) · <a href="#" data-go="direct">Direct tab</a></td></tr>
+        <tr><td>transitive</td><td><b>${C.transitive}</b> (pulled in by other packages) · <a href="#" data-go="transitive">Transitive tab</a></td></tr>
+        <tr><td>scope</td><td>${C.prod} prod · ${C.dev} dev install paths</td></tr>
+        <tr><td>origin</td><td>${reg} npm registry · <b>${loc}</b> local file · ${bun} bundled (no origin)</td></tr>
+        <tr><td>install scripts</td><td>${PKGS.filter(n => n.install).length} install paths declare one</td></tr>
+        <tr><td>vulnerabilities</td><td>${M.osv.status==="evaluated" ? `<b>${C.vuln_pairs}</b> package–advisory pairs in ${C.vulnerable_packages} packages (${M.osv.advisories} unique advisories) · <a href="#" data-go="vulns">Vulnerabilities tab</a>` : "not evaluated"}</td></tr>
+      </table>
+      <h3>how deep the tree goes (install paths per level)</h3>
+      <div class="bars">${Object.keys(depth).sort((x,y) => (x==="none") - (y==="none") || x - y).map(d => `<span>${d==="none" ? "no path" : d==="1" ? "1 (direct)" : "level " + d}</span><div class="bar" style="width:${Math.max(2, 100*depth[d]/dmax)}%"></div><span>${depth[d]}</span>`).join("")}</div>
+      <div class="hint" style="margin-top:12px">Click any node, or any row in the Direct / Transitive / Vulnerabilities tabs, to see how it reaches the app (blue path).</div>`;
+  } else if (t==="direct"){
+    const ds = PKGS.filter(n => n.direct).sort((a,b) => (VIA[b.id]||[]).length - (VIA[a.id]||[]).length);
+    s.innerHTML = `<h2>Direct dependencies (${C.direct})</h2>
+      <div class="hint">Listed in the app's package.json. Sorted by how many transitive packages each one brings in.</div>
+      ${searchBox("filter, e.g. express")}
+      ${ds.map(n => { const sub = VIA[n.id] || [], vul = sub.filter(id => vulnCount(N[id]) > 0).length;
+        return pkgRow(n, `<span class="muted">brings in <b>${sub.length}</b> transitive${vul ? `, ${vul} vulnerable` : ""}</span>`); }).join("")}`;
+    bindSearch();
+  } else if (t==="transitive"){
+    const groups = Object.entries(VIA).sort((a,b) => (a[0]==="(none)") - (b[0]==="(none)") || b[1].length - a[1].length);
+    s.innerHTML = `<h2>Transitive dependencies (${C.transitive})</h2>
+      <div class="hint">The app never asked for these: each one arrives through a direct dependency. Grouped by that direct dependency (shortest path). Click one to see its path in blue.</div>
+      ${searchBox("filter, e.g. qs, minimist, ansi-regex")}
+      ${groups.map(([via, ids]) => { const vul = ids.filter(id => vulnCount(N[id]) > 0).length;
+        ids.sort((a,b) => (N[a].path||[]).length - (N[b].path||[]).length || N[a].name.localeCompare(N[b].name));
+        return `<details class="grp"><summary>${via==="(none)" ? "not reachable from the app" : `via ${esc(label(via))}`} — ${ids.length} package(s)${vul ? ` · <span style="color:var(--orange)">${vul} vulnerable</span>` : ""}</summary><div>
+          ${ids.map(id => pkgRow(N[id], `<span class="muted">depth ${N[id].path ? N[id].path.length - 1 : "?"}</span>`)).join("")}</div></details>`; }).join("")}`;
+    bindSearch();
+  } else if (t==="vulns"){
+    s.innerHTML = `<h2>Known vulnerabilities</h2>${osvWarn}
+      <div class="hint">Source: OSV (${esc(M.osv.status)}). One row per unique package + advisory (${C.vuln_pairs ?? "—"}); ${C.vuln_findings_by_install_path} findings when counted per install path. Level = advisory severity (GitHub / CVSS); dev-only one level lower.</div>
+      ${searchBox("filter by package, GHSA or CVE")}
+      <div class="fbar" id="fr">${["all","critical","high","medium","low"].map(r => `<button class="fbtn ${r==="all"?"on":""}" data-r="${r}">${r}${r==="all" ? "" : " (" + VPL.filter(v => v.risk===r).length + ")"}</button>`).join("")}</div>
+      <div class="fbar" id="fs">${["all","direct","transitive"].map(r => `<button class="fbtn ${r==="all"?"on":""}" data-sc="${r}">${r}${r==="all" ? "" : " (" + VPL.filter(v => (v.direct ? "direct" : "transitive")===r).length + ")"}</button>`).join("")}</div>
+      <div id="vl">${VPL.map(vulnRow).join("")}</div>`;
+    let fr = "all", fsc = "all";
+    const apply = () => { const q = $("#q").value.trim().toLowerCase();
+      document.querySelectorAll("#vl .row").forEach(el => el.style.display =
+        (fr==="all" || el.dataset.risk===fr) && (fsc==="all" || el.dataset.scope===fsc) && (!q || el.dataset.s.includes(q)) ? "" : "none"); };
+    document.querySelectorAll("#fr .fbtn").forEach(b => b.onclick = () => { fr = b.dataset.r; document.querySelectorAll("#fr .fbtn").forEach(x => x.classList.toggle("on", x===b)); apply(); });
+    document.querySelectorAll("#fs .fbtn").forEach(b => b.onclick = () => { fsc = b.dataset.sc; document.querySelectorAll("#fs .fbtn").forEach(x => x.classList.toggle("on", x===b)); apply(); });
+    $("#q").oninput = apply;
+  } else if (t==="sabotage"){
+    const sus = D.findings.filter(isSus).sort((a,b) => (b.new_in_head - a.new_in_head) || RO[a.risk]-RO[b.risk]);
+    const byType = {}; sus.forEach(f => (byType[f.type] = byType[f.type] || []).push(f));
+    s.innerHTML = `<h2>Supply-chain sabotage (${sus.length})</h2>
+      <div class="hint">Risks no vulnerability database knows about, found by generic rules on what changed. ${C.suspicious_new} new since baseline, ${C.suspicious_present} already present.</div>
+      ${Object.entries(byType).sort((a,b) => RO[a[1][0].risk] - RO[b[1][0].risk]).map(([ty, fs]) => `<h3>${esc(typeName(ty))} (${fs.length})</h3>${fs.map(f => findingHTML(f,false)).join("")}`).join("")}`;
   } else if (t==="changed"){
     const ch = D.findings.filter(f => f.new_in_head && isSus(f)).sort((a,b) => RO[a.risk]-RO[b.risk]);
     const byCommit = {};
@@ -278,21 +444,25 @@ function showTab(t){
       ${D.removed.length ? `<h3>removed packages</h3>${D.removed.map(r => `<div class="comp">${esc(r.name)}@${esc(r.version)}</div>`).join("")}` : ""}`;
   } else {
     const sus = D.findings.filter(isSus).sort((a,b) => RO[a.risk]-RO[b.risk]);
-    const vul = D.findings.filter(f => f.type==="known_vulnerability").sort((a,b) => RO[a.risk]-RO[b.risk]);
     const sNew = sus.filter(f => f.new_in_head), sOld = sus.filter(f => !f.new_in_head);
+    const crit = VPL.filter(v => v.risk==="critical");
     s.innerHTML = `<h2>What is risky</h2>${osvWarn}
       <h3>supply-chain findings new since baseline (${C.suspicious_new})</h3>${sNew.map(f => findingHTML(f,false)).join("")}
       <h3>already present in baseline (${C.suspicious_present})</h3>${sOld.map(f => findingHTML(f,false)).join("")}
-      <h3>known vulnerabilities (${M.osv.status==="evaluated" ? vul.length : "not evaluated"})</h3>${vul.map(f => findingHTML(f,false)).join("")}`;
+      <h3>critical vulnerabilities (${M.osv.status==="evaluated" ? crit.length : "not evaluated"})</h3>
+      <div class="hint">All ${C.vuln_pairs ?? ""} are in the <a href="#" data-go="vulns">Vulnerabilities tab</a>.</div>${crit.map(vulnRow).join("")}`;
   }
+  document.querySelectorAll("#side [data-go]").forEach(a => a.onclick = e => { e.preventDefault(); showTab(a.dataset.go); });
   bindItems();
 }
-document.querySelectorAll(".tab").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+const TABN = {direct: C.direct, transitive: C.transitive, vulns: C.vuln_pairs ?? "?", sabotage: C.suspicious_new + C.suspicious_present};
+document.querySelectorAll(".tab").forEach(b => { if (b.dataset.tab in TABN) b.insertAdjacentHTML("beforeend", `<span class="n">${TABN[b.dataset.tab]}</span>`); b.onclick = () => showTab(b.dataset.tab); });
 render(); showTab("in");
-const h = decodeURIComponent(location.hash.slice(1));
-if (h.startsWith("tab=")) showTab(h.slice(4));
-if (h.startsWith("view=")) setMode(h.slice(5));
-if (h.startsWith("node=")) setTimeout(() => showNode(h.slice(5)), 50);
+// deep links: #tab=transitive  #view=all  #node=node_modules/qs  (combine with &)
+const H = Object.fromEntries(decodeURIComponent(location.hash.slice(1)).split("&").filter(Boolean).map(kv => [kv.split("=")[0], kv.slice(kv.indexOf("=")+1)]));
+if (H.view) setMode(H.view);
+if (H.tab) showTab(H.tab);
+if (H.node && N[H.node]) { ensureVisible(H.node); setTimeout(() => showNode(H.node), 60); }
 </script>
 </body>
 </html>

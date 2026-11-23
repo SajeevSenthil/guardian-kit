@@ -373,7 +373,7 @@ def build(base, head, offline):
                 risk, rule = LOWER[risk], rule + "; dev-only dependency -> one level lower"
             f = F.add(category="vulnerability", type="known_vulnerability", component=n["purl"], risk=risk, rule=rule,
                       title="%s %s" % (v["id"], v["summary"][:90]), new_in_head=n["isNew"] or n["changed"],
-                      claim="VERIFIED", fixed=v["fixed"],
+                      claim="VERIFIED", fixed=v["fixed"], advisory=v["id"], aliases=v["aliases"], severity=v["severity"],
                       evidence=[{"source": "api.osv.dev/v1/vulns/%s (fetched %s)" % (v["id"], v["fetched"][:19]),
                                  "line": None, "excerpt": "severity=%s; aliases=%s; fixed=%s; cvss=%s" % (
                                      v["severity"], ",".join(v["aliases"][:3]) or "-", ",".join(v["fixed"]) or "none", v["cvss"] or "-")},
@@ -578,10 +578,17 @@ def build(base, head, offline):
 
     findings = sorted(F.items, key=lambda f: (RISK_ORDER[f["risk"]], f["category"] != "change", f["id"]))
     pk = [n for n in nodes.values() if n["kind"] == "pkg"]
-    sev = {}
+    # vulnerability counts: one per unique (package@version, advisory); the highest risk across its
+    # install paths wins (a package can be prod on one path and dev-only on another)
+    pairs = {}
     for f in F.items:
         if f["type"] == "known_vulnerability":
-            sev[f["risk"]] = sev.get(f["risk"], 0) + 1
+            k = (f["component"], f["advisory"])
+            if k not in pairs or RISK_ORDER[f["risk"]] < RISK_ORDER[pairs[k]]:
+                pairs[k] = f["risk"]
+    sev = {}
+    for r in pairs.values():
+        sev[r] = sev.get(r, 0) + 1
     uniq = {n["purl"] for n in pk}
     uniq_direct = {n["purl"] for n in pk if n["direct"]}
     sus = [f for f in F.items if f["type"] not in ("known_vulnerability", "new_dependency", "changed_dependency")]
@@ -592,6 +599,9 @@ def build(base, head, offline):
         "prod": sum(not n["dev"] for n in pk), "dev": sum(n["dev"] for n in pk),
         "new": sum(n["isNew"] for n in pk), "changed": sum(n["changed"] for n in pk), "removed": len(removed),
         "vulnerable_components": len(vulns) if osv_meta["status"] == "evaluated" else None,
+        "vulnerable_packages": len({k[0] for k in pairs}) if osv_meta["status"] == "evaluated" else None,
+        "vuln_pairs": len(pairs) if osv_meta["status"] == "evaluated" else None,
+        "vuln_findings_by_install_path": sum(1 for f in F.items if f["type"] == "known_vulnerability"),
         "vulns_by_risk": sev if osv_meta["status"] == "evaluated" else None,
         "suspicious_changes": sum(1 for f in F.items if f["category"] == "change" and f["type"] not in ("new_dependency", "changed_dependency")),
     }
