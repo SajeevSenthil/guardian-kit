@@ -71,12 +71,22 @@ def materialise(run: Path, ref: str) -> Path:
     return dest
 
 
+_FP = None
+
+
+def fastpath():
+    """The Day-1 fast path module (inventory, SBOM, OSV helpers), loaded once."""
+    global _FP
+    if _FP is None:
+        spec = importlib.util.spec_from_file_location("fastpath_build", KIT / "fastpath" / "build.py")
+        _FP = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_FP)
+    return _FP
+
+
 def scan(base: str, head: str, offline: bool) -> Path:
     """Run the Day-1 fast path and start a run directory from its outputs."""
-    spec = importlib.util.spec_from_file_location("fastpath_build", KIT / "fastpath" / "build.py")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    mod.build(base, head, offline)
+    fastpath().build(base, head, offline)
     run = RUNS / new_run_id()
     run.mkdir(parents=True)
     for f in DAY1_FILES:

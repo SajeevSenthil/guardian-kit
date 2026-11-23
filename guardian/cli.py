@@ -114,6 +114,81 @@ def cmd_doctor(a):
     return 0
 
 
+def cmd_plan(a):
+    from . import remediate, runs
+    from .agents.planner import make_planner
+    from .config import load
+    run = runs.resolve(a.run)
+    mode = "offline" if os.environ.get("GUARDIAN_OFFLINE") == "1" else a.mode
+    plan = remediate.make_plan(run, a.finding, force_candidate=a.candidate,
+                               planner=make_planner(mode, load().get("agents", {}).get("gemini", {})))
+    p = plan["prediction"]
+    _p(f"{plan['id']}  [{plan['state']}]  finding {plan['finding']} ({plan['finding_type']}) on {plan['component']}")
+    _p(f"chosen {plan['chosen']['id']} ({plan['chosen_by']}): {plan['chosen']['summary']}")
+    _p("  edits: " + " | ".join(p.get("applied", [])))
+    if p.get("npm"):
+        _p(f"  npm --package-lock-only --ignore-scripts: exit {p['npm']['exit']}")
+    _p(f"  prediction: target resolved={p.get('target_resolved')}  findings resolved={len(p.get('resolved', []))} "
+       f"{p.get('resolved_by_band', {})}  components +{len(p.get('added', []))}/-{len(p.get('removed', []))}  "
+       f"semver={p.get('semver')}  new vulnerabilities={len(p.get('new_vulnerabilities', []))}  "
+       f"dangling require()={p.get('dangling_requires')}")
+    for c in p.get("version_changes", [])[:6]:
+        _p(f"    {c['package']}: {c['from']} -> {c['to']} ({c['semver']})")
+    _p(f"  risk: target {p.get('risk', {}).get('target_before')} -> {p.get('risk', {}).get('target_after')}")
+    _p(f"  policy on head: {'PASS' if plan['policy_head']['pass'] else 'FAIL'} ({len(plan['policy_head']['deny'])} deny)   "
+       f"predicted: {'PASS' if p['policy']['pass'] else 'FAIL'} ({len(p['policy']['deny'])} deny)   "
+       f"plan gate: {'PASS' if p['plan_gate']['pass'] else 'FAIL'} - {p['plan_gate']['reason']}")
+    for d in p["plan_gate"].get("resolved", [])[:6]:
+        _p(f"    resolved deny: {d}")
+    _p("  alternatives considered:")
+    for alt in plan["alternatives_considered"]:
+        _p(f"    {alt['id']} ({alt['kind']}): {alt['summary']}\n       -> not chosen: {alt['why_not_chosen']}")
+    if plan.get("policy_entries"):
+        _p(f"  policy entries: {plan['policy_entries']}")
+    _p(f"  rollback: {plan['rollback']}")
+    _p(f"  plan_hash {plan['plan_hash']}  patch {plan['patch_file']}")
+    ai = plan["rationale"].get("ai") or {}
+    _p(f"  AI rationale: {ai.get('status', 'ok') if 'status' in ai else 'ok'} {ai.get('reason', '')}")
+    _p(f"\nnext: python -m guardian approve {plan['id']} --approver \"Your Name\"")
+
+
+def cmd_approve(a):
+    from . import remediate, runs
+    run = runs.resolve(a.run)
+    rec = remediate.approve(run, a.plan, a.approver, reject=a.reject, comment=a.comment or "")
+    _p(f"{rec['plan']} {rec['decision']} by {rec['approver']} at {rec['at']} (plan_hash {rec['plan_hash'][:16]}...)")
+
+
+def cmd_validate(a):
+    from . import remediate, runs
+    run = runs.resolve(a.run)
+    ok, msg = remediate.check_approval(run, a.plan)
+    _p(("approval OK: " if ok else "REFUSED: ") + msg)
+    if not ok:
+        return 3
+    _p("validation checks (build, tests, rescan) are phase 11: not built yet")
+    return 0
+
+
+def cmd_policy(a):
+    from . import remediate, runs
+    run = runs.resolve(a.run)
+    ctx = remediate.Ctx(run)
+    st = remediate.policy_state(ctx, ctx.findings, ctx.nodes, ctx.head_src)
+    runs.write_json(run, "policy-input.json", st["input"])
+    _p(f"policy gate on {ctx.meta['head']}: {'PASS' if st['pass'] else 'FAIL'}  ({st['engine']})")
+    for d in st["deny"]:
+        _p(f"  deny: {d}")
+    _p(f"  warn: {len(st['warn'])}")
+
+
+def cmd_audit(a):
+    from . import audit, runs
+    ok, msg = audit.verify(runs.resolve(a.run))
+    _p(msg)
+    return 0 if ok else 4
+
+
 def _not_built(name):
     def f(a):
         _p(f"`{name}` is not built yet (see implementations.md)")
@@ -145,7 +220,30 @@ def main(argv=None):
     s.add_argument("--fresh", action="store_true", help="ignore the agent result cache")
     s.set_defaults(fn=cmd_analyse)
     sub.add_parser("doctor", help="keys (presence only), tools, Gemini model availability").set_defaults(fn=cmd_doctor)
-    for name in ("plan", "approve", "validate", "report"):
+    s = sub.add_parser("plan", help="fix candidates, dry runs, policy gate -> a plan awaiting approval")
+    s.add_argument("--finding", required=True)
+    s.add_argument("--candidate", help="choose this candidate explicitly instead of the ranked best")
+    s.add_argument("--run")
+    s.add_argument("--mode", choices=["live", "offline"], default="live")
+    s.set_defaults(fn=cmd_plan)
+    s = sub.add_parser("approve", help="record a human approval (or rejection) bound to the plan hash")
+    s.add_argument("plan")
+    s.add_argument("--approver", required=True)
+    s.add_argument("--reject", action="store_true")
+    s.add_argument("--comment")
+    s.add_argument("--run")
+    s.set_defaults(fn=cmd_approve)
+    s = sub.add_parser("validate", help="validate an approved plan")
+    s.add_argument("plan")
+    s.add_argument("--run")
+    s.set_defaults(fn=cmd_validate)
+    s = sub.add_parser("policy", help="policy gate on the head ref")
+    s.add_argument("--run")
+    s.set_defaults(fn=cmd_policy)
+    s = sub.add_parser("audit-verify", help="verify the hash-chained audit log")
+    s.add_argument("--run")
+    s.set_defaults(fn=cmd_audit)
+    for name in ("report",):
         sub.add_parser(name).set_defaults(fn=_not_built(name))
     from .env import load_dotenv
     load_dotenv()

@@ -247,3 +247,92 @@ Python standard library** (no SDK installed). The safety design is unchanged:
   counted).
 - Not built: `registry_metadata` and `capability_diff` tools (no registry calls; the
   suspicious-update evidence already carries the size and file diff), agent results in the UI.
+
+---
+
+## Phase 10 — Remediation plan, policy gate, human approval (2026-11-24) — done
+
+**Brief items:** Day 2 item 3 (recommend upgrade / replace or remove / pin / update base image /
+block / escalate, with expected risk reduction, compatibility impact and rollback). Out-of-scope
+rule R-10 (no merge or deploy without human approval). Stretch S-5 (policy as code).
+
+### What was built
+
+| File | Purpose |
+|---|---|
+| `guardian/remediate.py` | fix candidates (generic rules), throwaway clones, edits by code, dry runs, prediction, deterministic ranking, plans with patch + hash, approval, `check_approval` |
+| `guardian/policy.py` | Python port of `policy/guardian.rego` (conftest not installed) + the **plan gate** |
+| `guardian/audit.py` | append-only, hash-chained `audit.jsonl`; `verify()` |
+| `guardian/agents/planner.py`, `prompts/remediation_planner.md` | Remediation Planner rationale and the Refuter's review of the chosen plan (INFERRED; cannot change the plan) |
+| CLI | `plan --finding F [--candidate C]`, `approve P --approver NAME [--reject] [--comment]`, `validate P` (approval check only until phase 11), `policy`, `audit-verify` |
+
+### How a plan is made
+
+1. **Candidates** by generic rules on the finding type and graph data (table in the module
+   docstring): V1 lowest fixed version · V2 highest fixed version among the package's advisories ·
+   V3 follow-up when the chosen version still carries a same-major-fixable advisory · VM major
+   upgrade · VR remove if not imported · VO npm override (transitive) · C1 manifest-only removal ·
+   C2 removal incl. vendored tarball and unused `require()` line · C3 replace with the imitated
+   package (only if its binding is used) · U1 restore the base version + block the bad version's
+   integrity hash · U2 remove · I1 restore the base image line · A1 delete a workflow the change
+   introduced · E escalate to a human (always offered).
+2. **Dry run** per candidate in `runs/<id>/work/<plan>-<cand>/` (`git clone --local`, remote
+   removed): edits applied by code; `npm install --package-lock-only --ignore-scripts` (nothing
+   installed or executed; ~35 s); `file:` paths normalised to `/` (npm on Windows wrote a
+   backslash during the probe); committed; `git format-patch --binary` (tarball adds/deletes
+   survive).
+3. **Prediction** by code: findings resolved (purl gone, or evidence line gone from the file),
+   components added/removed, version changes with semver distance, **known vulnerabilities on
+   added components** (OSV), **`require()` calls left pointing at a removed package**, policy on
+   the predicted state, target score before → after.
+4. **Policy gate.** The full gate (rules of `policy/guardian.rego`) is reported on head and on the
+   predicted state; it fails on both while unrelated pre-existing violations remain (KEV jquery,
+   etc.). A plan passes the **plan gate** when its predicted state has no deny on the plan's target
+   (its purl at any version, or the image/action refs in its evidence) and introduces no deny head
+   did not have.
+5. **Ranking** (deterministic): resolves the target → no dangling require → plan gate passes →
+   fewer new vulnerabilities → keeps the dependency working (upgrade / pin back before replace
+   before remove) → more findings resolved → smaller semver distance → fewer edits. Each
+   alternative gets a computed "why not chosen".
+6. **Plan file** `plans/P-xxxx.json` + `.patch`: chosen candidate, alternatives, prediction,
+   head and predicted policy, plan gate, policy entries (block-list), rollback, `plan_hash` =
+   sha256 of the patch text, state `pending_approval`; an audit event `plan.created`.
+7. **Approval**: `approvals/P-xxxx.json` binds approver name + plan hash; audit event with actor
+   `human:<name>`. `check_approval` refuses a plan that is not approved, was rejected, or whose
+   patch hash differs from the approved one.
+
+### Results on the demo target (run 20261123T224752Z-3b42)
+
+| Plan | Finding | Chosen | Prediction | Plan gate | Alternatives (why not) |
+|---|---|---|---|---|---|
+| P-0001 | F359 look-alike `lodahs` | **C2** remove: manifest, lockfile, vendored tarball, unused `require()` line | 5 findings resolved (4 critical), target 90 → 0, no new vulnerabilities | PASS | C1 manifest-only: "leaves first-party code requiring a removed package: lodahs"; E |
+| P-0002 | F357 suspicious update strfmt 1.0.1 | **U1** restore 1.0.0 (baseline) and block 1.0.1's integrity hash | 4 resolved (3 critical), 1.0.1 → 1.0.0 | PASS | U2 remove: "more disruptive than a pin_back that resolves the finding as well"; E |
+| P-0003 | F162 lodash 4.17.4, GHSA-4xc9 (`_.merge`, R3) | **V3** upgrade to 4.18.1 | 61 resolved (7 high, 54 medium); lodash 4.17.4, 4.17.15, 4.17.21 deduped → 4.18.1 (minor); 0 new vulnerabilities | PASS | V1 4.17.11: "fails the plan gate" (still critical CVE-2019-10744); V2 4.18.0: "leaves 1 known vulnerability" (GHSA-f23m-r3pf-42rh, fixed 4.18.1); E |
+
+- Policy gate on head: **FAIL, 16 deny** (new install scripts, untrusted origins, floating image,
+  unpinned new action, critical prod findings, KEV entries incl. pre-existing jquery).
+- Patches are portable (0 backslash paths); P-0001 deletes the tarball, P-0002 restores the
+  1.0.0 tarball as a binary patch.
+- `python -m guardian validate P-0001` → `REFUSED: P-0001 has not been approved by a human`
+  (exit 3). No approval was recorded on the real run: approval is for a human to give.
+- `python -m guardian audit-verify` → OK (3 events). `./target`: no changes, no remote.
+
+### Tests
+
+`python -m pytest -q tests/unit` → **51 passed** (15 new in `test_remediate.py`): semver
+distance; unused-require detection; ranking (pin back before remove; dangling require loses);
+every deny/warn rule of the Rego file and the allow-list; the plan gate; approval binding: an
+unapproved plan is refused, **an approved plan whose patch is edited afterwards is refused**,
+rejection and an empty approver name are refused; editing an audit line breaks the chain.
+
+### Not done / limitations
+
+- **conftest is not installed**: `policy/guardian.rego` and `guardian_test.rego` are still
+  untested Rego; the gate runs on the Python port.
+- **Image digest pinning and CI action SHA pinning are "not evaluated"** (they need Docker Hub /
+  GitHub lookups). I1 restores the base's exact tag; A1 deletes the introduced workflow.
+- The Remediation Planner and plan Refuter ran in offline mode only (no Gemini key yet).
+- Predicted findings are not re-scored: findings on new versions get a band from OSV severity.
+- Removing the work-clone folders can fail on Windows while VS Code's Git extension watches them
+  (`runs/_probe_clone` from the probe is still there; it is git-ignored).
+- No UI page yet; plans are JSON + CLI (report and UI: phase 12).
