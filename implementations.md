@@ -160,3 +160,90 @@ validator `rtrim` (R2). `ejs@1.0.0` is **unknown**: not imported, but `'ejs'` is
   flowing through variables is not tracked.
 - Exploit/PoC references in advisories do not yet raise exploitability (research 04 §1.5).
 - Bundled packages (326 install paths) still have no OSV data, so they are not scored.
+
+---
+
+## Phase 9 — Agents: Change Detective, Risk Analyst, Refuter, investigation record (2026-11-23) — built, live run pending
+
+**Brief items:** Day 2 item 2 (investigate suspicious changes; clearly separate verified evidence
+from AI-generated inference) and the "AI" half of item 1 (prioritise with AI). This phase also
+covers the Change Detective planned for phase 5.
+
+### Provider change (user decision)
+
+The design specified the Claude Agent SDK. The team has a **Gemini** API key, not an Anthropic one,
+so the agent layer was built provider-neutral with a **Gemini backend over the REST API using the
+Python standard library** (no SDK installed). The safety design is unchanged:
+
+| Control | Implementation |
+|---|---|
+| Least privilege | the model can call only the read-only tools in an allow-list built by our code; an unknown tool name is refused, never executed; no shell, file-system or web tool exists |
+| Evidence minted by code | every tool result is stored as evidence `T<n>` before the model sees it |
+| Structured output | final answer is a separate request with no tools and a JSON `responseSchema`; validated by code; one retry; then "skipped" |
+| Claims are INFERRED | `EvidenceIndex.check_claim` forces INFERRED, drops unknown evidence ids, drops quotes that are not literal (≥ 8 chars) substrings of a cited excerpt |
+| Limits | `agent_max_turns` (12), `max_output_tokens` (2048) per call, `token_budget_per_agent` (120k), HTTP timeouts, retry with backoff on 429/5xx |
+| Secrets | `.env` loaded at runtime, never printed; `redact()` masks the configured key values and token shapes in every payload and tool output; the key travels in the `x-goog-api-key` header, never in a URL |
+| Prompt injection | package, advisory, source and tool text is wrapped as `<package_content>` / `<advisory_text>` / `<file_excerpt>` / `<tool_output>` data; prompts forbid following it and forbid using a package's self-description as evidence |
+| Fallback | offline, no key, model error or invalid output → status "skipped" with the reason; nothing changes |
+| Cache | results cached in `.cache/agents/` by hash of (agent, model, prompt, payload, schema); `--fresh` bypasses |
+
+### What was built
+
+| File | Purpose |
+|---|---|
+| `guardian/env.py` | minimal `.env` loader (values never printed) |
+| `guardian/evidence.py` | evidence index (finding evidence `F…E<n>`, tool evidence `T<n>`), `redact()`, `check_claim()` |
+| `guardian/agents/llm.py` | Gemini client (retry, token count), tool loop, structured final answer, schema validator, cache |
+| `guardian/agents/tools.py` | read-only tools: `get_finding`, `list_package_files`, `read_package_file` (local tarballs only, read as text), `get_advisory` (OSV cache), `find_imports`, `find_call_sites`, `read_source_excerpt` (first-party files only), `commit_context` (base..head only), `list_incident_patterns` |
+| `guardian/agents/prompts/*.md` | `change_detective.md`, `risk_analyst.md`, `refuter.md` |
+| `guardian/agents/runner.py` | `analyse` stage: selects findings, runs agents concurrently, applies results by fixed rules, writes investigation records |
+| `guardian/data/incident_patterns.json` | pattern library; only the tj-actions entry is marked verified (CISA KEV); the rest are labelled unverified |
+| `guardian.toml` `[agents]` | provider, models per role, token limits |
+| CLI | `python -m guardian analyse [--mode live|offline] [--top N] [--fresh]`, `python -m guardian doctor` |
+
+### How agent output changes results (code decides)
+
+- **Change Detective** (all change findings new since baseline): writes `agents.change_detective`
+  on the finding: summary, checked claims, "resembles", suggested risk (shown as a proposal only;
+  the score is not changed).
+- **Risk Analyst** (vulnerabilities in the top N): a vulnerable symbol counts only if its
+  `advisory_quote` is a literal substring of the advisory text. Code then recomputes the tier
+  from the app's own call sites (`reachability.tier_with_symbols`, grade `inferred`) and
+  re-scores; `NOT_LOADED_CAP` is dropped if the tier is no longer R0.
+- **Refuter** (top N), `apply_refuter`: upheld → confidence +5; downgraded → named factor's grade
+  drops one step and the finding is re-scored; refuted → `status: not_affected_candidate`
+  (waits for a named human; score unchanged); inconclusive → nothing. **A downgrade or refutation
+  with no checked quote is treated as inconclusive.**
+- **Investigation record** (`investigations.json`) for every change finding and non-CVE top-N
+  finding: timeline (commit + files it touched), version comparison, provenance (origin,
+  integrity, signature = not evaluated), verified facts with ids, AI assessment, resembles.
+- The score before agents is kept as `priority_before_agents`.
+
+### Verified
+
+- `python -m pytest -q tests/unit` → **36 passed** (14 new in `test_agents.py`, model replaced
+  by a fake transport): claim coercion to INFERRED; unknown ids and non-literal quotes dropped;
+  redaction; tool loop mints `T1` evidence; the final call has no tools and a schema; an unknown
+  tool (`shell`) is refused; invalid output twice → skipped; offline → skipped; refuter rules.
+- **Adversarial fixture:** an install script whose comment says it is harmless, and a model that
+  "refutes" using a paraphrase that is not a literal quote → treated as **inconclusive**, score and
+  status unchanged.
+- `python -m guardian analyse --mode offline` on the demo run: 22 jobs (10 Change Detective,
+  2 Risk Analyst, 10 Refuter), all **skipped with the reason**, no score changed; 10 investigation
+  records written (e.g. strfmt 1.0.1: commit `05b9d85` touching `package-lock.json`,
+  `package.json` and both vendored tarballs; provenance `file:` origin, integrity, signature not
+  evaluated).
+- `uvx ruff check guardian tests/unit --line-length 110` → clean.
+
+### Not done / pending
+
+- **No live Gemini run yet.** `python -m guardian doctor` reports `GEMINI_API_KEY present: no`.
+  Once the key is in `.env`: run `doctor` (checks the key and which configured models exist),
+  then `python -m guardian analyse --mode live`. Phase 9's live acceptance items (agent results
+  on the top findings, the Refuter upholding the look-alike finding and proposing not-affected
+  for an unimported package, time and token totals) are **not yet checked**.
+- Model ids in `guardian.toml` (`gemini-2.5-flash`, `gemini-2.5-pro` for the Refuter) are
+  unverified until `doctor` lists the models the key can use. Cost is not estimated (tokens are
+  counted).
+- Not built: `registry_metadata` and `capability_diff` tools (no registry calls; the
+  suspicious-update evidence already carries the size and file diff), agent results in the UI.

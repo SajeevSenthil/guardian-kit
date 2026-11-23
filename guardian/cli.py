@@ -60,6 +60,60 @@ def cmd_explain(a):
     _p("\n" + p["explanation"])
 
 
+def cmd_analyse(a):
+    from . import runs
+    from .agents.runner import analyse
+    run = runs.resolve(a.run)
+    st = analyse(run, mode=a.mode, top_n=a.top, fresh=a.fresh)
+    _p(f"run {run.name}  mode={st['mode']}  provider={st['provider']}  jobs={st['jobs']}")
+    for role, s in st["by_role"].items():
+        _p(f"  {role:18} ok={s['ok']:>3} skipped={s['skipped']:>3}" + (f"  reasons: {'; '.join(s['reasons'])[:160]}" if s['reasons'] else ""))
+    _p(f"  tokens={st['tokens']} turns={st['turns']} tool_calls={st['tool_calls']} "
+       f"quotes kept={st['quotes_kept']} dropped={st['quotes_dropped']}  (cost not estimated)")
+    res = runs.read_json(run, "prioritised.json")
+    shown = next((f for f in res["findings"] if f.get("agents", {}).get("change_detective", {}).get("status") == "ok"), None)
+    if shown:
+        cd = shown["agents"]["change_detective"]
+        _p(f"\nexample: {shown['id']} {shown['type']} {shown['component']}\n  AI summary ({cd['model']}): {cd['summary']}")
+        for c in cd["claims"][:4]:
+            _p(f"  - [INFERRED, support_checked={c['support_checked']}] {c['text']}  cites {c['evidence_ids']}")
+        _p(f"  resembles: {cd.get('resembles')}\n  suggested risk (proposal): {cd.get('suggested_risk')}")
+
+
+def cmd_doctor(a):
+    import json
+    import shutil
+    import urllib.error
+    import urllib.request
+
+    from .config import load
+    from .env import key_present
+    cfg = load()
+    _p(f"GEMINI_API_KEY present: {'yes' if key_present('GEMINI_API_KEY') else 'no'} (value never shown)")
+    for t in ("git", "node", "npm", "docker", "conftest", "syft", "grype", "osv-scanner"):
+        _p(f"  {t:12} {'found' if shutil.which(t) else 'MISSING'}")
+    if not key_present("GEMINI_API_KEY"):
+        return 1
+    req = urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models?pageSize=200",
+                                 headers={"x-goog-api-key": os.environ["GEMINI_API_KEY"]})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            names = {m["name"].split("/")[-1] for m in json.load(r).get("models", [])
+                     if "generateContent" in m.get("supportedGenerationMethods", [])}
+    except urllib.error.HTTPError as e:
+        _p(f"Gemini API: HTTP {e.code} (key rejected or no access)")
+        return 1
+    except OSError as e:
+        _p(f"Gemini API unreachable: {type(e).__name__}")
+        return 1
+    _p(f"Gemini API: OK, {len(names)} models support generateContent")
+    for role, m in cfg.get("agents", {}).get("gemini", {}).items():
+        _p(f"  {role:20} {m:28} {'available' if m in names else 'NOT AVAILABLE'}")
+    flash = sorted(n for n in names if "flash" in n)[:8]
+    _p(f"  some available models: {', '.join(flash)}")
+    return 0
+
+
 def _not_built(name):
     def f(a):
         _p(f"`{name}` is not built yet (see implementations.md)")
@@ -84,8 +138,17 @@ def main(argv=None):
     s.add_argument("finding")
     s.add_argument("--run")
     s.set_defaults(fn=cmd_explain)
+    s = sub.add_parser("analyse", help="agents: Change Detective, Risk Analyst, Refuter (phase 9)")
+    s.add_argument("--run")
+    s.add_argument("--mode", choices=["live", "offline"], default="live")
+    s.add_argument("--top", type=int)
+    s.add_argument("--fresh", action="store_true", help="ignore the agent result cache")
+    s.set_defaults(fn=cmd_analyse)
+    sub.add_parser("doctor", help="keys (presence only), tools, Gemini model availability").set_defaults(fn=cmd_doctor)
     for name in ("plan", "approve", "validate", "report"):
         sub.add_parser(name).set_defaults(fn=_not_built(name))
+    from .env import load_dotenv
+    load_dotenv()
     a = ap.parse_args(argv)
     if getattr(a, "offline", False):
         os.environ["GUARDIAN_OFFLINE"] = "1"

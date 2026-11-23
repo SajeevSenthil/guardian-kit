@@ -1,0 +1,20 @@
+{
+  "note": "Pattern library for the Change Detective. 'verified' means the incident was confirmed from a primary source during this build; others are well-known public incidents recorded from memory and must be presented as 'resembles', not as fact.",
+  "patterns": [
+    {"pattern": "typosquat", "signals": ["name one edit away from a popular package", "new dependency", "install script"],
+     "incident": "crossenv typosquat of cross-env (npm)", "date": "2017-08", "verified": false},
+    {"pattern": "hijacked-maintainer-update", "signals": ["patch release adds an install script", "new obfuscated or large file", "remote URL"],
+     "incident": "ua-parser-js malicious versions (npm)", "date": "2021-10", "verified": false},
+    {"pattern": "worm-dropper", "signals": ["preinstall hook", "setup script", "large single-line payload", "credential harvesting"],
+     "incident": "npm self-replicating worm campaigns (e.g. 'Shai-Hulud')", "date": "2025-09", "verified": false},
+    {"pattern": "dependency-takeover", "signals": ["new transitive dependency in an update", "targets specific environment"],
+     "incident": "event-stream / flatmap-stream (npm)", "date": "2018-11", "verified": false},
+    {"pattern": "compromised-ci-action", "signals": ["third-party GitHub Action on a mutable tag", "tag repointed to malicious commit", "secrets printed to logs"],
+     "incident": "tj-actions/changed-files compromise, CVE-2025-30066", "date": "2025-03", "verified": true,
+     "source": "CISA KEV catalog 2026.11.23 lists CVE-2025-30066"},
+    {"pattern": "floating-base-image", "signals": ["base image tag without digest", "tag moved from exact to floating"],
+     "incident": "generic hygiene risk (no single incident)", "date": null, "verified": false},
+    {"pattern": "curl-pipe-shell", "signals": ["remote script piped to a shell in CI or build"],
+     "incident": "Codecov bash uploader compromise", "date": "2021-04", "verified": false}
+  ]
+}

@@ -51,6 +51,17 @@ pass/fail of validation, approval, or applying changes. _(pointer: …)_
 - Agents have read-only tools, no shell, no file writes, no general network access, turn and
   budget limits, and do not load this repository's settings.
 
+### Update 2026-11-23: model provider is Gemini
+
+The runtime agents call Google's Gemini API (`generativelanguage.googleapis.com`) instead of
+Anthropic's, because that is the key the team has. What leaves the machine, per agent call: the
+finding's evidence excerpts (file, line, short excerpt), and the outputs of the read-only tools the
+agent requests: short excerpts of first-party source files, of local package files, of OSV advisory
+text, and commit file lists. Whole repositories are never sent. Every payload passes `redact()`
+first (configured key values, cloud/GitHub token shapes, private-key blocks, bearer tokens). The
+key is read from `.env` at runtime, sent only in the `x-goog-api-key` header and never printed or
+written to the run directory. Implementation: `guardian/agents/llm.py`, `guardian/evidence.py`.
+
 ## 5. Untrusted content and prompt injection
 
 Package files, READMEs, changelogs and advisory text are treated as data in delimited blocks.

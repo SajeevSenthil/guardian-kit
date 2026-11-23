@@ -200,6 +200,7 @@ def prioritise(run: Path) -> dict:
                                                              "install script shows two or more red-flag capabilities")))
         res = scoring.score(factors, rails, cfg)
         res["explanation"] = scoring.explain(res)
+        res["rails"] = [list(r) for r in rails]   # applicable guardrails, kept for re-scoring after agents
         out.append({**f, "priority": res})
 
     # ranking: one entry per unique (component, advisory) for vulnerabilities, per finding otherwise

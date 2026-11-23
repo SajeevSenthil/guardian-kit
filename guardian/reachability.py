@@ -164,6 +164,23 @@ def package_tier(name: str, scan_result: dict) -> dict:
             "note": f"no import found in {len(scan_result['files'])} first-party file(s)"}
 
 
+def tier_with_symbols(node: dict, symbols: list[str], scan_result: dict) -> dict | None:
+    """Recompute R2/R3 from symbols an agent extracted (with a literal advisory quote checked by code).
+    The tier and witness are code output; that these symbols are the vulnerable ones is an inference,
+    so the grade is `inferred`. Returns None when the symbols are not used by the app."""
+    if not node.get("direct") or node["name"] not in scan_result["imports"]:
+        return None
+    members = scan_result["imports"][node["name"]]["members"]
+    hits = {m: members[m] for m in symbols if m in members}
+    if not hits:
+        return None
+    sites = [s for m in sorted(hits) for s in hits[m]]
+    req = [s for s in sites if s["request_data"]]
+    return {"tier": "R3" if req else "R2", "grade": "inferred", "witness": (req or sites)[:3],
+            "symbols": sorted(hits), "note": f"agent-identified vulnerable symbol(s) `{', '.join(sorted(hits))}` "
+                                             "called by the app" + (" with request data" if req else "")}
+
+
 def tier_for_vulnerability(node: dict, nodes: dict, advisory_text: str, scan_result: dict) -> dict:
     """Reachability tier of one vulnerable install path."""
     path = node.get("path")
