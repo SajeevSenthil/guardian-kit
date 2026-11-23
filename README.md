@@ -89,18 +89,65 @@ answers the three questions in the organisers' Day 1 checkpoint:
 
 ## 3. Technical approach
 
+```mermaid
+flowchart TB
+    T[("<b>./target</b> git repo<br/>guardian-baseline → tampered")]
+    EXT[("OSV.dev API<br/>public advisories")]
+
+    subgraph D1["<b>DAY 1 · Guardian's eyes</b> · fastpath/build.py · implemented · deterministic"]
+        direction LR
+        X["<b>Extract</b><br/>git archive<br/>read-only"] --> INV["<b>Inventory</b><br/>package-lock.json<br/>Dockerfile · workflows"]
+        INV --> SB["<b>SBOM</b><br/>CycloneDX 1.5<br/>base + head + diff"]
+        SB --> G["<b>Dependency graph</b><br/>Node.js resolution<br/>shortest paths"]
+        G --> V["<b>Vulnerabilities</b><br/>OSV batch query<br/>cached"]
+        G --> C["<b>Change detectors</b><br/>look-alike · install script<br/>origin · update · image · CI"]
+        V --> F["<b>Findings</b><br/>risk + rule · path<br/>commit · evidence"]
+        C --> F
+    end
+
+    subgraph OUT["<b>Outputs</b> · fastpath/out/"]
+        direction LR
+        H1["guardian.html<br/>graph + 3 tabs"]
+        H2["findings.json"]
+        H3["SBOMs<br/>.cdx.json"]
+    end
+
+    subgraph D2["<b>DAY 2 · brain and shield</b> · designed, not built yet"]
+        direction LR
+        DET["<b>Investigate</b><br/>AI: Change Detective"] --> PRI["<b>Prioritise</b><br/>AI: Risk Analyst<br/>score by code"]
+        PRI --> REF["<b>Challenge</b><br/>AI: Refuter"]
+        REF --> PLN["<b>Plan fix</b><br/>AI: Remediation Planner"]
+        PLN --> HA{{"<b>HUMAN<br/>APPROVAL</b><br/>bound to plan hash"}}
+        HA --> VAL["<b>Validate</b><br/>throwaway clone<br/>build · test · rescan"]
+        VAL --> REP["<b>Report</b><br/>JSON · CycloneDX · VEX"]
+        VAL -. "fails" .-> DG["<b>Diagnose</b><br/>AI: Diagnostician"]
+        DG -. "new plan" .-> PLN
+    end
+
+    T --> D1
+    EXT --> D1
+    D1 --> OUT
+    D1 == "findings + evidence" ==> D2
+
+    classDef built fill:#e6f4ea,stroke:#1e8e3e,color:#0b3d1b
+    classDef ai fill:#f3e8fd,stroke:#8430ce,stroke-dasharray:5 4,color:#3b0a6b
+    classDef code fill:#f1f3f4,stroke:#80868b,stroke-dasharray:5 4,color:#202124
+    classDef human fill:#fff4e5,stroke:#e8710a,stroke-width:3px,color:#5f2b00
+    classDef data fill:#e8f0fe,stroke:#1a73e8,color:#0b2e6b
+    classDef out fill:#ffffff,stroke:#1e8e3e,stroke-width:2px,color:#0b3d1b
+    class X,INV,SB,G,V,C,F built
+    class DET,PRI,REF,PLN,DG ai
+    class VAL,REP code
+    class HA human
+    class T,EXT data
+    class H1,H2,H3 out
+    style D1 fill:#f8fdf9,stroke:#1e8e3e,stroke-width:2px
+    style D2 fill:#fcfaff,stroke:#8430ce,stroke-width:2px,stroke-dasharray:6 4
+    style OUT fill:#ffffff,stroke:#1e8e3e
 ```
-              ┌──────────── Day 1: implemented (fastpath/build.py) ─────────────┐
- git refs ──► │ 1 Inventory ─► 2 SBOM + graph ─► 3 Vulnerabilities ─► 4 Change │
- baseline +   │   (lockfile)     (CycloneDX)        (OSV API)          detectors│
- tampered     │                                                    ─► 5 Evidence│──► guardian.html
-              └──────────────────────────────────────────────────────────────────┘    findings.json
-                                                                                      SBOMs
-              ┌──────────── Day 2: designed (docs/ARCHITECTURE.md) ─────────────┐
-              │ prioritise ─► refute ─► plan ─► HUMAN APPROVAL ─► validate ─► report
-              │   (agents add judgement; code computes scores and pass/fail)    │
-              └──────────────────────────────────────────────────────────────────┘
-```
+
+**Legend:** solid green = implemented and deterministic · dashed purple = AI agent (Day 2) · dashed grey = code step (Day 2) · orange = human approval gate · blue = data sources. Agents can only propose. Scores, verdicts and pass/fail are always computed by code.
+Image for slides: [`docs/architecture.png`](docs/architecture.png) (source: [`docs/architecture.mmd`](docs/architecture.mmd)).
 
 ### Day 1: deterministic detection (built)
 
