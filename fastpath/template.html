@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guardian Evidence Graph</title>
+<!--__VIS__-->
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --ink:#14181f; --muted:#5b6472; --line:#d9dde3;
+  --red:#d62828; --orange:#ee8a12; --grey:#9aa3ad; --app:#1f5fbf; --file:#6b4fbb;
+  --crit:#9b1111; --high:#d62828; --med:#ee8a12; --low:#6b7684;
+  --chip:#eef1f5;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#12151a; --panel:#1b1f26; --ink:#eef1f5; --muted:#a3acb8; --line:#2d333d; --chip:#262c35; --grey:#6f7883;
+}}
+:root[data-theme="dark"]{ --bg:#12151a; --panel:#1b1f26; --ink:#eef1f5; --muted:#a3acb8; --line:#2d333d; --chip:#262c35; --grey:#6f7883; }
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:20px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:14px 20px 0;background:var(--panel);border-bottom:1px solid var(--line)}
+.title{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+.title h1{font-size:30px;margin:0}
+.title .sub{color:var(--muted);font-size:18px}
+.counts{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.stat{background:var(--chip);border-radius:10px;padding:6px 14px;min-width:110px}
+.stat b{display:block;font-size:30px;line-height:1.1}
+.stat span{font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.stat.red b{color:var(--red)} .stat.orange b{color:var(--orange)}
+.tabs{display:flex;gap:4px}
+.tab{font:inherit;font-weight:600;border:0;background:none;color:var(--muted);padding:10px 18px;border-bottom:4px solid transparent;cursor:pointer}
+.tab.on{color:var(--ink);border-bottom-color:var(--app)}
+main{display:flex;height:calc(100% - 210px);min-height:500px}
+#graphwrap{flex:1 1 58%;position:relative;border-right:1px solid var(--line)}
+#graph{position:absolute;inset:0}
+.gtools{position:absolute;left:12px;top:12px;z-index:2;display:flex;gap:8px;flex-wrap:wrap}
+.gtools button{font:inherit;font-size:17px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.gtools button.on{background:var(--app);color:#fff;border-color:var(--app)}
+.legend{position:absolute;left:12px;bottom:12px;z-index:2;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:16px;display:flex;gap:14px;flex-wrap:wrap}
+.dot{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:-1px;margin-right:5px}
+.dash{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px dashed var(--ink);vertical-align:-2px;margin-right:5px}
+aside{flex:1 1 42%;max-width:760px;overflow:auto;padding:16px 20px;background:var(--panel)}
+aside h2{font-size:24px;margin:4px 0 10px}
+aside h3{font-size:19px;margin:18px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.item{border:1px solid var(--line);border-left:8px solid var(--grey);border-radius:8px;padding:10px 12px;margin:8px 0;cursor:pointer}
+.item:hover{background:var(--chip)}
+.item.r-critical{border-left-color:var(--crit)} .item.r-high{border-left-color:var(--high)}
+.item.r-medium{border-left-color:var(--med)} .item.r-low{border-left-color:var(--low)}
+.badge{display:inline-block;font-size:14px;font-weight:700;padding:1px 8px;border-radius:6px;color:#fff;text-transform:uppercase;margin-right:6px;vertical-align:2px}
+.b-critical{background:var(--crit)} .b-high{background:var(--high)} .b-medium{background:var(--med)} .b-low{background:var(--low)}
+.b-new{background:var(--app)} .b-type{background:var(--chip);color:var(--ink)}
+.comp{font-family:ui-monospace,Consolas,monospace;font-size:18px;word-break:break-all}
+.muted{color:var(--muted);font-size:17px}
+.ev{background:var(--chip);border-radius:6px;padding:8px 10px;margin:6px 0;font-size:16px}
+.ev .src{color:var(--muted);font-size:15px}
+.ev code{display:block;font-family:ui-monospace,Consolas,monospace;font-size:16px;white-space:pre-wrap;word-break:break-all;margin-top:3px}
+.path{font-family:ui-monospace,Consolas,monospace;font-size:16px}
+.path span+span:before{content:" → ";color:var(--muted)}
+table.kv{border-collapse:collapse;width:100%} table.kv td{padding:4px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.kv td:first-child{color:var(--muted);width:150px}
+.claim{font-size:13px;font-weight:700;letter-spacing:.05em;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px}
+.back{font:inherit;font-size:17px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:4px 12px;cursor:pointer}
+.warn{background:#fff3cd;color:#5c4400;border-radius:8px;padding:8px 12px;margin:8px 0}
+@media (max-width:900px){ main{flex-direction:column;height:auto} #graphwrap{height:60vh;flex:none} aside{max-width:none} }
+</style>
+</head>
+<body>
+<header>
+  <div class="title"><h1>Guardian — evidence graph</h1><span class="sub" id="sub"></span></div>
+  <div class="counts" id="counts"></div>
+  <nav class="tabs">
+    <button class="tab on" data-tab="in">What is in it</button>
+    <button class="tab" data-tab="changed">What changed</button>
+    <button class="tab" data-tab="risky">What is risky</button>
+  </nav>
+</header>
+<main>
+  <div id="graphwrap">
+    <div class="gtools">
+      <button id="vFocus" class="on" title="app, direct dependencies, files, and full paths to every suspicious change and every critical vulnerability">Focused view</button>
+      <button id="vVul">+ all vulnerable paths</button>
+      <button id="vAll">Whole graph</button>
+      <button id="vFit">Fit</button>
+    </div>
+    <div id="graph"></div>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--red)"></i>suspicious change</span>
+      <span><i class="dot" style="background:var(--orange)"></i>known vulnerability</span>
+      <span><i class="dot" style="background:var(--grey)"></i>clean / not flagged</span>
+      <span><i class="dash"></i>new since baseline</span>
+    </div>
+  </div>
+  <aside id="side"></aside>
+</main>
+<script>
+const D = /*__DATA__*/null;
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const N = Object.fromEntries(D.nodes.map(n => [n.id, n]));
+const FBY = Object.fromEntries(D.findings.map(f => [f.id, f]));
+const RO = {critical:0, high:1, medium:2, low:3};
+const C = D.counts, M = D.meta;
+
+function nodeFindings(n){ return (n.findings||[]).map(id => FBY[id]); }
+function status(n){
+  const fs = nodeFindings(n);
+  if (fs.some(f => f.category==="change" && f.risk!=="low" && !["new_dependency","changed_dependency"].includes(f.type))) return "sus";
+  if (fs.some(f => f.type==="known_vulnerability")) return "vuln";
+  return "clean";
+}
+function flagged(n){ return status(n) !== "clean" || n.isNew || n.changed; }
+
+// ---- header
+$("#sub").textContent = `./target  ${M.base} (${M.base_sha}) → ${M.head} (${M.head_sha}) · generated ${M.generated} · no LLM`;
+const vb = C.vulns_by_risk;
+const stats = [
+  ["components", C.components], ["direct", C.direct], ["transitive", C.transitive],
+  ...(vb ? ["critical","high","medium","low"].map(k => ["vulns " + k, vb[k]||0, "orange"]) : [["vulnerabilities", "not evaluated", "orange"]]),
+  ["suspicious changes", C.suspicious_changes, "red"], ["new / changed pkgs", `${C.new} / ${C.changed}`]
+];
+$("#counts").innerHTML = stats.map(([k,v,c]) => `<div class="stat ${c||""}"><b>${esc(v)}</b><span>${esc(k)}</span></div>`).join("");
+
+// ---- graph
+const colors = () => ({sus:css("--red"), vuln:css("--orange"), clean:css("--grey"), app:css("--app"), file:css("--file")});
+function visNode(n){
+  const col = colors(), st = status(n);
+  let bg = n.kind==="app" ? col.app : st==="sus" ? col.sus : st==="vuln" ? col.vuln : (n.kind==="file" ? col.file : col.clean);
+  if (n.kind==="file" && st==="clean") bg = col.file;
+  const big = n.kind!=="pkg" || st==="sus" || n.direct || n.isNew || n.changed || (st==="vuln" && topVuln(n));
+  const label = !big ? undefined : n.kind==="pkg" ? `${n.name}@${n.version}` : n.kind==="file" ? n.name.split("/").pop() : n.name;
+  return {
+    id:n.id, label, shape: n.kind==="file" ? "box" : "dot",
+    size: n.kind==="app" ? 34 : st==="sus" ? 26 : st==="vuln" ? 18 : n.direct ? 14 : 9,
+    color:{background:bg, border: (n.isNew||n.changed) ? css("--ink") : bg, highlight:{background:bg, border:css("--ink")}},
+    borderWidth: (n.isNew||n.changed) ? 4 : 1,
+    shapeProperties:{borderDashes: (n.isNew||n.changed) ? [8,5] : false},
+    title: n.kind==="pkg" ? `${n.name}@${n.version}` : n.name,
+    font:{size: st==="sus" || n.kind!=="pkg" ? 30 : 22, color:css("--ink"), strokeWidth:4, strokeColor:css("--bg"), face:"system-ui", multi:false,
+          ...(n.kind==="file" ? {color:"#fff", strokeWidth:0} : {})},
+  };
+}
+function topVuln(n){ return nodeFindings(n).some(f => f.type==="known_vulnerability" && f.risk==="critical"); }
+function focusSet(allVulns){
+  const keep = new Set([""]);
+  D.nodes.forEach(n => {
+    if (n.direct || n.kind==="file") keep.add(n.id);
+    const st = status(n);
+    if ((st==="sus" || n.isNew || n.changed || (st==="vuln" && (allVulns || topVuln(n)))) && n.path) n.path.forEach(p => keep.add(p));
+  });
+  return keep;
+}
+const susEdges = new Set();
+D.nodes.forEach(n => { if (status(n)==="sus" && n.path) for (let i=1;i<n.path.length;i++) susEdges.add(n.path[i-1]+"→"+n.path[i]); });
+const nodesDS = new vis.DataSet(), edgesDS = new vis.DataSet();
+let net, mode = "focus", coreIds = null;
+function fitCore(){ net.fit(coreIds ? {nodes: coreIds, animation:false} : {animation:false}); }
+function render(){
+  const keep = mode==="focus" ? focusSet(false) : mode==="vulns" ? focusSet(true) : null;
+  const ns = D.nodes.filter(n => !keep || keep.has(n.id));
+  const ids = new Set(ns.map(n => n.id));
+  nodesDS.clear(); edgesDS.clear();
+  // deterministic radial tree layout over the shortest-path tree
+  const kids = {}, parentOf = id => { const p = N[id].path; return p && p.length > 1 ? p[p.length-2] : null; };
+  ns.forEach(n => { const p = parentOf(n.id); if (p !== null && ids.has(p)) (kids[p] = kids[p] || []).push(n.id); });
+  const rank = id => { const s = status(N[id]); return s==="sus" ? 0 : s==="vuln" ? 2 : N[id].kind==="file" ? 1 : 3; };
+  Object.values(kids).forEach(a => a.sort((x,y) => rank(x)-rank(y) || N[x].name.localeCompare(N[y].name)));
+  const w = {}; const weight = id => w[id] ??= (status(N[id])==="sus" ? 4 : 1) + 0.7 * (kids[id]||[]).reduce((s,k) => s + weight(k), 0);
+  const pos = {}, n1 = (kids[""]||[]).length, r1 = Math.max(320, n1 * 95 / (2*Math.PI));
+  const rad = d => d===0 ? 0 : r1 + (d-1) * (mode==="all" ? 260 : 240);
+  (function place(id, a0, a1, d){
+    const a = (a0+a1)/2; pos[id] = {x: rad(d)*Math.cos(a), y: rad(d)*Math.sin(a)};
+    let cur = a0; const tot = (kids[id]||[]).reduce((s,k) => s + weight(k), 0) || 1;
+    (kids[id]||[]).forEach(k => { const span = (a1-a0) * weight(k) / tot; place(k, cur, cur+span, d + 1); cur += span; });
+  })("", -Math.PI, Math.PI, 0);
+  ns.forEach(n => { if (!pos[n.id]) pos[n.id] = {x: 0, y: (R*6)}; });
+  nodesDS.add(ns.map(n => ({...visNode(n), x: pos[n.id].x, y: pos[n.id].y})));
+  edgesDS.add(D.edges.filter(([a,b]) => ids.has(a) && ids.has(b)).map(([a,b],i) => {
+    const hot = susEdges.has(a+"→"+b);
+    return {id:a+"→"+b, from:a, to:b, arrows:{to:{enabled:true, scaleFactor:.5}},
+            color:{color: hot ? colors().sus : css("--grey"), opacity: hot ? 1 : .35}, width: hot ? 5 : 1};
+  }));
+  coreIds = mode==="all" ? null : ns.filter(n => n.kind==="app" || (n.path && n.path.length<=2) || status(n)==="sus").map(n => n.id);
+  setTimeout(fitCore, 0);
+}
+net = new vis.Network($("#graph"), {nodes:nodesDS, edges:edgesDS}, {
+  layout:{improvedLayout:false}, physics:{enabled:false}, interaction:{hover:true, tooltipDelay:150},
+  edges:{smooth:false}
+});
+net.on("click", p => { if (p.nodes.length) showNode(p.nodes[0]); });
+function setMode(m){ mode=m; [["focus","#vFocus"],["vulns","#vVul"],["all","#vAll"]].forEach(([k,s]) => $(s).classList.toggle("on", k===m)); render(); }
+$("#vFocus").onclick = () => setMode("focus");
+$("#vVul").onclick = () => setMode("vulns");
+$("#vAll").onclick = () => setMode("all");
+$("#vFit").onclick = () => net.fit({animation:true});
+$("#vFit").textContent = "Fit all";
+
+// ---- side panel
+function evHTML(e){ return `<div class="ev"><div class="src">${esc(e.source)}${e.line ? `, line ${e.line}` : ""}</div><code>${esc(e.excerpt)}</code></div>`; }
+function pathHTML(p){ return `<div class="path">${(p||[]).map(x => `<span>${esc(x)}</span>`).join("")}</div>`; }
+function findingHTML(f, full){
+  return `<div class="item r-${f.risk}" data-node="${esc(f.nodeId)}">
+    <div><span class="badge b-${f.risk}">${f.risk}</span><span class="badge b-type">${esc(f.type)}</span>${f.new_in_head ? '<span class="badge b-new">new</span>' : ""}<span class="claim">${esc(f.claim)}</span></div>
+    <div class="comp" style="margin-top:4px">${esc(f.component)}</div>
+    <div>${esc(f.title)}</div>
+    ${f.commit ? `<div class="muted">introduced by commit <b>${esc(f.commit.sha)}</b> “${esc(f.commit.subject)}”</div>` : ""}
+    ${full ? `<div class="muted">rule: ${esc(f.rule)}</div>
+      ${f.signals ? `<div class="muted">signals: ${f.signals.map(esc).join(" · ")}</div>` : ""}
+      ${f.fixed && f.fixed.length ? `<div class="muted">fixed in: ${f.fixed.map(esc).join(", ")}</div>` : ""}
+      <h3>dependency path</h3>${pathHTML(f.path)}
+      <h3>evidence</h3>${f.evidence.map(evHTML).join("")}` : `<div class="muted">${esc(f.evidence[0].source)}${f.evidence[0].line ? ", line " + f.evidence[0].line : ""}</div>`}
+  </div>`;
+}
+function bindItems(){
+  document.querySelectorAll("#side .item[data-node]").forEach(el => el.onclick = () => {
+    const id = el.dataset.node; if (!(id in N)) return;
+    if (!nodesDS.get(id)) { $("#vAll").onclick(); }
+    showNode(id);
+  });
+}
+function showNode(id){
+  const n = N[id]; if (!n) return;
+  try { net.selectNodes([id]); net.focus(id, {scale:1.1, animation:{duration:400}}); } catch(e) {}
+  const fs = nodeFindings(n).sort((a,b) => RO[a.risk]-RO[b.risk]);
+  const pathNames = (n.path||[]).map(p => N[p].kind==="pkg" ? `${N[p].name}@${N[p].version}` : N[p].name);
+  $("#side").innerHTML = `<button class="back" id="back">← back to list</button>
+   <h2 class="comp" style="font-size:24px">${esc(n.name)}${n.version ? "@" + esc(n.version) : ""}</h2>
+   <table class="kv">
+    ${n.kind==="pkg" ? `
+     <tr><td>version</td><td>${esc(n.version)}${n.baseVersion && n.baseVersion!==n.version ? ` <span class="muted">(was ${esc(n.baseVersion)} on ${esc(M.base)})</span>` : ""}</td></tr>
+     <tr><td>origin</td><td class="comp" style="font-size:16px">${esc(n.resolved || "(none)")} ${n.registry ? "" : '<span class="badge b-high">not npm registry</span>'}</td></tr>
+     <tr><td>relation</td><td>${n.direct ? "direct" : "transitive"} · ${n.dev ? "dev" : "prod"}${n.optional ? " · optional" : ""}</td></tr>
+     <tr><td>install script</td><td>${n.install ? "<b>yes</b> (hasInstallScript)" : "no"}</td></tr>
+     <tr><td>since baseline</td><td>${n.isNew ? "<b>new</b>" : n.changed ? "<b>changed</b>" : "unchanged"}</td></tr>
+     <tr><td>vulnerabilities</td><td>${esc(n.vulnStatus || M.osv.status)}${n.vulns ? ` — <b>${n.vulns.length}</b> advisory(ies)` : n.vulnStatus==="evaluated" ? " — none listed by OSV" : ""}</td></tr>
+     <tr><td>lockfile</td><td class="muted">package-lock.json line ${esc(n.lockLine)}</td></tr>` :
+     `<tr><td>kind</td><td>${n.kind==="app" ? "application root" : "repository file"}</td></tr>
+      <tr><td>since baseline</td><td>${n.isNew ? "<b>new</b>" : n.changed ? "<b>changed</b>" : "unchanged"}</td></tr>`}
+   </table>
+   <h3>dependency path</h3>${pathHTML(pathNames)}
+   <h3>findings (${fs.length})</h3>
+   ${fs.length ? fs.map(f => findingHTML(f, true)).join("") : `<div class="muted">No findings for this component.${n.vulnStatus && n.vulnStatus!=="evaluated" ? " Vulnerabilities: " + esc(n.vulnStatus) + " — this is unknown, not clean." : ""}</div>`}`;
+  $("#back").onclick = () => showTab(curTab);
+}
+let curTab = "in";
+function showTab(t){
+  curTab = t;
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab===t));
+  const s = $("#side");
+  const osvWarn = M.osv.status!=="evaluated" ? `<div class="warn">Vulnerabilities <b>not evaluated</b>: ${esc(M.osv.reason||"")}. This is unknown, not zero.</div>` : "";
+  if (t==="in"){
+    const direct = D.nodes.filter(n => n.direct).sort((a,b) => a.name.localeCompare(b.name));
+    s.innerHTML = `<h2>What is in it</h2>${osvWarn}
+      <div class="muted">${C.components} components from package-lock.json @ ${esc(M.head)}: ${C.direct} direct, ${C.transitive} transitive; ${C.prod} prod, ${C.dev} dev. CycloneDX SBOMs: sbom.base.cdx.json, sbom.head.cdx.json. Vulnerability data: OSV (${esc(M.osv.status)}${M.osv.advisories!=null ? ", " + M.osv.advisories + " advisories" : ""}).</div>
+      <h3>direct dependencies (${direct.length})</h3>
+      ${direct.map(n => { const st = status(n); return `<div class="item ${st==="sus"?"r-high":st==="vuln"?"r-medium":""}" data-node="${esc(n.id)}">
+        <span class="comp">${esc(n.name)}@${esc(n.version)}</span> ${n.dev ? '<span class="badge b-type">dev</span>' : ""}${n.isNew ? '<span class="badge b-new">new</span>' : ""}${n.changed ? '<span class="badge b-new">changed</span>' : ""}
+        ${n.vulns ? `<span class="muted"> · ${n.vulns.length} advisories</span>` : ""}${!n.registry ? '<span class="muted"> · non-registry origin</span>' : ""}</div>`; }).join("")}`;
+  } else if (t==="changed"){
+    const ch = D.findings.filter(f => f.new_in_head && f.type!=="known_vulnerability").sort((a,b) => RO[a.risk]-RO[b.risk]);
+    const byCommit = {};
+    ch.forEach(f => { const k = f.commit ? f.commit.sha : "—"; (byCommit[k] = byCommit[k] || []).push(f); });
+    s.innerHTML = `<h2>What changed</h2>
+      <div class="muted">${D.commits.length} commits ${esc(M.base)}..${esc(M.head)} · ${C.new} new, ${C.changed} changed, ${C.removed} removed packages</div>
+      ${D.commits.map(c => `<h3>${esc(c.sha)} — ${esc(c.subject)}</h3>${(byCommit[c.sha]||[]).map(f => findingHTML(f,false)).join("") || '<div class="muted">no findings linked</div>'}`).join("")}
+      ${byCommit["—"] ? `<h3>not linked to a commit</h3>${byCommit["—"].map(f => findingHTML(f,false)).join("")}` : ""}
+      ${D.removed.length ? `<h3>removed packages</h3>${D.removed.map(r => `<div class="comp">${esc(r.name)}@${esc(r.version)}</div>`).join("")}` : ""}`;
+  } else {
+    const rk = D.findings.filter(f => !["new_dependency","changed_dependency"].includes(f.type));
+    const sus = rk.filter(f => f.type!=="known_vulnerability").sort((a,b) => (b.new_in_head-a.new_in_head) || RO[a.risk]-RO[b.risk]);
+    const vul = rk.filter(f => f.type==="known_vulnerability").sort((a,b) => RO[a.risk]-RO[b.risk]);
+    s.innerHTML = `<h2>What is risky</h2>${osvWarn}
+      <h3>supply-chain and configuration findings (${sus.length})</h3>${sus.map(f => findingHTML(f,false)).join("")}
+      <h3>known vulnerabilities (${M.osv.status==="evaluated" ? vul.length : "not evaluated"})</h3>${vul.map(f => findingHTML(f,false)).join("")}`;
+  }
+  bindItems();
+}
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+render(); showTab("in");
+const h = decodeURIComponent(location.hash.slice(1));
+if (h.startsWith("tab=")) showTab(h.slice(4));
+if (h.startsWith("view=")) setMode(h.slice(5));
+if (h.startsWith("node=")) setTimeout(() => showNode(h.slice(5)), 50);
+</script>
+</body>
+</html>
