@@ -16,6 +16,8 @@ from guardian.v2.workspace import Workspace
 @pytest.fixture()
 def wsroot(tmp_path, monkeypatch):
     monkeypatch.setenv("GUARDIAN_WORKSPACES_DIR", str(tmp_path / "ws"))
+    # tests use a restrictive allow-list regardless of guardian.toml
+    monkeypatch.setattr(sd, "_cfg_sources", lambda: {"allow": ["github.com/SajeevSenthil"], "max_mb": 200})
     return tmp_path
 
 
@@ -34,6 +36,15 @@ def test_create_requires_consent(wsroot):
         Workspace.create("path", str(wsroot), None, "", consent=True)
     with pytest.raises(ValueError, match="consent"):
         Workspace.create("path", str(wsroot), None, "me", consent=False)
+
+
+def test_wildcard_allows_any_https_repo_but_keeps_safety_checks(monkeypatch):
+    monkeypatch.setattr(sd, "_cfg_sources", lambda: {"allow": ["*"]})
+    assert sd.check_git_url("https://github.com/anyone/anything")[1] == "anyone/anything"
+    with pytest.raises(ValueError, match="credentials"):
+        sd.check_git_url("https://u:p@github.com/anyone/x")
+    with pytest.raises(ValueError, match="https"):
+        sd.check_git_url("http://github.com/anyone/x")
 
 
 def test_allow_list_refuses_unknown_owner_and_credentials(wsroot):

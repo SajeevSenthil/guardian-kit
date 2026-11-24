@@ -88,7 +88,7 @@ function renderForm(el) {
       <div><label>Branch, tag or commit (optional)</label><input type="text" name="ref" placeholder="default branch"></div>
       <div><label>Your name (recorded as consent)</label><input type="text" name="by" required></div>
       <label><input type="checkbox" name="consent" required> I am authorised to analyse this repository</label>
-      <p class="muted">Git URLs must be on the allow-list in <span class="mono">guardian.toml [sources] allow</span>. Guardian never runs code from the repository (tests run only in the sandbox stage, inside a locked-down container).</p>
+      <p class="muted">Any public https Git URL works (an allow-list can be set in <span class="mono">guardian.toml [sources] allow</span>). Guardian only reads the files: it never runs code from the repository (tests run only in the sandbox stage, inside a locked-down container).</p>
       <div class="row"><button class="btn btn-primary" type="submit">Create and run discovery (1–3)</button><span data-msg class="muted"></span></div>
     </form>`,
   });

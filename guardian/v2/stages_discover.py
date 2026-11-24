@@ -74,6 +74,8 @@ def check_git_url(url: str) -> tuple[str, str]:
         raise ValueError("expected https://<host>/<owner>/<repo>")
     owner, repo = parts[0].lower(), parts[1].lower().removesuffix(".git")
     allow = [a.lower().strip("/") for a in _cfg_sources().get("allow", [])]
+    if "*" in allow:  # any https repository (consent is still required and audited)
+        return host, f"{owner}/{repo}"
     if not any(a in (host, f"{host}/{owner}", f"{host}/{owner}/{repo}") for a in allow):
         raise ValueError(f"{host}/{owner} is not in guardian.toml [sources] allow "
                          f"(currently: {', '.join(allow) or 'empty'}). Only repositories you are authorised "

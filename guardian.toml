@@ -65,7 +65,8 @@ remediation_planner = "gemini-3.8-flash"
 diagnostician = "gemini-3.8-flash"
 
 [sources]                        # v2: which git repos may be cloned (local paths and uploaded zips are always allowed)
-# Entries are "host", "host/owner" or "host/owner/repo". Ask the organisers what counts as your authorised sandbox.
-allow = ["github.com/SajeevSenthil", "github.com/anxolerd"]
+# "*" = any https repository (the default). To restrict, list "host", "host/owner" or "host/owner/repo" entries,
+# e.g. allow = ["github.com/SajeevSenthil"]. Consent (name + "I am authorised") is always required and audited.
+allow = ["*"]
 max_mb = 200                     # refuse a checkout larger than this
 max_depsdev_lookups = 150        # direct packages resolved through api.deps.dev per graph run
