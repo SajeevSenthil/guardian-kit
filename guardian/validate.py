@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
 import shutil
 import subprocess
 import time
@@ -155,7 +156,8 @@ def validate(run: Path, plan_id: str) -> dict:
 
     # 5 install (no scripts)
     t0 = time.time()
-    r = subprocess.run([remediate._npm(), "ci", "--ignore-scripts", "--no-audit", "--no-fund"], cwd=str(root),
+    offline = ["--offline"] if os.environ.get("GUARDIAN_OFFLINE") == "1" else []   # npm cache only
+    r = subprocess.run([remediate._npm(), "ci", "--ignore-scripts", "--no-audit", "--no-fund", *offline], cwd=str(root),
                        capture_output=True, timeout=INSTALL_TIMEOUT, check=False)
     out = (r.stdout + r.stderr).decode("utf-8", "replace")
     logs["install"] = out[-4000:]

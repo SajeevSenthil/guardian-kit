@@ -26,6 +26,11 @@ Frank list, kept current. Status as of 2026-11-24. Details and measurements: `im
 - **No self-SBOM / `tools.lock`** for Guardian itself; tool versions are listed in the README.
 - **VEX** follows the OpenVEX v0.2.0 structure but is not validated with official tooling.
 
+- **The end-to-end test (`tests/e2e/`) has not been run** by the assistant (it records test approvals);
+  run `python -m pytest -q -m e2e -s`.
+- **Plan P-0004 in the demo run has a defective patch** (line-ending churn, fixed in code since; see
+  implementations.md phase 15): withdraw it and use P-0005.
+
 ## Detection limits
 
 - **npm only** (lockfile v2/v3). The Docker and CI rules are generic.

@@ -334,7 +334,8 @@ def collect(run: Path) -> dict:
 def _md(rep: dict) -> str:
     r, s = rep["run"], rep["summary"]["counts"]
     L = [f"# Guardian Report — {r['target']} @ {r['head']} ({r['head_sha'][:7]})", "",
-         f"Run {r['run_id']} · {r['generated']} · mode {r['mode']} · baseline {r['base']} ({r['base_sha'][:7]})", "",
+         (f"Run {r['run_id']} · {r['generated']} · scan mode {r['mode']} · agents: {rep['data_sources']['agent_mode']} · "
+         f"baseline {r['base']} ({r['base_sha'][:7]})"), "",
          ("> Claim types: **verified** = read from tool output (evidence id shown) · **derived** = computed by Guardian's code "
          "· **inferred (AI)** = model judgement. \"Unknown\" means not established; it never means safe."), "",
          "## 1. Executive summary", ""]
@@ -402,7 +403,9 @@ def _md(rep: dict) -> str:
           f"Critical/high items open: {ba['need_attention_open_before']} → {ba['need_attention_open_after']}.", ""]
     L += [f"- {pid}: {x['verdict']}, risk {x['risk']}, SBOM diff {x['sbom_diff']}" for pid, x in ba["validated_plans"].items()]
     rm = rep["remaining"]
-    L += ["", "## 9. Remaining and accepted risks", "", f"Open by band: {rm['open_by_band']}.", "",
+    L += ["", "## 9. Remaining and accepted risks", "",
+          (f"Open and not covered by any plan, by band: {rm['open_by_band']} (the summary's open critical/high count "
+          "also includes findings with a pending plan)."), "",
           (f"Accepted risks: {len(rm['accepted_risks'])} · not affected (human-confirmed): {len(rm['not_affected'])} · "
           f"not-affected candidates awaiting a human: {rm['not_affected_candidates'] or 'none'}."), ""]
     L += [f"- {d['finding']} {d['decision']} by {d['by']} ({d['at']}): {d['reason']}" for d in rm["accepted_risks"] + rm["not_affected"]]
@@ -469,14 +472,14 @@ table{{border-collapse:collapse;width:100%;background:var(--p)}} td,th{{border-b
 .note{{background:var(--p);border-left:6px solid var(--a);padding:8px 12px}}
 </style></head><body><main>
 <h1>Guardian Report — {e(r['target'])} @ {e(r['head'])} ({e(r['head_sha'][:7])})</h1>
-<p class=c>Run {e(r['run_id'])} · {e(r['generated'])} · baseline {e(r['base'])} ({e(r['base_sha'][:7])}) · rendered by code from the run directory; no model wrote this text</p>
+<p class=c>Run {e(r['run_id'])} · {e(r['generated'])} · scan mode {e(str(r['mode']))} · agents: {e(str(rep['data_sources']['agent_mode']))} · baseline {e(r['base'])} ({e(r['base_sha'][:7])}) · rendered by code from the run directory; no model wrote this text</p>
 <p class=note><b>verified</b> = read from tool output · <b>derived</b> = computed by code · <b>inferred (AI)</b> = model judgement · "unknown" never means safe</p>
 <h2>1. Executive summary</h2><div class=st>{stat}</div><ul>{summ}</ul>
 <h2>2. Not evaluated</h2><ul>{ne}</ul>
 <h2>3. Ranked findings (top 40 of {len(rep['findings'])})</h2>
 <table><tr><th>id</th><th>score</th><th>type</th><th>component</th><th>title / advisory</th><th>status</th><th>conf.</th></tr>{rows}</table>
 <h2>4. Recommended and approved actions, validation</h2>{plans or '<p>No plans.</p>'}
-<h2>5. Remaining and accepted risks</h2><p>Open by band: {e(str(rep['remaining']['open_by_band']))}. Accepted: {len(rep['remaining']['accepted_risks'])}. Not affected (human-confirmed): {len(rep['remaining']['not_affected'])}. Not-affected candidates awaiting a human: {e(str(rep['remaining']['not_affected_candidates'] or 'none'))}.</p>
+<h2>5. Remaining and accepted risks</h2><p>Open and not covered by any plan, by band: {e(str(rep['remaining']['open_by_band']))} (the summary's open critical/high count also includes findings with a pending plan). Accepted: {len(rep['remaining']['accepted_risks'])}. Not affected (human-confirmed): {len(rep['remaining']['not_affected'])}. Not-affected candidates awaiting a human: {e(str(rep['remaining']['not_affected_candidates'] or 'none'))}.</p>
 <h2>6. Confidence and audit trail</h2><p>Overall confidence {rep['confidence']['overall']} ({e(rep['confidence']['basis'])}). Audit chain <b>{'OK' if au['chain_ok'] else 'BROKEN'}</b>: {e(au['result'])}. Events by actor: {e(str(au['by_actor']))}.</p>
 <h2>Full report (Markdown)</h2><details><summary>show</summary><pre style="white-space:pre-wrap">{e(md)}</pre></details>
 </main></body></html>"""

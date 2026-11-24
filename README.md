@@ -58,6 +58,7 @@ python -m guardian approve P-0001 --approver "Your Name"
 python -m guardian validate P-0001            # on failure: diagnosis + superseding plan (approve again)
 python -m guardian report                     # runs/<run_id>/report/guardian-report.html
 python -m guardian audit-verify
+python -m guardian withdraw P-0004 --reason "..."   # make a defective pending plan unapprovable
 ```
 
 Finding ids depend on the run; use `python -m guardian prioritise` to see them.
@@ -211,7 +212,8 @@ time; npm uses its own cache.
 ## Tests
 
 ```bash
-python -m pytest -q tests/unit                         # 62 passed, no network, no docker
+python -m pytest -q                                    # 67 passed, no network, no docker (e2e deselected)
+python -m pytest -q -m e2e -s                          # end-to-end loop, ~10 min, real npm installs (not yet run)
 uvx ruff check guardian tests/unit --line-length 110   # clean
 ```
 

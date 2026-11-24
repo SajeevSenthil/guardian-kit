@@ -162,6 +162,12 @@ def cmd_approve(a):
     _p(f"{rec['plan']} {rec['decision']} by {rec['approver']} at {rec['at']} (plan_hash {rec['plan_hash'][:16]}...)")
 
 
+def cmd_withdraw(a):
+    from . import remediate, runs
+    plan = remediate.withdraw(runs.resolve(a.run), a.plan, a.reason)
+    _p(f"{plan['id']} withdrawn: {plan['withdrawn_reason']}")
+
+
 def cmd_validate(a):
     from . import remediate, runs
     run = runs.resolve(a.run)
@@ -286,6 +292,11 @@ def main(argv=None):
     s.add_argument("--comment")
     s.add_argument("--run")
     s.set_defaults(fn=cmd_approve)
+    s = sub.add_parser("withdraw", help="withdraw a pending plan (e.g. a defective patch) so it cannot be approved")
+    s.add_argument("plan")
+    s.add_argument("--reason", required=True)
+    s.add_argument("--run")
+    s.set_defaults(fn=cmd_withdraw)
     s = sub.add_parser("validate", help="validate an approved plan; on failure diagnose and re-plan")
     s.add_argument("plan")
     s.add_argument("--run")
@@ -313,7 +324,14 @@ def main(argv=None):
     a = ap.parse_args(argv)
     if getattr(a, "offline", False):
         os.environ["GUARDIAN_OFFLINE"] = "1"
-    return a.fn(a) or 0
+    try:
+        return a.fn(a) or 0
+    except (FileNotFoundError, KeyError, ValueError, OSError, RuntimeError) as e:
+        if os.environ.get("GUARDIAN_DEBUG") == "1":
+            raise
+        msg = e.args[0] if isinstance(e, KeyError) and e.args else e
+        print(f"error: {msg}  (set GUARDIAN_DEBUG=1 for the traceback)", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":

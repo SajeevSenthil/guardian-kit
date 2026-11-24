@@ -83,7 +83,7 @@ def test_plan_gate():
 
 # ---- approval bound to the plan hash ------------------------------------------------------
 def make_run(tmp_path):
-    (tmp_path / "plans").mkdir()
+    (tmp_path / "plans").mkdir(parents=True)
     patch = "From abc\n--- a/package.json\n+++ b/package.json\n"
     (tmp_path / "plans" / "P-0001.patch").write_text(patch, encoding="utf-8")
     plan = {"id": "P-0001", "patch_file": "plans/P-0001.patch", "state": "pending_approval",
@@ -127,3 +127,20 @@ def test_audit_chain_detects_edits(tmp_path):
     (run / "audit.jsonl").write_text("\n".join([json.dumps(e)] + lines[1:]) + "\n", encoding="utf-8")
     ok, msg = audit.verify(run)
     assert not ok and "line 1" in msg
+
+
+def test_only_pending_plans_can_be_approved_and_withdrawn_plans_never(tmp_path):
+    run = make_run(tmp_path)
+    remediate.approve(run, "P-0001", "Reviewer", reject=True)
+    with pytest.raises(ValueError):
+        remediate.approve(run, "P-0001", "Someone Else")          # a rejection cannot be overturned silently
+    run2 = make_run(tmp_path / "b")
+    remediate.withdraw(run2, "P-0001", "defective patch")
+    with pytest.raises(ValueError):
+        remediate.approve(run2, "P-0001", "Reviewer")
+    assert not remediate.check_approval(run2, "P-0001")[0]
+
+
+def test_expected_paths(tmp_path):
+    ops = [("remove_dep", "x"), ("delete", "vendor/x.tgz"), ("remove_lines", [("routes/a.js", 3, "var y = require('x');")])]
+    assert remediate.expected_paths(tmp_path, ops) == {"package.json", "package-lock.json", "vendor/x.tgz", "routes/a.js"}

@@ -301,7 +301,10 @@ def work_clone(ctx: Ctx, name: str) -> Path:
     if w.exists():
         shutil.rmtree(w, ignore_errors=True)
     w.parent.mkdir(parents=True, exist_ok=True)
-    subprocess.run(["git", "clone", "-q", "--local", str(runs.TARGET), str(w)], check=True, capture_output=True)
+    # core.autocrlf=false from the first checkout: a machine-wide autocrlf=true would otherwise rewrite
+    # line endings of files stored with CRLF and leak that churn into the patch
+    subprocess.run(["git", "clone", "-q", "-c", "core.autocrlf=false", "--local", str(runs.TARGET), str(w)],
+                   check=True, capture_output=True)
     for args in (["checkout", "-q", ctx.meta["head"]], ["remote", "remove", "origin"],
                  ["config", "user.name", "Guardian"], ["config", "user.email", "guardian@example.invalid"],
                  ["config", "commit.gpgsign", "false"], ["config", "core.autocrlf", "false"]):
@@ -345,6 +348,19 @@ def policy_state(ctx: Ctx, findings: list[dict], nodes: dict, root: Path) -> dic
     return {"input": doc, **policy.evaluate(doc)}
 
 
+def expected_paths(root: Path, ops: list) -> set[str]:
+    """Files a candidate's edits are allowed to change in its patch."""
+    out = {"package.json", "package-lock.json"}
+    for op in ops:
+        if op[0] in ("delete", "restore") or op[0] == "replace_line":
+            out.add(op[1])
+        elif op[0] == "remove_lines":
+            out |= {rel for rel, _, _ in op[1]}
+        elif op[0] == "replace_require":
+            out |= {f.relative_to(root).as_posix() for f in reachability.app_files(root)}
+    return out
+
+
 def dry_run(ctx: Ctx, plan_id: str, cand: dict, target: dict, head_policy: dict) -> dict:
     if cand["kind"] == "escalate":
         return {"applied": [], "npm": None, "target_resolved": False, "resolved": [], "added": [], "removed": [],
@@ -366,6 +382,13 @@ def dry_run(ctx: Ctx, plan_id: str, cand: dict, target: dict, head_policy: dict)
     subprocess.run(["git", "-C", str(root), "add", "-A"], check=True, capture_output=True)
     subprocess.run(["git", "-C", str(root), "commit", "-q", "-m", f"guardian {plan_id}: {cand['summary']}"],
                    check=False, capture_output=True)
+    touched = set(subprocess.run(["git", "-C", str(root), "diff", "--name-only", "HEAD~1", "HEAD"],
+                                 capture_output=True, check=True).stdout.decode().split())
+    unexpected = sorted(touched - expected_paths(root, cand["ops"]))
+    if unexpected:   # never hand a human a patch with changes the candidate did not make
+        return {"applied": log, "npm": npm, "error": f"patch touched files the candidate did not edit: {unexpected[:8]}",
+                "target_resolved": False, "plan_gate": {"pass": False, "reason": "unexpected file changes"},
+                "policy": {"pass": False, "deny": [], "warn": []}}
     patch = subprocess.run(["git", "-C", str(root), "format-patch", "--binary", "-1", "--stdout"],
                            capture_output=True, check=True).stdout
     # ---- prediction
@@ -555,6 +578,8 @@ def approve(run: Path, plan_id: str, approver: str, reject: bool = False, commen
     if not approver or not approver.strip():
         raise ValueError("an approver name is required")
     plan = runs.read_json(run, f"plans/{plan_id}.json")
+    if plan["state"] != "pending_approval":
+        raise ValueError(f"{plan_id} is {plan['state']}; only a plan pending approval can be approved or rejected")
     current = hashlib.sha256((run / plan["patch_file"]).read_text(encoding="utf-8").encode("utf-8")).hexdigest()
     if current != plan["plan_hash"]:
         raise ValueError("the plan's patch changed after it was created; re-plan instead of approving")
@@ -567,6 +592,19 @@ def approve(run: Path, plan_id: str, approver: str, reject: bool = False, commen
     audit.append(run, f"human:{rec['approver']}", f"plan.{rec['decision']}", plan_id,
                  {"plan_hash": plan["plan_hash"], "comment": comment})
     return rec
+
+
+def withdraw(run: Path, plan_id: str, reason: str) -> dict:
+    """Mark a pending plan as withdrawn (e.g. a defective patch) so it can no longer be approved."""
+    if not (reason or "").strip():
+        raise ValueError("a reason is required")
+    plan = runs.read_json(run, f"plans/{plan_id}.json")
+    if plan["state"] != "pending_approval":
+        raise ValueError(f"{plan_id} is {plan['state']}; only a pending plan can be withdrawn")
+    plan["state"], plan["withdrawn_reason"] = "withdrawn", reason.strip()
+    runs.write_json(run, f"plans/{plan_id}.json", plan)
+    audit.append(run, "guardian", "plan.withdrawn", plan_id, {"reason": reason.strip()})
+    return plan
 
 
 def check_approval(run: Path, plan_id: str) -> tuple[bool, str]:

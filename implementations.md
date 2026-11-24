@@ -583,3 +583,80 @@ this log and `fastpath/README.md` and reported 14 problems. All were addressed:
 ### Tests
 
 `python -m pytest -q tests/unit` → **65 passed**; `uvx ruff check guardian tests/unit --line-length 110` → clean.
+
+---
+
+## Phase 15 — Freeze and rehearse (2026-11-24) — done, with two human steps left
+
+No new features. Fixes, a runbook, drills, an end-to-end test, one rehearsal.
+
+### Failure drills
+
+| Drill | Result |
+|---|---|
+| `GUARDIAN_OFFLINE=1` | prioritise works from caches; `doctor` skips the network; scan / plan / validate use caches or report "not evaluated"; npm runs with `--offline` (plan and, now, validate) |
+| no model key, `analyse --mode live` | every agent step "skipped: GEMINI_API_KEY is not set"; nothing changes; exit 0 |
+| docker missing | `doctor` shows MISSING; validation describes container checks as not implemented |
+| unknown run / finding | **was a Python traceback**; now `error: no run 'x' …` / `error: no finding F999`, exit 2 (`GUARDIAN_DEBUG=1` shows the traceback) |
+| unapproved plan | `validate` → `REFUSED: … has not been approved by a human`, exit 3 |
+
+### Rehearsal (demo-director subagent, one run against the live system)
+
+Segments 1–4 and 8 of `demo/RUNBOOK.md` passed (numbers, ids and wording match the screens);
+segments 5–7 had issues. All fixed:
+
+- **Blocking bug found: P-0004's patch changed 19 files (+3,872 / −3,885) for a one-line removal.**
+  Cause: work clones were checked out under the machine-wide `core.autocrlf=true` and only then set
+  to `false`, so files stored with CRLF (`views/*`, `public/*`, `sarif.json`, …) leaked line-ending
+  churn into `git add -A`. Fixes in `guardian/remediate.py`: clones are made with
+  `-c core.autocrlf=false` from the first checkout, and **a dry run now fails if the patch touches
+  any file the candidate's edits did not name** (`expected_paths`). The regenerated C1 plan
+  (**P-0005**) changes exactly `package.json` and `package-lock.json`. **P-0004 must not be
+  approved**; withdraw it with `python -m guardian withdraw P-0004 --reason "..."` (new command:
+  a withdrawn plan can never be approved). The assistant did not withdraw it, because changing the
+  state of a plan awaiting a human was left to the human.
+- `approve` now refuses any plan that is not `pending_approval` (a rejection cannot be silently
+  overturned; a withdrawn plan cannot be approved) — `test_only_pending_plans_can_be_approved_and_withdrawn_plans_never`.
+- Runbook: plan ids made generic (they differ per run); report section numbers corrected; the
+  `explain` line no longer says "higher-CVSS" (F162 has no CVSS vector) — it compares with lodash's
+  CRITICAL GHSA-jf85 (72, R1); a "before the approval run" cut of the demo (~3 minutes).
+- Report: header shows "scan mode … · agents: …" instead of a bare "mode live"; section 9's
+  open-by-band count is labelled "not covered by any plan" so it reconciles with section 1.
+- Not changed, and said out loud: the score range widens only for unknown/inferred factors (the
+  research design), so a heuristic R3 shows a narrow range; confidence (90) is where its
+  heuristic grade shows.
+
+### End-to-end test
+
+`tests/e2e/test_pipeline.py` (marked `e2e`, excluded from the default run by `pytest.ini`):
+scan → prioritise → analyse (offline) → plan C1 → approve → validate (expects FAILED at
+static_start) → loop with a **mocked Diagnostician recommending the ineligible C1** (expects code to
+keep C2 and the new plan to be unapproved) → approve → validate (expects PARTIAL, target resolved,
+nothing new) → report (status `remediated_partial`, audit chain OK) → `./target` unchanged. It runs in
+pytest's temporary folder, and its approvals are recorded under the name
+"e2e-test (automated test, not a human review)".
+
+**Not run by the assistant**: running it records approvals, and the environment's oversight guard
+blocked the assistant from doing that, as it blocked direct approvals. Run it yourself:
+`python -m pytest -q -m e2e -s` (~10 minutes; two real `npm ci` installs; prints per-stage timings).
+
+### Demo artefacts
+
+- `demo/RUNBOOK.md`: true lines, lines to avoid, the night-before commands, a 6-minute script with
+  a 3-minute "before the approval run" cut, and fallbacks (network down, model down, docker,
+  command errors, browser, slow validation).
+- `scripts/record_demo.sh`: freezes a run's report, plans, approvals, validations, audit log and the
+  dashboard into `demo/recorded/final/<run_id>/`. Tested, then the recording was deleted because it
+  captured the pre-approval state; record again after the approval run.
+
+### Tests
+
+`python -m pytest -q` → **67 passed, 1 deselected (e2e)**; ruff clean.
+
+### Left for the team (human steps)
+
+1. `python -m guardian withdraw P-0004 --reason "defective patch (line-ending churn); use P-0005"`
+2. Approve and validate P-0005 (C1, expected to fail), approve and validate the plan it produces,
+   `python -m guardian report`, `bash scripts/record_demo.sh`.
+3. Optionally `python -m pytest -q -m e2e -s`, and a live agent run after `python -m guardian doctor`.
+4. Two more timed rehearsals with the team (the phase asks for three; one was done).

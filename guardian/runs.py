@@ -11,6 +11,7 @@ import datetime as dt
 import importlib.util
 import io
 import json
+import os
 import secrets
 import shutil
 import subprocess
@@ -19,7 +20,7 @@ from pathlib import Path
 
 KIT = Path(__file__).resolve().parents[1]
 TARGET = KIT / "target"
-RUNS = KIT / "runs"
+RUNS = Path(os.environ["GUARDIAN_RUNS_DIR"]) if os.environ.get("GUARDIAN_RUNS_DIR") else KIT / "runs"
 FASTPATH_OUT = KIT / "fastpath" / "out"
 DAY1_FILES = ("findings.json", "graph.json", "sbom.base.cdx.json", "sbom.head.cdx.json", "sbom.diff.json")
 
