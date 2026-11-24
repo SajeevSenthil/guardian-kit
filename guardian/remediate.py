@@ -474,7 +474,7 @@ def _next_plan_id(run: Path) -> str:
 
 
 def make_plan(run: Path, finding_id: str, force_candidate: str | None = None, supersedes: str | None = None,
-              planner=None) -> dict:
+              planner=None, chosen_by: str | None = None) -> dict:
     ctx = Ctx(run)
     f = ctx.byid.get(finding_id)
     if not f:
@@ -508,12 +508,16 @@ def make_plan(run: Path, finding_id: str, force_candidate: str | None = None, su
         "title": f.get("title"), "advisory": f.get("advisory"), "state": "pending_approval",
         "created": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"), "supersedes": supersedes,
         "chosen": {k: chosen[k] for k in ("id", "kind", "summary")},
-        "chosen_by": "explicit --candidate (human/operator choice)" if force_candidate else "deterministic ranking",
+        "chosen_by": chosen_by or ("explicit --candidate (human/operator choice)" if force_candidate
+                                   else "deterministic ranking"),
         "deterministic_best": ranked[0]["id"],
         "prediction": {k: v for k, v in chosen["prediction"].items() if k != "patch"},
         "alternatives_considered": [{"id": c["id"], "kind": c["kind"], "summary": c["summary"],
                                      "prediction": _short(c["prediction"]),
-                                     "why_not_chosen": why_not(chosen, c)} for c in cands if c is not chosen],
+                                     "why_not_chosen": ("ranked best by code; not used because this plan was created "
+                                                        f"for an explicitly chosen candidate ({chosen['id']})"
+                                                        if rank_key(c) < rank_key(chosen) else why_not(chosen, c))}
+                                    for c in cands if c is not chosen],
         "policy_entries": chosen.get("policy_entries", []),
         "policy_head": {k: head_policy[k] for k in ("engine", "pass", "deny", "warn")},
         "patch_file": f"plans/{pid}.patch", "plan_hash": hashlib.sha256(patch.encode("utf-8")).hexdigest(),

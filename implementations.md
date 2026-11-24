@@ -336,3 +336,95 @@ rejection and an empty approver name are refused; editing an audit line breaks t
 - Removing the work-clone folders can fail on Windows while VS Code's Git extension watches them
   (`runs/_probe_clone` from the probe is still there; it is git-ignored).
 - No UI page yet; plans are JSON + CLI (report and UI: phase 12).
+
+---
+
+## Phase 11 — Validate and the closed loop (2026-11-24) — built; end-to-end run waits for a human approval
+
+**Brief items:** Day 2 item 4 (apply in a controlled branch or sandbox; build; run tests; rescan;
+compare before-and-after SBOM; detect newly introduced vulnerabilities or dependencies) and the
+Day-2 flow *prioritised risk → recommended fix → human approval → build & test → rescan → verified
+remediation*.
+
+### What was built
+
+| File | Purpose |
+|---|---|
+| `guardian/validate.py` | the 11 checks below, verdict, `validation/P-xxxx.json`, logs, audit events |
+| `guardian/loop.py` | failed validation → deterministic diagnosis (+ Diagnostician agent when a model is available) → superseding plan in `pending_approval` |
+| `guardian/agents/prompts/diagnostician.md` | Diagnostician prompt |
+| CLI | `python -m guardian validate P-xxxx [--no-loop] [--mode live|offline]` |
+
+### The checks (passed / FAILED / not run — "not run" is never counted as passed)
+
+| # | Check | On this machine |
+|---|---|---|
+| 1 | approval: approved by a named human, patch hash unchanged | runs |
+| 2 | baseline_tests: docker smoke test on unmodified head | **not run** (docker not installed) |
+| 2b | baseline_static: `node --check` (parse only) on first-party files + every `require()` declared | runs; stops validation if it fails |
+| 3 | apply: `git clone --local`, branch `guardian/fix-P-xxxx`, `git am` the binary patch | runs |
+| 4 | build: docker build | **not run** |
+| 5 | install: `npm ci --ignore-scripts` from the patched lockfile (verifies every integrity hash; runs no package script) | runs, ~140 s |
+| 6 | tests: docker smoke test (start + HTTP routes) | **not run** |
+| 6b | static_start: `node --check` + every first-party `require()` resolves to an installed package | runs |
+| 7 | rescan: the full Day-1 pipeline on the fix branch vs the base ref | runs, ~12 s |
+| 8 | sbom_diff: before vs after | runs |
+| 9 | new_findings: findings after that were not there before; a new critical/high fails | runs |
+| 10 | policy: plan gate on the actual result | runs |
+| 11 | prediction vs outcome (target resolved, components added/removed, dangling requires) | runs; informational |
+
+Verdict: **failed** if any verdict check fails; **verified** if all pass; **partial** if none failed
+but some could not run. Without docker the best possible verdict here is **partial**, stated as such.
+
+### The closed loop
+
+When a verdict check fails, the plan becomes `validation_failed` and `loop.close_loop` runs:
+1. **Deterministic diagnosis** from the failed check's evidence (e.g. `routes/index.js:21
+   var strutil = require('lodahs'); -> Cannot find module 'lodahs'`), recommending the
+   best-ranked alternative of the failed plan whose dry run resolves the target, passes the plan
+   gate and does not show the observed failure (no dangling `require()` for a resolution
+   failure); otherwise "escalate".
+2. **Diagnostician agent** (Gemini, when available): its recommendation is accepted only if it is
+   one of those eligible alternatives; otherwise code's choice stands and the disagreement is
+   recorded.
+3. A **new plan** is created with `supersedes` = the failed plan, its own patch and hash, state
+   `pending_approval`. **Nothing is re-approved automatically.** Audit events: `validate.failed`,
+   `diagnosis`, `plan.created`.
+
+### Verified so far
+
+- `python -m pytest -q tests/unit` → **57 passed** (6 new in `test_validate.py`): require check
+  (declared and installed modes, with `Cannot find module` evidence); "not run" never reported as
+  passed; the diagnosis recommends the alternative without the observed failure, escalates when
+  none qualifies, and only eligible alternatives can be accepted from an agent.
+- **Machinery probe on an unmodified clone of head** (no plan applied, no approval used): clone
+  0.9 s; `node --check` clean; every `require()` declared; `npm ci --ignore-scripts` exit 0 in
+  141 s; every `require()` resolves after install; rescan inside the clone reproduces exactly the
+  same 370 findings and 982 packages as the original scan. `./target` unchanged.
+- `validate` on an unapproved plan → `REFUSED ... has not been approved by a human` (exit 3).
+
+### What has NOT been run, and why
+
+- **An end-to-end validation of a plan.** Every plan needs a human approval first. Recording an
+  approval from the assistant's session was blocked by the environment's oversight guard, which is
+  the intended behaviour: the approval must come from a person. To run the loop:
+
+  ```bash
+  python -m guardian approve P-0004 --approver "Your Name"   # C1: manifest-only removal (explicitly chosen)
+  python -m guardian validate P-0004                          # expected: FAILED at static_start -> diagnosis -> P-0005 (C2)
+  python -m guardian approve P-0005 --approver "Your Name"
+  python -m guardian validate P-0005                          # expected: PARTIAL (build/tests not run: no docker)
+  python -m guardian approve P-0002 --approver "Your Name"   # strfmt pin-back
+  python -m guardian validate P-0002
+  python -m guardian approve P-0003 --approver "Your Name"   # lodash -> 4.18.1
+  python -m guardian validate P-0003
+  ```
+
+  P-0004 is "what a manifest-only dependency bot would do", created with `--candidate C1` and
+  labelled as an explicit choice; the ranked best (C2) is what code recommends.
+- **Docker build and smoke test**: docker is not installed → "not run"; verdicts can be at best
+  partial.
+- **Warm timing target** (< 2 min per validation) is not met: `npm ci` alone takes ~140 s here.
+- P-0004's "why not chosen" text for C2 says "ranked lower…"; that wording was wrong for an
+  explicitly chosen plan and has been fixed for new plans (it now says C2 was ranked best by code
+  and not used because of the explicit choice). P-0004 is a record and was not rewritten.

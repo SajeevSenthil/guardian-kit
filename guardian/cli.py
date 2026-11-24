@@ -162,12 +162,38 @@ def cmd_approve(a):
 def cmd_validate(a):
     from . import remediate, runs
     run = runs.resolve(a.run)
+    from .loop import close_loop
+    from .validate import validate
     ok, msg = remediate.check_approval(run, a.plan)
-    _p(("approval OK: " if ok else "REFUSED: ") + msg)
     if not ok:
+        _p("REFUSED: " + msg)
         return 3
-    _p("validation checks (build, tests, rescan) are phase 11: not built yet")
-    return 0
+    res = validate(run, a.plan)
+    _p(f"validation of {a.plan} (candidate {res['candidate']}, finding {res['finding']})")
+    for c in res["checks"]:
+        flag = "" if c["affects_verdict"] else "  (informational)"
+        _p(f"  {c['status']:8} {c['name']:16} {c['detail']}{flag}" + (f"  [{c['seconds']}s]" if c.get("seconds") else ""))
+        for e in c["evidence"][:4]:
+            _p(f"           - {e}")
+    _p(f"VERDICT: {res['verdict'].upper()}" + (f"  (not run: {', '.join(res.get('not_run', []))})" if res.get("not_run") else ""))
+    if "risk" in res:
+        r = res["risk"]
+        _p(f"  target score {r['target_before']} -> {r['target_after']}; findings {r['findings_before']} -> "
+           f"{r['findings_after']}; target resolved: {res['target_resolved']}")
+    if res["verdict"] == "failed" and not a.no_loop:
+        mode = "offline" if os.environ.get("GUARDIAN_OFFLINE") == "1" else a.mode
+        loop = close_loop(run, a.plan, res, mode)
+        d = loop["diagnosis"]
+        _p(f"\nDIAGNOSIS ({d['deterministic']['source']}): {d['deterministic']['root_cause']}")
+        ag = d["agent"]
+        _p(f"  Diagnostician agent: {ag.get('status')} {ag.get('reason') or ag.get('root_cause') or ''}")
+        _p(f"  recommended: {d['recommended_candidate']} ({d['decision_note']}) - {d['deterministic'].get('why', '')}")
+        if loop["new_plan"]:
+            np = loop["new_plan"]
+            _p(f"\nNEW PLAN {np['id']} supersedes {a.plan}: {np['chosen']['summary']}")
+            _p(f"  state {np['state']}, plan_hash {np['plan_hash'][:16]}...  A human must approve it:")
+            _p(f"  python -m guardian approve {np['id']} --approver \"Your Name\"")
+    return 0 if res["verdict"] in ("verified", "partial") else 5
 
 
 def cmd_policy(a):
@@ -233,9 +259,11 @@ def main(argv=None):
     s.add_argument("--comment")
     s.add_argument("--run")
     s.set_defaults(fn=cmd_approve)
-    s = sub.add_parser("validate", help="validate an approved plan")
+    s = sub.add_parser("validate", help="validate an approved plan; on failure diagnose and re-plan")
     s.add_argument("plan")
     s.add_argument("--run")
+    s.add_argument("--mode", choices=["live", "offline"], default="live")
+    s.add_argument("--no-loop", action="store_true", help="do not diagnose / re-plan after a failure")
     s.set_defaults(fn=cmd_validate)
     s = sub.add_parser("policy", help="policy gate on the head ref")
     s.add_argument("--run")
