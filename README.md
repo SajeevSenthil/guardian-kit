@@ -2,383 +2,249 @@
 
 **Know what you build. Trust what you ship.**
 
-Guardian compares a trusted version of an application with its current version. It does four
-things:
+Guardian compares a trusted version of an application with the version under review, finds known
+vulnerabilities and supply-chain sabotage (look-alike packages, hijacked updates, loosened Docker
+and CI settings), and backs every claim with the file, line, commit or API response that proves
+it. It then ranks what matters for this application, proposes a fix that a **named human must
+approve**, and proves the fix in a throwaway clone before reporting it. Facts, scores and pass/fail
+are computed by code; AI agents only add labelled, evidence-checked inferences.
 
-- lists everything the application is built from;
-- finds known vulnerabilities;
-- spots suspicious changes such as look-alike packages, hijacked updates, loosened Docker and
-  CI settings, and install scripts that touch secrets;
-- backs every warning with proof: the file, the line and the commit.
+Built for the Bosch "Software Supply Chain Guardian" hackathon. Phase-by-phase build log with
+measured results: [`implementations.md`](implementations.md).
 
-Built for the Bosch "Software Supply Chain Guardian" hackathon.
+![Dependency graph tracing a transitive package six levels deep](docs/screenshots/dashboard-transitive-trace.png)
 
-| | Status |
-|---|---|
-| **Day 1: the Guardian's eyes.** SBOM, dependency graph, vulnerabilities, suspicious changes, evidence dashboard | **Implemented:** [`fastpath/`](fastpath/README.md) |
-| **Day 2: brain and shield.** AI agents, prioritisation, fix plan, human approval, validated remediation, report | **Designed, not built yet:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
+---
+
+## Status (honest, 2026-11-24)
+
+| Capability | Status | Where |
+|---|---|---|
+| Inventory, CycloneDX SBOM (base + head + diff), dependency graph with paths | **works** | `fastpath/build.py` |
+| Known vulnerabilities (OSV), CVE / severity / fix, path to the direct dependency | **works** | `fastpath/build.py` |
+| Supply-chain sabotage rules (look-alike name, install script read statically, suspicious update, untrusted origin, unused import, Docker image, CI actions) | **works** — 7/7 planted findings, 3/3 negative controls | `fastpath/build.py` |
+| Interactive dashboard (graph, direct / transitive / vulnerabilities / sabotage tabs, path tracing) | **works** | `fastpath/out/guardian.html` |
+| Risk score 0–100 with range, confidence, guardrails; reachability R0–R3; EPSS + CISA KEV | **works** | `guardian/prioritise.py`, `scoring.py`, `reachability.py` |
+| AI agents (Change Detective, Risk Analyst, Refuter, Remediation Planner, Diagnostician) | **built; live run not yet done** (no model key configured on the build machine) — offline fallback works | `guardian/agents/` |
+| Fix candidates, dry runs, policy gate, plans with hash, human approval | **works** (approval unit-tested; no approval recorded on the demo run yet) | `guardian/remediate.py`, `policy.py` |
+| Validation in a throwaway clone (apply, `npm ci --ignore-scripts`, static start, rescan, SBOM diff, new findings, policy) | **works up to the approval step** (machinery probed on an unmodified clone); container build and smoke test **not implemented**; no plan has been validated end to end yet (needs a human approval) | `guardian/validate.py` |
+| Closed loop: failed validation → diagnosis → superseding plan → new approval | **built, unit-tested**; end-to-end run waits for a human approval | `guardian/loop.py` |
+| Report: HTML, Markdown, schema-validated JSON, OpenVEX, before/after SBOMs | **works** | `guardian/report.py` |
+| Hash-chained audit log | **works** | `guardian/audit.py` |
+| Hold-out seeds, second application, NiceGUI UI, replay mode, Playwright UI test | **not built** | see [Known limitations](docs/KNOWN_LIMITATIONS.md) |
 
 ---
 
 ## Quick start
 
-From this folder, using Git Bash on Windows or any shell on macOS or Linux:
+Prerequisites: Python ≥ 3.11.4 (3.12.1 tested), git, Node + npm (22 / 10 tested), Git Bash on
+Windows. Optional: a Gemini API key (agents). Docker is not used: the container build and smoke
+test of the validation design are not implemented.
 
 ```bash
-bash scripts/make_demo_target.sh     # once: builds ./target, the sample app with planted risks
-python fastpath/build.py             # ~20 s: writes fastpath/out/
-start fastpath/out/guardian.html     # Windows  (macOS: open, Linux: xdg-open)
+# 0. build the demo target once (needs network; Windows notes in fastpath/README.md)
+bash scripts/make_demo_target.sh
+
+# Day 1: detect (about 20 s)
+python -m guardian scan                       # runs the fast path, creates runs/<run_id>/
+start fastpath/out/guardian.html              # the dashboard (macOS: open, Linux: xdg-open)
+
+# Day 2: decide, fix, prove, report
+python -m guardian prioritise                 # ranked list with scores
+python -m guardian explain F162               # factor table for one finding
+python -m guardian analyse                    # AI agents (needs GEMINI_API_KEY in .env; else "skipped")
+python -m guardian plan --finding F359        # fix candidates, dry runs, policy gate -> P-0001
+python -m guardian approve P-0001 --approver "Your Name"
+python -m guardian validate P-0001            # on failure: diagnosis + superseding plan (approve again)
+python -m guardian report                     # runs/<run_id>/report/guardian-report.html
+python -m guardian audit-verify
 ```
 
-You need Python ≥ 3.11.4, git, and Node/npm (npm is only used to build the demo target).
-Internet access is optional: `python fastpath/build.py --offline` uses cached vulnerability
-data, and any lookup it can't answer shows "not evaluated".
+Finding ids depend on the run; use `python -m guardian prioritise` to see them.
+**Offline mode:** add `--offline` to `scan` / `prioritise`, `--mode offline` to `analyse` / `plan`
+/ `validate`, or set `GUARDIAN_OFFLINE=1`. Lookups are then served from `.cache/` or reported as
+**not evaluated** (never as zero), agents are skipped, and npm dry runs use its cache only.
+Tested in a fresh clone in a temporary folder (see implementations.md, phase 14).
 
-**On Windows, building the target needs three workarounds:**
-- `python3` opens the Microsoft Store instead of Python;
-- git's automatic line-ending conversion breaks the target's shell scripts;
-- VS Code locks the new folder, so the final rename fails.
-
-Each fix is in [`fastpath/README.md`](fastpath/README.md#windows-notes-building-the-demo-target).
+**Model key:** put `GEMINI_API_KEY=...` in a `.env` file in this folder (git-ignored). It is read at
+runtime and never printed. `python -m guardian doctor` reports whether it is present and which
+configured models it can use.
 
 ---
 
-## 1. The problem
+## Demo scenario
 
-A modern application is mostly other people's code. Our sample app declares **37**
-dependencies, but installing it pulls in **982 unique packages**, installed in **1,276** places.
-Developers review the 37 they chose. Attackers target the rest:
+1. **What is in it?** 982 packages (1,276 install paths), 37 direct; the graph traces any
+   transitive package to the direct dependency that brings it in.
+2. **What changed?** Four innocent-looking commits on `tampered`: a look-alike package with a
+   secret-reading install script, a floating Docker base image, a third-party CI action on a
+   mutable tag with `write-all` and `curl | bash`, and a patch release that adds a preinstall
+   payload. All 7 planted findings are detected and linked to their commits.
+3. **What matters?** lodash `merge` advisory: **R3** (the app calls `_.merge(…, req.body…)`),
+   score 79, ranks above the higher-CVSS `defaultsDeep` advisory (72). Packages nothing loads
+   are capped at 39. tj-actions' CVE-2025-30066 is in CISA KEV → 90.
+4. **Fix it safely.** Plan P-0001 removes the look-alike package, its tarball and its unused
+   `require()`; the manifest-only alternative is rejected because code would still require the
+   package. A human approves the exact patch hash.
+5. **Prove it** *(expected; not yet run end to end — it needs a human approval)*. Validation in a
+   throwaway clone; the "manifest-only bot" plan (P-0004) should fail the static start check, the
+   diagnosis should recommend the full removal, and the new plan needs a new approval.
+6. **Report.** HTML / Markdown / JSON / VEX with the audit chain verified.
 
-| Attack | Real-world example |
-|---|---|
-| A package with a look-alike name (`lodahs` instead of `lodash`) | npm typosquatting campaigns |
-| A "patch" release that quietly adds an install script | 2025–26 npm worm droppers |
-| A CI action referenced by a movable tag | tj-actions/changed-files compromise, March 2025 |
-| A Docker base image switched to a floating tag | silent base-image swaps |
-| Old packages with published vulnerabilities (CVEs) | most real applications |
+---
 
-Existing scanners answer "which CVEs exist?". Teams still lack answers to three questions:
-
-- **What changed** between the version we trusted and this one?
-- **Does the change look like an attack?**
-- **Can I check the evidence myself?**
-
-## 2. The idea
-
-Guardian works from **two git refs**, a trusted baseline and the version under review, and
-answers the three questions in the organisers' Day 1 checkpoint:
-
-1. **What is in the application?** An SBOM and a dependency graph.
-2. **What changed?** A package-by-package and file-by-file diff, with each change linked to
-   the commit that introduced it.
-3. **What appears risky?** Known vulnerabilities plus generic sabotage-detection rules, each
-   finding backed by evidence.
-
-**Product rules** (from `CLAUDE.md`, enforced in code):
-
-- **Evidence is minted only by tools.** Every fact on screen was read from a file or an API
-  response by code. A model never creates evidence.
-- **Claims are typed.**
-  - *verified* = read directly from a file or from OSV.
-  - *computed* = derived by code (edit distance, size ratio).
-  - *AI inference*, from Day 2, will always be labelled as such, separately.
-- **Unknown is never zero.** If a lookup fails or a package can't be checked, Guardian says
-  "not evaluated". It never says "clean".
-- **LLMs propose; code decides.** Scores, verdicts and pass/fail are computed by deterministic
-  code.
-
-## 3. Technical approach
+## Architecture
 
 ```mermaid
 flowchart TB
-    T[("<b>./target</b> git repo<br/>guardian-baseline → tampered")]
-    EXT[("OSV.dev API<br/>public advisories")]
+    T[("<b>./target</b> git repo<br/>guardian-baseline → tampered<br/>read only")]
+    EXT[("Public data (read only)<br/>OSV.dev · FIRST EPSS · CISA KEV<br/>npm registry (dry runs)")]
+    LLM[("Gemini API<br/>redacted excerpts only")]
 
-    subgraph D1["<b>DAY 1 · Guardian's eyes</b> · fastpath/build.py · implemented · deterministic"]
+    subgraph D1["<b>DAY 1 · detect</b> · fastpath/build.py · built · deterministic"]
         direction LR
-        X["<b>Extract</b><br/>git archive<br/>read-only"] --> INV["<b>Inventory</b><br/>package-lock.json<br/>Dockerfile · workflows"]
-        INV --> SB["<b>SBOM</b><br/>CycloneDX 1.5<br/>base + head + diff"]
-        SB --> G["<b>Dependency graph</b><br/>Node.js resolution<br/>shortest paths"]
-        G --> V["<b>Vulnerabilities</b><br/>OSV batch query<br/>cached"]
-        G --> C["<b>Change detectors</b><br/>look-alike · install script<br/>origin · update · image · CI"]
-        V --> F["<b>Findings</b><br/>risk + rule · path<br/>commit · evidence"]
-        C --> F
+        X["<b>Extract</b><br/>git archive"] --> INV["<b>Inventory</b><br/>lockfile · Dockerfile<br/>workflows"]
+        INV --> SB["<b>SBOM</b><br/>CycloneDX 1.5"]
+        SB --> G["<b>Dependency graph</b><br/>Node.js resolution"]
+        G --> V["<b>Vulnerabilities</b><br/>OSV"]
+        G --> C["<b>Sabotage rules</b><br/>look-alike · install script<br/>update · origin · image · CI"]
     end
 
-    subgraph OUT["<b>Outputs</b> · fastpath/out/"]
+    subgraph D2["<b>DAY 2 · decide and fix</b> · guardian/ · built"]
         direction LR
-        H1["guardian.html<br/>graph + 3 tabs"]
-        H2["findings.json"]
-        H3["SBOMs<br/>.cdx.json"]
+        PRI["<b>Prioritise</b> (code)<br/>score · range · confidence<br/>reachability · EPSS · KEV"]
+        AG["<b>AI agents</b><br/>Change Detective · Risk Analyst<br/>Refuter · Planner · Diagnostician<br/>read-only tools · INFERRED only"]
+        PLN["<b>Plan</b> (code)<br/>candidates · dry run<br/>policy gate · plan hash"]
+        HA{{"<b>HUMAN<br/>APPROVAL</b><br/>name + plan hash"}}
+        VAL["<b>Validate</b> (code)<br/>throwaway clone · npm ci<br/>static start · rescan · SBOM diff"]
+        DG["<b>Diagnose</b><br/>code + Diagnostician"]
+        REP["<b>Report</b> (code)<br/>HTML · MD · JSON · VEX"]
+        PRI --> AG --> PLN --> HA --> VAL --> REP
+        VAL -. "fails" .-> DG -. "superseding plan" .-> HA
     end
 
-    subgraph D2["<b>DAY 2 · brain and shield</b> · designed, not built yet"]
-        direction LR
-        DET["<b>Investigate</b><br/>AI: Change Detective"] --> PRI["<b>Prioritise</b><br/>AI: Risk Analyst<br/>score by code"]
-        PRI --> REF["<b>Challenge</b><br/>AI: Refuter"]
-        REF --> PLN["<b>Plan fix</b><br/>AI: Remediation Planner"]
-        PLN --> HA{{"<b>HUMAN<br/>APPROVAL</b><br/>bound to plan hash"}}
-        HA --> VAL["<b>Validate</b><br/>throwaway clone<br/>build · test · rescan"]
-        VAL --> REP["<b>Report</b><br/>JSON · CycloneDX · VEX"]
-        VAL -. "fails" .-> DG["<b>Diagnose</b><br/>AI: Diagnostician"]
-        DG -. "new plan" .-> PLN
-    end
+    STORE[("<b>runs/&lt;id&gt;/</b> evidence store<br/>findings · evidence_index · plans<br/>approvals · validation · audit.jsonl (hash chain)")]
 
     T --> D1
     EXT --> D1
-    D1 --> OUT
-    D1 == "findings + evidence" ==> D2
+    D1 == "findings + evidence + graph" ==> D2
+    EXT -.-> D2
+    D2 <-. "agent calls only" .-> LLM
+    D2 --> STORE
 
     classDef built fill:#e6f4ea,stroke:#1e8e3e,color:#0b3d1b
     classDef ai fill:#f3e8fd,stroke:#8430ce,stroke-dasharray:5 4,color:#3b0a6b
-    classDef code fill:#f1f3f4,stroke:#80868b,stroke-dasharray:5 4,color:#202124
     classDef human fill:#fff4e5,stroke:#e8710a,stroke-width:3px,color:#5f2b00
     classDef data fill:#e8f0fe,stroke:#1a73e8,color:#0b2e6b
-    classDef out fill:#ffffff,stroke:#1e8e3e,stroke-width:2px,color:#0b3d1b
-    class X,INV,SB,G,V,C,F built
-    class DET,PRI,REF,PLN,DG ai
-    class VAL,REP code
+    class X,INV,SB,G,V,C,PRI,PLN,VAL,REP built
+    class AG,DG ai
     class HA human
-    class T,EXT data
-    class H1,H2,H3 out
+    class T,EXT,LLM,STORE data
     style D1 fill:#f8fdf9,stroke:#1e8e3e,stroke-width:2px
-    style D2 fill:#fcfaff,stroke:#8430ce,stroke-width:2px,stroke-dasharray:6 4
-    style OUT fill:#ffffff,stroke:#1e8e3e
+    style D2 fill:#f8fdf9,stroke:#1e8e3e,stroke-width:2px```
+
+Agents never write facts, scores, plans or verdicts: their output is INFERRED and every quote is
+checked against the evidence by code. The diagram's "Validate" box has no container build or smoke
+test in this build (not implemented). Full design and what changed while building:
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) (section 0 "As built"). Image for slides:
+[`docs/architecture.png`](docs/architecture.png).
+
+---
+
+## Sample application and what we changed
+
+[snyk-labs/nodejs-goof](https://github.com/snyk-labs/nodejs-goof), Apache-2.0, pinned to commit
+`add14ba59e98240d9e00a235dd7d42cd61ae9912`: an Express + MongoDB app with a real dependency tree, a
+Dockerfile, a compose file and CI workflows. `scripts/make_demo_target.sh` clones it into
+`./target`, **removes the git remote** (nothing can be pushed), and adds:
+
+| Change | Why |
+|---|---|
+| `guardian/smoke-test.sh` + `compose.guardian.yml` bound to 127.0.0.1 | credential-free build + HTTP check (upstream `npm test` needs a Snyk token; the app is deliberately vulnerable) |
+| vendored `guardian-demo-strfmt@1.0.0` | a clean baseline version of the package that the "suspicious update" later replaces |
+| tag `guardian-baseline` | the trusted version |
+| branch `tampered`: 4 commits (look-alike `lodahs`, `FROM node:18`, risky workflow, `strfmt@1.0.1`) | simulated attacks; local `file:` tarballs only, nothing published; scripts only write a marker file |
+
+What is planted and what must not be flagged: [`demo/ground_truth.yaml`](demo/ground_truth.yaml).
+The rules are generic (a unit test fails if a seeded name appears in detector or planning code)
+and work on any npm project with a `package-lock.json` v2/v3; other ecosystems are not implemented.
+
+---
+
+## Tools and data sources
+
+| Item | Version (tested) | Purpose |
+|---|---|---|
+| Python (standard library) | 3.12.1 | everything in `fastpath/` and `guardian/` |
+| jsonschema | 4.26.0 | validates the report JSON against `schemas/guardian-report.schema.json` |
+| PyYAML, pytest | 6.0.3, 8.4.2 | tests only |
+| git | 2.47.1 | `git archive`, `git log -S`, clones, `git am` |
+| Node / npm | 22.12.0 / 10.9.0 | `node --check`; `npm install --package-lock-only --ignore-scripts`; `npm ci --ignore-scripts` |
+| vis-network | 9.1.9 (inlined) | dashboard graph |
+| ruff | 0.17.6 (via `uvx`) | lint |
+| Docker, conftest, syft, grype, osv-scanner | **not installed / not used** | container build and smoke test not implemented; policy runs on a Python port of the Rego rules; lockfile SBOM + OSV API instead of the scanners |
+
+| Host contacted | When | What is sent |
+|---|---|---|
+| `api.osv.dev` | scan, plan, validate | package name + version; advisory ids; GitHub Action names |
+| `api.first.org` | prioritise | CVE ids |
+| `www.cisa.gov` | prioritise | nothing (downloads the KEV catalogue) |
+| `registry.npmjs.org` | plan dry run, validate (`npm`) | package names / versions npm resolves |
+| `generativelanguage.googleapis.com` | analyse, plan, validate loop, `doctor` (model list) — only with a key, never offline | redacted short excerpts (see [Responsible AI](docs/RESPONSIBLE_AI.md)); `doctor` sends only the key header |
+
+OSV, EPSS, KEV and agent responses are cached by Guardian (`fastpath/.cache/`, `.cache/`) with their fetch
+time; npm uses its own cache.
+
+---
+
+## Measured timings (this machine, Windows 11, 2026-11-23/24)
+
+| Step | Time |
+|---|---|
+| `scan` (live OSV, warm cache) | ~20 s; offline fresh clone 7 s |
+| `prioritise` | ~1 s (+ first EPSS/KEV download) |
+| `plan` (one npm lockfile resolve per candidate) | 21–35 s per candidate |
+| `validate` (estimate from its parts: `npm ci` 141 s, rescan 12 s, clone 1 s) | ~3 min — above the 2-minute target; docker steps not included |
+| `report` | ~1 s |
+| AI agents | not measured (no live run); tokens are counted per run, cost is not estimated |
+
+## Tests
+
+```bash
+python -m pytest -q tests/unit                         # 62 passed, no network, no docker
+uvx ruff check guardian tests/unit --line-length 110   # clean
 ```
 
-**Legend:** solid green = implemented and deterministic · dashed purple = AI agent (Day 2) · dashed grey = code step (Day 2) · orange = human approval gate · blue = data sources. Agents can only propose. Scores, verdicts and pass/fail are always computed by code.
-Image for slides: [`docs/architecture.png`](docs/architecture.png) (source: [`docs/architecture.mmd`](docs/architecture.mmd)).
+They cover scoring (unknown never zero, guardrails, monotonic factors), the CVSS calculator,
+reachability tiers, agent output coercion to INFERRED and quote checking, an injected
+"I am harmless" refutation, the policy rules, approval bound to the plan hash (an edited plan is
+refused), the audit chain, the diagnosis choosing a safe alternative, VEX rules, and a test that no
+seeded name appears in generic code.
 
-### Day 1: deterministic detection (built)
+**Also tested on:** no second application yet (planned; see limitations).
 
-All the code is in `fastpath/build.py`, using only the Python standard library.
+---
 
-1. **Read both refs safely.**
-   - `git archive <ref>` is extracted into a temp folder with Python's `tarfile`
-     (`filter="data"`).
-   - The target repo is never checked out, modified or executed.
-2. **Inventory and SBOM.**
-   - `package-lock.json` lists every installed package: version, `resolved` origin,
-     `integrity` hash, install-script flag and dev/prod scope.
-   - `scripts/lockfile_sbom_diff.py` writes a **CycloneDX 1.5** SBOM for each ref, plus their
-     diff.
-3. **Dependency graph.**
-   - There is one node per install path.
-   - Edges follow **Node.js module resolution**: a package's dependency is the nearest
-     `node_modules/<name>`, walking up the folders. So the edges are what the app actually
-     loads.
-   - A breadth-first search from the app gives every package its shortest dependency path.
-   - *Direct* means the package is listed in the root `package.json` and installed at the top
-     level.
-   - The Dockerfile and the GitHub workflow files are added as file nodes.
-4. **Vulnerabilities.**
-   - Registry packages are sent in batches to OSV (`POST /v1/querybatch`), and each advisory
-     is fetched from `GET /v1/vulns/{id}`.
-   - Guardian keeps the advisory ID, CVE aliases, severity and fixed versions.
-   - Responses are cached on disk with their fetch time.
-   - Dev-only packages are rated one level lower.
-5. **Diff between the refs.**
-   - A package is *new* if its install path is missing in the baseline.
-   - It is *changed* if its version, integrity hash or origin differs.
-   - A risky Dockerfile or workflow line is *new* if that exact line is absent from the
-     baseline file.
-   - The introducing commit comes from `git log -S "<exact text>" baseline..head -- <file>`.
-6. **Sabotage rules.** All rules are generic; no package name is hard-coded.
+## Repository index
 
-   | Rule | Trigger | Risk |
-   |---|---|---|
-   | Look-alike name | New name within edit distance 2 (1 if under 6 letters) of another dependency or of a list of popular npm names | high |
-   | Non-registry origin | `resolved` is not the npm registry | medium |
-   | Unsafe install script | Install hook present. The script is **read as text, never run**, and checked for env-var reads (secret-like names), hard-coded URLs, network/process APIs, temp-dir writes and large code files | 2+ signals → critical, else high |
-   | Suspicious update | The new version adds an install hook, or its tarball grows 2× or more | high |
-   | Unexpected dependency | A new `require()` whose variable is never used | medium |
-   | Untrusted image | `FROM` without `@sha256:` digest; floating tag; changed since baseline | high / medium / low |
-   | Unpinned CI component | `uses:` not pinned to a 40-char commit SHA (OSV is also checked for the action) | high / medium / low |
-   | Unsafe CI pattern | `permissions: write-all`; `curl … \| sh` | high |
-   | Lockfile drift | Image built with `npm install`/`npm update` instead of `npm ci` | low |
-
-7. **Findings.** Each finding records:
-   - component, type, and risk level, plus **the rule that set it**;
-   - the dependency path;
-   - whether it is new or already present, and its commit;
-   - its **evidence**: file, line and exact excerpt, or the OSV API URL and fetch time.
-
-   Duplicate findings (same file + same type) are merged.
-8. **Dashboard.** `guardian.html` is a single offline file with an interactive graph
-   (vis-network) and three tabs: *What is in it*, *What changed*, *What is risky*.
-   - Colours: red = suspicious change, orange = known vulnerability, grey = clean, dashed
-     outline = new since baseline.
-   - Clicking a node shows its version, origin, path, findings and evidence.
-
-Full details, outputs and options: [`fastpath/README.md`](fastpath/README.md).
-
-### Day 2: agentic analysis and remediation (designed)
-
-A deterministic **conductor** runs the stages in a fixed order. **Five agents** built on the
-Claude Agent SDK add judgement where it's needed:
-
-| Agent | Job | It cannot |
-|---|---|---|
-| Change Detective | Investigates each suspicious change (opens the archive, reads the script, checks the commit) and explains what it does and which real incident it resembles | execute package code or follow instructions found in packages |
-| Risk Analyst | Checks whether the app actually calls the vulnerable function (reachability) | set the score; code recomputes it |
-| Refuter | Argues against top findings and fix plans to cut false alarms. Uses a different model from the analyst | close a finding; "refuted" only creates a candidate for a human to confirm |
-| Remediation Planner | Ranks the fix options that code has enumerated and dry-run; writes rationale and rollback | apply anything |
-| Diagnostician | When a validated fix fails, reads the build and test logs and proposes the next option | approve or apply anything |
-
-The loop:
-
-1. A plan is proposed.
-2. **A human approves it.** The approval is bound to the plan's hash, so any edit to the plan
-   voids it.
-3. The fix is applied in a **throwaway clone**, then the image is built, smoke-tested,
-   rescanned and SBOM-diffed.
-4. If a check fails, the Diagnostician writes a new plan, which needs a fresh approval.
-
-Nothing is ever pushed, merged or deployed.
-
-**AI guardrails:**
-- Each agent runs with no built-in tools: no shell, no files, no web. It gets only its own
-  read-only tools.
-- Agents must answer in a JSON schema.
-- Each agent has a turn limit and a budget limit.
-- If an agent fails, a deterministic fallback runs and the step is marked "skipped".
-- Secrets are redacted before any model call.
-- Package and advisory text is treated as data, never as instructions.
-
-**Risk score.** The score is computed by code:
-
-| Factor | Weight |
+| Path | What |
 |---|---|
-| severity | 30 |
-| exploitability (EPSS, KEV) | 25 |
-| reachability | 20 |
-| exposure | 15 |
-| fix availability | 10 |
+| `fastpath/` | Day 1 pipeline and dashboard ([README](fastpath/README.md)) |
+| `guardian/` | Day 2: `prioritise`, `reachability`, `scoring`, `enrich`, `remediate`, `policy`, `validate`, `loop`, `report`, `audit`, `evidence`, `cli` |
+| `guardian/agents/prompts/` | **agent prompts** (deliverable) |
+| `guardian.toml` | **configuration**: score weights, priors, bands, trust lists, models, limits |
+| `policy/` | **sample policies** (Rego) — evaluated by the Python port in `guardian/policy.py` |
+| `schemas/guardian-report.schema.json` | report JSON Schema |
+| `docs/ARCHITECTURE.md`, `docs/architecture.png` | architecture (deliverable) |
+| `docs/RESPONSIBLE_AI.md` | Responsible AI & security note (deliverable) |
+| `docs/KNOWN_LIMITATIONS.md` | known limitations |
+| `implementations.md` | phase-by-phase build log with results |
+| `demo/ground_truth.yaml`, `scripts/make_demo_target.sh` | the planted scenario |
+| `docs/KIT_README.md` | the original build-kit README |
 
-Guardrails apply on top. Confidence drops for every unknown factor and moves with the
-Refuter's verdict.
+## Rules this project keeps
 
-## 4. Sample application and planted risks
-
-**Sample app:** [snyk-labs/nodejs-goof](https://github.com/snyk-labs/nodejs-goof) (Apache-2.0),
-pinned to commit `add14ba5`. It is an Express + MongoDB to-do app, deliberately vulnerable,
-with a real dependency tree, a Dockerfile, a compose file and CI workflows.
-
-`scripts/make_demo_target.sh` builds `./target` with two refs:
-
-- **`guardian-baseline`:** the app as published, plus one vendored helper package.
-- **`tampered`:** four commits with innocent-looking messages, each planting a harmless,
-  local-only replica of a real attack pattern:
-
-| Commit | Planted risk |
-|---|---|
-| `431ac1d` feat: add string helper utility | `lodahs`: look-alike of lodash, from a local file, with a postinstall script that reads secret-like env vars |
-| `a8de0f9` chore: use node 18 base image | Dockerfile `node:18.13.0` → `node:18` (floating tag, no digest) |
-| `52e2fa6` ci: list changed files on pull requests | `tj-actions/changed-files@v45`, `permissions: write-all`, `curl … \| bash` |
-| `05b9d85` chore: bump guardian-demo-strfmt to 1.0.1 | Patch release adds a preinstall script and a 99 KB one-line payload; tarball grows 5× |
-
-Nothing is published to any registry. The ground truth is in
-[`demo/ground_truth.yaml`](demo/ground_truth.yaml).
-
-**Not limited to this app.** The rules work on any npm project with a `package-lock.json` (v2/v3)
-in git, and the Docker and CI rules work on any repo. Other package ecosystems (pip, Maven, Go)
-each need their own lockfile parser.
-
-## 5. Results (Day 1, on the demo target)
-
-| Measure | Value |
-|---|---|
-| Packages | 982 unique (1,276 install paths): 37 direct, 945 transitive |
-| Vulnerabilities (OSV) | 217 advisories across 165 packages |
-| Suspicious findings | 10 new since baseline, 5 already present |
-| Planted changes detected | **7 / 7** (GT-C1…C7), each linked to the correct commit |
-| Preexisting risks | GT-P1 and GT-P2 detected and marked "already present" |
-| Negative controls | 3 / 3 respected (lodash not called a look-alike; strfmt 1.0.0 and `actions/checkout` not flagged as malicious) |
-
-**Caveat:** the detectors were written with the planted risks known. The honest test of how
-well they generalise is the hold-out seeds plus a run on a second application. Neither has
-been done yet.
-
-## 6. Why this stack
-
-| Choice | Reason |
-|---|---|
-| Python standard library only | Runs anywhere in ~20 s with nothing to install. The tool's own supply chain is minimal |
-| `git archive` instead of checkout | The target is only read, never modified or executed |
-| The lockfile, not just `package.json` | The lockfile records what is actually installed, with origin and integrity hash for every transitive package |
-| CycloneDX 1.5 | OWASP standard; other tools (Dependency-Track, grype) can consume the output |
-| OSV.dev | Free, no API key, aggregates GitHub advisories and others, has a batch API, also covers GitHub Actions |
-| vis-network | Renders 1,000+ nodes on canvas, works offline from one file |
-| One self-contained HTML file | The demo cannot fail on a server, a port or Wi-Fi |
-| Claude Agent SDK (Day 2) | Agents with in-process, read-only tools, structured output, and turn and budget limits |
-
-## 7. Safety and responsible AI
-
-- **Only `./target` is touched, and only by reading it.** No checkout, no install, no execution
-  of package code. Install scripts are read as text.
-- **One external service.** The only network calls go to `api.osv.dev`. Nothing is published,
-  pushed or deployed by Guardian.
-- **No credentials.** OSV needs no key. On Day 2, `ANTHROPIC_API_KEY` is read from the
-  environment and secrets are redacted before any model call.
-- **Human approval** is required for every remediation (Day 2). Fixes run only in a throwaway
-  clone.
-- **Enforcement for Claude Code.** A Claude Code `PreToolUse` hook
-  (`.claude/hooks/block_out_of_scope.py`) blocks out-of-scope commands while building: push,
-  publish, PR, merge and network scanners.
-
-Draft note: [`docs/RESPONSIBLE_AI.md`](docs/RESPONSIBLE_AI.md).
-
-## 8. Known limitations
-
-- **npm only** for package analysis. The script reads a fixed `./target` path.
-- **Registry install scripts are not opened.** Reading them would mean downloading the
-  tarball, so they are reported as "content not inspected" at medium risk.
-- **Bundled packages** (no `resolved` field) are not matched against OSV; they show "not
-  evaluated".
-- **Vulnerability counts** are advisory × package pairs.
-- **No reachability, EPSS or KEV yet** (Day 2).
-- **Text rules can be evaded** by obfuscation. Size-growth and large-file rules are the
-  backstop.
-- **The Docker image is not built or scanned yet.** Only the Dockerfile is read.
-
-More: [`docs/KNOWN_LIMITATIONS.md`](docs/KNOWN_LIMITATIONS.md) and
-[`fastpath/README.md`](fastpath/README.md#known-limitations).
-
-## 9. Repository layout
-
-| Path | What it is |
-|---|---|
-| `fastpath/` | **Implemented Day 1 pipeline:** `build.py`, dashboard template, outputs in `out/` |
-| `scripts/make_demo_target.sh` | Builds `./target` (sample app + planted risks) |
-| `scripts/lockfile_sbom_diff.py` | Lockfile → CycloneDX SBOM, and SBOM diff (stdlib) |
-| `demo/ground_truth.yaml` | What is planted, used to check results |
-| `demo/packages/` | The harmless local packages used as planted risks |
-| `guardian/contracts.py` | Data models and the product rules (starter for the full app) |
-| `guardian/data/popular_npm_names.txt` | Popular names for the look-alike detector |
-| `guardian.toml` | Configuration for the full app: models, score weights, trust lists |
-| `policy/` | Policy-as-code rules (OPA/conftest), for Day 2 |
-| `templates/` | Report and pull-request body templates |
-| `docs/ARCHITECTURE.md` | Full system design: pipeline, agents, risk score, controls |
-| `docs/HACKATHON_BRIEF.md` | The organisers' problem statement and rules |
-| `docs/PLAN.md`, `docs/PROMPTS.md` | Build plan by phase, with prompts and acceptance checks |
-| `docs/DEMO.md` | Demo script and judge Q&A |
-| `docs/research/` | Research notes: prior art, tools, threats, Day 2, Agent SDK, UX |
-| `CLAUDE.md`, `.claude/` | Rules, safety hook, subagents and skills for building with Claude Code |
-
-## 10. Building the rest with Claude Code
-
-The Day 2 work is planned phase by phase in `docs/PROMPTS.md`:
-
-- Run a phase with `/phase N`, then check its acceptance commands and commit.
-- Run `/checkpoint final` to audit the result against every requirement on the organisers'
-  slides.
-- `docs/PLAN.md` has cut lines if time runs short.
-
-**Rules you must not break** (from the organisers):
-
-- do not scan or attack real systems;
-- stay inside your sandbox;
-- never publish packages;
-- never use real credentials;
-- never merge or deploy without human approval;
-- do not affect other teams.
+Nothing outside `./target` and its throwaway clones is scanned; nothing is published, pushed,
+merged or deployed; no real credentials are used (the only secret is the model key, read from
+`.env`); package code is never executed outside an install with scripts disabled; every
+remediation needs a named human approval bound to the plan hash.

@@ -1,6 +1,38 @@
 # Guardian — system design
 
-Status: design for a two-day build. Section 12 lists what is deliberately left out.
+Status: design for a two-day build, followed by what was actually built (section 0). Section 12
+lists what is deliberately left out. Build log with measured results: `implementations.md`.
+
+## 0. As built (2026-11-24)
+
+The pipeline, the product rules and the human gate were built as designed. These parts were
+built differently; the rest of this document is the original design and is kept for reference.
+
+| Design | As built | Why |
+|---|---|---|
+| Phases 1–7 inside `guardian/` (ledger, events, conductor, NiceGUI, syft/grype/osv-scanner wrappers) | Day 1 is the stdlib **fast path** `fastpath/build.py` (lockfile SBOM, OSV API, generic rules, HTML dashboard); Day 2 (`guardian/`) reads its outputs into `runs/<id>/` | a 70-minute checkpoint; scanners not installed on the build machine |
+| Evidence ledger with per-fact records + command + hash | evidence embedded in each finding (source, line, excerpt; API URL + fetch time); ids `F….E<n>`; agent tool outputs minted as `T<n>` by `guardian/evidence.py`; the report's evidence index carries the sha256 of every excerpt | same rule (only code writes facts), smaller implementation |
+| Conductor + event stream + replay | CLI stages: `scan → prioritise → analyse → plan → approve → validate (→ diagnose → plan) → report`; `run.json` records stage status | no replay mode was built |
+| Claude Agent SDK, in-process MCP tools | **Gemini REST API** (stdlib client, `guardian/agents/llm.py`) with an allow-list of read-only tools, schema-validated output, turn/token limits, deterministic fallback | the team has a Gemini key, not an Anthropic key |
+| conftest + `policy/guardian.rego` | `guardian/policy.py`: the same rules in Python, plus a **plan gate** (no deny left on the plan's target, none introduced) | conftest not installed; the whole-repo gate can never pass while pre-existing KEV/critical findings remain |
+| Validation: docker build + smoke test | `npm ci --ignore-scripts`, `node --check`, require resolution, rescan, SBOM diff, new findings, policy; the container build and smoke test are **not implemented** (reported "not run") | docker not installed on the build machine, so they were not built; best verdict is "partial" |
+| NiceGUI pages (Overview … Agent trace) | `fastpath/out/guardian.html` (Day 1) and `runs/<id>/report/guardian-report.html` (Day 2) | time |
+| Scorecard, hold-outs, second app | not built (the ground-truth comparison was done by hand: 7/7, 3/3) | time |
+
+Package layout as built:
+
+```
+fastpath/build.py, template.html          Day 1 pipeline and dashboard
+guardian/cli.py                           python -m guardian <scan|prioritise|explain|analyse|plan|approve|
+                                                              validate|report|accept|policy|audit-verify|doctor>
+guardian/runs.py                          run directories, read-only materialisation of refs
+guardian/prioritise.py, scoring.py, reachability.py, cvss.py, enrich.py     phase 8
+guardian/evidence.py, env.py, agents/{llm,tools,runner,planner}.py, agents/prompts/*.md   phase 9
+guardian/remediate.py, policy.py, audit.py                                 phase 10
+guardian/validate.py, loop.py                                             phase 11
+guardian/report.py, schemas/guardian-report.schema.json                   phase 12
+tests/unit/                                62 tests, no network, no docker
+```
 
 ## 1. One-paragraph description
 
@@ -131,7 +163,7 @@ All agents are Claude Agent SDK `query()` calls configured the same way:
 | Diagnostician | read_build_log, read_test_log, get_plan, find_imports, list_fix_candidates | approve or apply anything | sonnet |
 
 No agent can write a VERIFIED claim. Agent output is INFERRED; its cited evidence ids and
-quotes are checked by `ledger.check_claim`.
+quotes are checked by `ledger.check_claim` (as built: `guardian/evidence.py::EvidenceIndex.check_claim`).
 
 Why a deterministic conductor instead of one orchestrating super-agent: stage order is fixed by
 the brief, an LLM orchestrator adds latency and a failure mode for no gain, and subagent results
@@ -141,7 +173,8 @@ a strength ("agents where judgement is needed, code where correctness is needed"
 Prompt-injection stance: text from packages and advisories is passed inside clearly delimited
 data blocks, tools return capped excerpts, agents cannot write or execute, a package's
 description of itself is never evidence, and because only code writes facts a model cannot
-"verify" anything. Two adversarial fixtures test this.
+"verify" anything. As built, one adversarial unit test covers a paraphrased and one a verbatim self-description
+(`tests/unit/test_agents.py`); no live adversarial run against a model has been done.
 
 ## 6. Risk score
 
@@ -270,15 +303,18 @@ replay mode shows a permanent "REPLAY" badge; all JS/CSS is local.
 |---|---|
 | Hallucination control | facts written only by code from tool output; agent output always labelled inference with checked support; schema-validated outputs; scores, policy and pass/fail computed in code; refuter agent |
 | Human approval | plan state machine; approval record with approver + plan hash; validation refuses unapproved or changed plans; a superseding plan needs a new approval; not-affected and accepted-risk need a named human; nothing is ever pushed, merged or opened as a pull request |
-| Least privilege for agents | per-agent tool allow-list; no shell, write or network tools; `setting_sources=[]`; turn and budget limits |
-| Untrusted content | package/advisory text handled as data; static analysis only; install scripts never run outside the validation container |
-| Secrets | only `ANTHROPIC_API_KEY`, from env; redaction pass on every string sent to a model or written to the ledger; no secrets in `runs/` |
+| Least privilege for agents | per-agent allow-list of read-only tools built by our code; an unknown tool name is refused; no shell, write or network tool exists; turn, token and timeout limits; schema-validated output |
+| Untrusted content | package/advisory text handled as data; static analysis only; as built, install scripts never run: `npm` always runs with `--ignore-scripts` (the validation container was not built) |
+| Secrets | only the model key (`GEMINI_API_KEY`), loaded from `.env` at runtime, never printed; sent only in the `x-goog-api-key` header; `redact()` on every string sent to a model and on tool outputs; no secrets in `runs/` |
 | Source code protection | only excerpts (not whole files) go to the model; documented in the Responsible AI note with the list of data that leaves the machine |
-| Auditability | hash-chained audit log; `guardian audit verify` |
-| Honesty | synthetic fixtures labelled; unknown never shown as clean; scorecard shows misses and separates hold-out seeds |
-| Self-protection (phase 14; remove this row if not done) | tool versions recorded in `tools.lock` and printed in the report; Guardian's own SBOM as a report appendix |
+| Auditability | hash-chained audit log; `python -m guardian audit-verify` |
+| Honesty | unknown never shown as clean (OSV/EPSS/KEV/agents report "not evaluated" / "skipped"); the automatic scorecard and hold-out seeds were **not built** (ground truth checked by hand) |
 
 ## 11. Performance targets
+
+**Measured (README, implementations.md):** scan ~20 s; plan 21–35 s per candidate; validation ~3 min
+(`npm ci` alone 141 s), so the 2-minute validation target is not met. The targets below are the design.
+
 
 Discover + detect under 60 s on the demo target with warm caches; scanners run concurrently
 (`asyncio.gather`); advisory lookups cached; agents for independent findings run concurrently

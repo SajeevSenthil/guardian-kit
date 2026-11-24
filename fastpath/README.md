@@ -18,8 +18,8 @@ Detection is deterministic: no LLM, no Docker, nothing to install beyond Python 
 The script never modifies the target repo and never runs code from scanned packages.
 
 This is the Day 1 deliverable ("Show us what is in the application, what changed, and what
-appears risky"). The AI agents, remediation and validation planned for Day 2 are described in
-`docs/ARCHITECTURE.md` and are **not built yet**.
+appears risky"). Day 2 (prioritisation with reachability, EPSS and KEV; agents; remediation plans; validation; report)
+is built separately in `guardian/` on top of these outputs: see the main README and `implementations.md`.
 
 ---
 
@@ -226,8 +226,8 @@ in `demo/ground_truth.yaml` plus a run on a second application; neither has been
 - **Bundled packages** (no `resolved` field, e.g. inside `nyc`) are not matched against OSV
   and show "not evaluated".
 - **Vulnerability counts** are advisory × package pairs; there are 217 unique advisories.
-- **Severity** is OSV's GitHub-advisory severity. There is no reachability, EPSS or KEV yet
-  (planned for Day 2).
+- **Severity** here is OSV's GitHub-advisory severity. Reachability, EPSS and KEV are added by
+  `python -m guardian prioritise` (Day 2), not by the fast path.
 - **The dependency path shown is the shortest one.** A package may also be reachable by
   longer routes.
 - **Static text rules can be evaded** by obfuscated code. The size-growth and large-file rules

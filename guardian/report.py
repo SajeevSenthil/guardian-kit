@@ -57,6 +57,19 @@ def _ver(cmd: list[str]) -> str:
         return "unknown"
 
 
+def vuln_clause(osv_status: str | None, pairs: int | None) -> str:
+    """Unknown is never zero: without an evaluated OSV lookup the report must not print a count."""
+    if osv_status == "evaluated" and pairs is not None:
+        return f"{pairs} package–advisory vulnerability pairs are present; "
+    return "known vulnerabilities were NOT evaluated (OSV unavailable: unknown, not zero); "
+
+
+def docker_sentence(docker_installed: bool) -> str:
+    return ("The container build and HTTP smoke test are not implemented in this build"
+            + ("" if docker_installed else " (and docker is not installed on this machine)")
+            + "; a 'partial' verdict means the fix is confirmed by install, static checks and rescan, not by a build.")
+
+
 # ---------------------------------------------------------------------------------- decisions
 def accept(run: Path, finding_id: str, as_: str, by: str, reason: str) -> dict:
     """Record a human decision: not-affected (feeds VEX) or accepted-risk. Both need a name and a reason."""
@@ -219,8 +232,8 @@ def collect(run: Path) -> dict:
                  f"and inventoried {counts['packages']} packages ({counts['install_paths']} install paths, "
                  f"{counts['direct']} direct).", "cites": ["sbom.head.cdx.json"]},
         {"text": f"{len(new_sus)} supply-chain findings were introduced since the baseline, and "
-                 f"{counts.get('vuln_pairs') or 0} package–advisory vulnerability pairs are present; "
-                 f"{len(need)} ranked items need attention (critical or high).",
+                 + vuln_clause(day1["meta"]["osv"].get("status"), counts.get("vuln_pairs"))
+                 + f"{len(need)} ranked items need attention (critical or high).",
          "cites": [i["id"] for i in new_sus][:12]},
     ] + [{"text": f"Ranked #{n}: {i['title'] or i['advisory']} on {i['component']} scores {i['score']} ({i['band']}), "
                   f"confidence {i['confidence']}.", "cites": [i["id"]]} for n, i in enumerate(top, 1)] + [
@@ -229,12 +242,11 @@ def collect(run: Path) -> dict:
                  f"({len(verified)} verified, {len(partial)} partial, {len(failed)} failed).", "cites": sorted(plans)},
         {"text": f"{len(open_need)} critical/high item(s) remain open; {len(accepted)} risk(s) were accepted and "
                  f"{len(not_aff)} marked not affected by a named human.", "cites": [i["id"] for i in open_need][:12]},
-        {"text": "Build and container smoke tests were not run on this machine (docker not installed); "
-                 "a 'partial' verdict means the fix is confirmed by install, static checks and rescan but not by a build.",
-         "cites": partial or []},
+        {"text": docker_sentence(shutil.which("docker") is not None), "cites": partial or []},
     ]
     not_evaluated = [
-        {"item": "docker build and smoke test", "why": "docker not installed", "effect": "validation verdicts at best partial"},
+        {"item": "container build and smoke test", "why": "not implemented in this build"
+         + ("" if shutil.which("docker") else "; docker not installed"), "effect": "validation verdicts at best partial"},
         {"item": f"{sum(1 for n in pkgs if not n.get('resolved'))} bundled install paths", "why": "no download origin in the lockfile; OSV cannot match them", "effect": "vulnerabilities not evaluated (unknown, not clean)"},
         {"item": "install scripts of registry packages", "why": "tarballs are not downloaded", "effect": "reported as 'content not inspected'"},
         {"item": "image digest / action SHA pinning", "why": "no Docker Hub or GitHub lookups", "effect": "fix candidates restore the base tag or delete the workflow instead"},
@@ -243,9 +255,21 @@ def collect(run: Path) -> dict:
         {"item": f"AI agent steps ({agents_skipped} skipped, {agents_ran} ran)", "why": analysis.get("by_role") and
          "; ".join(f"{r}: {', '.join(s['reasons'])}" for r, s in analysis["by_role"].items() if s["reasons"]) or "analyse not run",
          "effect": "no AI assessment where skipped; scores are computed by code either way"},
-        {"item": f"EPSS for {pr['meta']['epss']['requested'] - pr['meta']['epss']['scored']} CVE(s)", "why": "no score published",
-         "effect": "exploitability unknown: prior used, range widened"},
     ]
+    osv = day1["meta"]["osv"]
+    if osv.get("status") != "evaluated":
+        not_evaluated.insert(0, {"item": "known vulnerabilities (OSV)", "why": osv.get("reason") or osv.get("status"),
+                                 "effect": "no vulnerability findings: unknown, not zero"})
+    if pr["meta"]["kev"].get("status") != "evaluated":
+        not_evaluated.append({"item": "CISA KEV", "why": pr["meta"]["kev"].get("error") or "not evaluated",
+                              "effect": "KEV membership unknown; KEV_FLOOR cannot fire"})
+    missing_epss = pr["meta"]["epss"]["requested"] - pr["meta"]["epss"]["scored"]
+    if pr["meta"]["epss"]["status"] != "evaluated":
+        not_evaluated.append({"item": "EPSS", "why": "; ".join(pr["meta"]["epss"].get("errors", [])) or "not evaluated",
+                              "effect": "exploitability unknown: prior used, range widened"})
+    elif missing_epss:
+        not_evaluated.append({"item": f"EPSS for {missing_epss} CVE(s)", "why": "no score published",
+                              "effect": "exploitability unknown: prior used, range widened"})
     weights = {i["id"]: i["confidence"] for i in need}
     overall_conf = round(sum(weights.values()) / len(weights)) if weights else None
     ev_index = [{"id": c["evidence_id"], "source": c["source"], "line": c["line"], "type": c["type"],

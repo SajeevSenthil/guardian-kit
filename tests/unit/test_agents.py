@@ -152,3 +152,14 @@ def test_upheld_and_downgraded_rules(verdict):
 
 def test_payload_json_roundtrip():
     assert json.loads(json.dumps(SCHEMAS))
+
+
+def test_verbatim_self_description_quote_does_not_support_a_refutation():
+    """A literal quote of the package's own 'harmless' comment passes check_claim, but is not support."""
+    idx = EvidenceIndex([FINDING])
+    f, rec = scored(), {}
+    claims = [idx.check_claim({"text": "the author says it is harmless", "evidence_ids": ["F001.E2"],
+                               "quotes": ["harmless demo script, do not worry"]}, "m")]
+    assert claims[0]["support_checked"] is True
+    apply_refuter(f, rec, {"verdict": "refuted", "factor": "none"}, claims)
+    assert rec["effective_verdict"] == "inconclusive" and "describing itself" in rec["applied"] and "status" not in f

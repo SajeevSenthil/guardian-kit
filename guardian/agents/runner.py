@@ -95,12 +95,24 @@ def _rescore(f: dict, factors: dict, rails: list) -> None:
     f["priority"] = res
 
 
+# A package describing itself ("harmless", "demo", "safe", ...) is never evidence. Quotes made of such
+# self-description do not count as support for lowering risk, even when they are literal.
+SELF_DESCRIPTION = re.compile(r"(?i)\b(harmless|benign|safe|demo|example only|test(ing)? only|for testing|"
+                              r"do not worry|don't worry|not malicious|no harm)\b")
+
+
+def _supports(c: dict) -> bool:
+    return bool(c["support_checked"]) and not any(SELF_DESCRIPTION.search(q) for q in c["quotes"])
+
+
 def apply_refuter(f: dict, rec: dict, out: dict, claims: list[dict]) -> None:
     """Fixed rules for a Refuter verdict. Mutates the finding `f` and the record `rec`."""
     verdict, factor = out.get("verdict"), out.get("factor")
-    supported = any(c["support_checked"] for c in claims)
+    supported = any(_supports(c) for c in claims)
     if verdict in ("downgraded", "refuted") and not supported:
-        rec["applied"] = f"{verdict} -> inconclusive (no reason had a checked quote)"
+        why = ("its only checked quotes are the package describing itself"
+               if any(c["support_checked"] for c in claims) else "no reason had a checked quote")
+        rec["applied"] = f"{verdict} -> inconclusive ({why})"
         verdict = "inconclusive"
     if verdict == "upheld":
         f["priority"]["confidence"] = min(100, f["priority"]["confidence"] + 5)

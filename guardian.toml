@@ -5,7 +5,7 @@ default_mode = "live"            # live | replay | offline
 top_n_for_agents = 10            # findings sent to Risk Analyst + Refuter
 agent_concurrency = 3
 
-[models]                         # aliases keep this portable; pin full ids for the final demo
+[models]                         # UNUSED (original Claude design); runtime agents use [agents.gemini] below
 change_detective = "sonnet"
 risk_analyst = "sonnet"
 refuter = "opus"                 # deliberately a different model from the analyst
@@ -49,7 +49,7 @@ min_release_age_days = 7         # cool-down for brand-new versions
 tool_timeout_s = 180
 build_timeout_s = 600
 agent_max_turns = 12
-agent_max_budget_usd = 0.60
+agent_max_budget_usd = 0.60     # UNUSED: no dollar cap is enforced; tokens are capped by [agents]
 
 [agents]                         # runtime agents (phase 9+). Provider: Gemini REST API (stdlib client).
 provider = "gemini"

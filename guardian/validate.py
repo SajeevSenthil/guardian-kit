@@ -125,8 +125,8 @@ def validate(run: Path, plan_id: str) -> dict:
     rq_ok, rq_missing = _require_check(base, installed=False)
     logs["baseline_static"] = {"node_check_errors": nc_err, "undeclared_requires": rq_missing}
     checks.append(_check("baseline_tests", None,
-                         "docker smoke test on unmodified head: not run (docker is not installed)" if not _docker()
-                         else "docker smoke test: not wired in this build", t0=t0))
+                         "container smoke test on unmodified head: not implemented in this build"
+                         + ("" if _docker() else " (docker is not installed)"), t0=t0))
     checks.append(_check("baseline_static", nc_ok and rq_ok,
                          f"node --check on {len(reachability.app_files(base))} first-party files: "
                          f"{'ok' if nc_ok else 'errors'}; every require() declared: {'yes' if rq_ok else 'no'}",
@@ -150,8 +150,8 @@ def validate(run: Path, plan_id: str) -> dict:
         return done("failed")
 
     # 4 build
-    checks.append(_check("build", None, "docker build: not run (docker is not installed)" if not _docker()
-                         else "docker build: not wired in this build"))
+    checks.append(_check("build", None, "container build: not implemented in this build"
+                         + ("" if _docker() else " (docker is not installed)")))
 
     # 5 install (no scripts)
     t0 = time.time()
@@ -165,8 +165,8 @@ def validate(run: Path, plan_id: str) -> dict:
 
     # 6 tests
     t0 = time.time()
-    checks.append(_check("tests", None, "docker smoke test (app start + HTTP routes): not run (docker is not installed)"
-                         if not _docker() else "docker smoke test: not wired in this build", t0=t0))
+    checks.append(_check("tests", None, "container smoke test (app start + HTTP routes): not implemented in this build"
+                         + ("" if _docker() else " (docker is not installed)"), t0=t0))
     nc_ok, nc_err = _node_check(root)
     rq_ok, rq_missing = _require_check(root, installed=r.returncode == 0)
     logs["static_start"] = {"node_check_errors": nc_err, "unresolved_requires": rq_missing}

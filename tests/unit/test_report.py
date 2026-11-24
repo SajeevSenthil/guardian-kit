@@ -48,3 +48,14 @@ def test_accept_records_decision_and_audit(tmp_path):
     assert rec["by"] == "Alice" and (tmp_path / "decisions" / "F1.json").exists()
     ok, msg = audit.verify(tmp_path)
     assert ok and "1 events" in msg
+
+
+def test_unknown_vulnerabilities_are_never_reported_as_zero():
+    assert "NOT evaluated" in report.vuln_clause("not evaluated", None)
+    assert "NOT evaluated" in report.vuln_clause("not evaluated", 0)
+    assert report.vuln_clause("evaluated", 0).startswith("0 package")
+
+
+def test_docker_sentence_says_not_implemented():
+    assert "not implemented" in report.docker_sentence(True) and "not installed" not in report.docker_sentence(True)
+    assert "not installed" in report.docker_sentence(False)

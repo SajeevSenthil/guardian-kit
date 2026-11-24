@@ -505,3 +505,81 @@ and `sbom.after.<plan>.cdx.json` for each validated plan.
   (`tests/ui/` not written; Playwright not installed).
 - With no approvals yet, sections 6–8 show plans as "not approved / not validated". Re-run
   `python -m guardian report` after approving and validating to fill them.
+
+---
+
+## Phase 14 — Documentation and deliverables (2026-11-24) — done
+
+**Deliverables:** README for the submission, architecture overview, source/setup, sample
+policies, prompts, known limitations, Responsible AI & security note.
+
+### What was written or changed
+
+| File | Change |
+|---|---|
+| `README.md` | submission README: honest status table, quick start (Day 1 + Day 2 commands, offline mode, model key), demo scenario, architecture diagram (Mermaid), sample app and every modification, tools with versions, hosts contacted and what is sent, measured timings, tests, repository index (policies, prompts, config, schema) |
+| `docs/KIT_README.md` | the original build-kit README, restored from git history |
+| `docs/architecture.mmd`, `docs/architecture.png` | diagram updated to what was built: data sources, Day 1 / Day 2 stages, AI agents, human approval, failure loop, Gemini API, evidence store with hash-chained audit log |
+| `docs/ARCHITECTURE.md` | new section 0 "As built" (design → implementation table, deviations and why, real package layout); controls table corrected; measured numbers in section 11; "self-protection" row removed (no `tools.lock`, no self-SBOM) |
+| `docs/RESPONSIBLE_AI.md` | rewritten from the built system; every statement points to code or a test; hosts contacted and what is sent; what was not built is said |
+| `docs/KNOWN_LIMITATIONS.md` | rewritten: not run / not built, detection, scoring and process limits, status of each kit-era note |
+| `docs/screenshots/` | dashboard (transitive trace, vulnerabilities tab) and report screenshots |
+
+### Code changes made during the phase
+
+- `guardian/remediate.py`: npm dry runs use `--offline` (cache only) when `GUARDIAN_OFFLINE=1`.
+- `guardian/report.py`: **bug found by the fresh-clone test** — with OSV unavailable the summary
+  said "0 package–advisory vulnerability pairs are present". Now `vuln_clause()` says "known
+  vulnerabilities were NOT evaluated (unknown, not zero)", and the not-evaluated list adds OSV,
+  KEV and EPSS when they did not run (`test_unknown_vulnerabilities_are_never_reported_as_zero`).
+- `guardian/agents/runner.py`: a refutation or downgrade whose only checked quotes are
+  self-describing language ("harmless", "demo", "safe", "do not worry", …) is treated as
+  inconclusive (`SELF_DESCRIPTION`, `test_verbatim_self_description_quote_does_not_support_a_refutation`).
+- `fastpath/build.py`: the unused-import rule scans every first-party JS file instead of two named
+  files (same single finding on the demo target).
+- `guardian/validate.py`, `guardian/report.py`: the container build and smoke test are described as
+  **not implemented** (plus "docker not installed" only when that is true), not as merely "not run".
+- `guardian/cli.py`: `doctor` makes no network call when `GUARDIAN_OFFLINE=1`.
+- `guardian.toml`: unused keys from the original design (`[models]`, `agent_max_budget_usd`) marked UNUSED.
+
+### Acceptance: the README in a fresh clone, offline
+
+A fresh `git clone` of this repository into a temporary folder (with `./target` cloned locally,
+`--no-hardlinks` because the temp folder is on another drive), `GUARDIAN_OFFLINE=1`:
+
+| Step | Result |
+|---|---|
+| `python -m guardian scan --offline` | exit 0, **7 s**: 982 packages, 10 new suspicious findings, vulnerabilities "not evaluated" (no OSV cache in a fresh clone) |
+| `python -m guardian prioritise --offline` | exit 0, 1 s; KEV not evaluated |
+| `python -m guardian analyse --mode offline` | exit 0, 1 s; 20 agent steps skipped |
+| `python -m guardian plan --finding F006 --mode offline` | exit 0, 21 s; C2 chosen, npm `--offline` resolve succeeded, plan gate PASS |
+| `python -m guardian report` | exit 0, 1 s; JSON schema valid |
+| `python -m guardian audit-verify` | OK |
+
+Building `./target` itself needs the network (it clones goof); the test reused a local clone.
+
+### Skeptic review
+
+The `skeptic-reviewer` subagent reviewed README, ARCHITECTURE, RESPONSIBLE_AI, KNOWN_LIMITATIONS,
+this log and `fastpath/README.md` and reported 14 problems. All were addressed:
+
+| # | Finding | Resolution |
+|---|---|---|
+| 1 | docs blamed "docker not installed" for checks that are not implemented at all | wording fixed in code and docs: "not implemented" |
+| 2 | a Refuter quoting the package's "harmless" comment verbatim would pass | code guard added + test; the keyword-list limit documented |
+| 3 | the unused-import rule hard-coded two demo file names | scans all first-party JS files |
+| 4 | the fresh-clone test and the OSV-zero fix had no record or test | this section + unit test |
+| 5 | demo step 5 described the loop as if it had run | marked "expected; not yet run" |
+| 6 | ARCHITECTURE §10 rows claimed a validation container, `guardian audit verify`, a scorecard | corrected |
+| 7 | "two adversarial fixtures" | corrected (unit tests named; no live run) |
+| 8 | `ledger.check_claim` does not exist | points to `guardian/evidence.py::EvidenceIndex.check_claim` |
+| 9 | `fastpath/README.md` said Day 2 / EPSS / KEV were not built | updated |
+| 10 | agent cache re-mints tool evidence without re-running tools | documented in RESPONSIBLE_AI and limitations (`--fresh` bypasses) |
+| 11 | "every sentence cites ids" while one cites a file and one may cite nothing | wording narrowed; docker sentence now computed |
+| 12 | approval marked "works" though none was recorded | "approval unit-tested; none recorded on the demo run yet" |
+| 13 | hosts table missed `doctor`; "all responses cached" | corrected; `doctor` skips the network offline |
+| 14 | unused `[models]` / `agent_max_budget_usd` in config | marked UNUSED |
+
+### Tests
+
+`python -m pytest -q tests/unit` → **65 passed**; `uvx ruff check guardian tests/unit --line-length 110` → clean.

@@ -76,6 +76,20 @@ def introduced_by(base, head, path, text=None):
     return {"sha": sha, "subject": subj}
 
 
+FIRST_PARTY_EXCLUDE = re.compile(r"(^|/)(node_modules|public|vendor|tests?|__tests__|\.github|coverage)/|\.(spec|test)\.[cm]?js$")
+
+
+def first_party_js(root):
+    """Every first-party .js/.mjs/.cjs file of the extracted ref (excludes node_modules, public, vendor, tests)."""
+    out = []
+    for d, _, files in os.walk(root):
+        for fn in files:
+            rel = os.path.relpath(os.path.join(d, fn), root).replace(os.sep, "/")
+            if fn.endswith((".js", ".mjs", ".cjs")) and not FIRST_PARTY_EXCLUDE.search(rel):
+                out.append(rel)
+    return sorted(out)
+
+
 def name_of(path):
     return path.split("node_modules/")[-1]
 
@@ -463,7 +477,7 @@ def build(base, head, offline):
     # unused new import (new require() of a new direct dependency whose binding is never used)
     for nid, n in nodes.items():
         if n["kind"] == "pkg" and n["isNew"] and n["direct"]:
-            for rel in ("app.js", "routes/index.js"):
+            for rel in first_party_js(rh):
                 txt = read(rh, rel) or ""
                 m = re.search(r"(?:var|const|let)\s+(\w+)\s*=\s*require\(['\"]%s['\"]\)" % re.escape(n["name"]), txt)
                 if m:

@@ -1,40 +1,81 @@
 # Known limitations
 
-Add to this file the moment a limitation is discovered. Frank limitations are a deliverable
-and score better than a judge finding them.
+Frank list, kept current. Status as of 2026-11-24. Details and measurements: `implementations.md`.
 
-## Known before the build started
+## Not run or not built
 
-- **Tool commands were not verified when the kit was written.** The authoring sandbox had no
-  network access, so no scanner was installed or run and no public API was called. Phase 0
-  exists to fix this. See `docs/research/02-tool-verification.md`.
-- **The demo target's container build was not tested.** `guardian/smoke-test.sh` and the full
-  `npm ci` of goof (about 980 packages) could not be run. Phase 0 step 4 tests them first.
-- **The seeded packages were tested only in isolation.** The lockfile entries for `lodahs` and
-  `guardian-demo-strfmt` install correctly with `npm ci --offline` in a pruned project (install
-  scripts ran, `require()` works, a corrupted hash gives EINTEGRITY), not yet in the full tree.
-- **The seeded packages say they are harmless** in their own comments and descriptions (so
-  anyone who finds the files knows what they are). Agents and detectors must not treat that
-  self-description as evidence; two tests check this.
-- **The scorecard's seeded entries are what the detectors were developed against.** Only the
-  hold-out seeds (phase 7) and the second application say anything about generality.
-- **A checked quote is not a checked conclusion.** For AI claims, code confirms that the cited
-  text exists in the evidence, not that the conclusion follows from it. That is why AI claims
-  are never shown as facts.
-- **The safety hook is a guard rail, not a boundary.** It was tested standalone against 25
-  commands, not inside a live Claude Code session. The real protections are no git remote and
-  no credentials.
-- **goof ships no unit tests.** Its `npm test` is `snyk test` (needs a token). "Run unit and
-  integration tests" is covered by our smoke test; say so.
-- **npm only.** Design allows other ecosystems; none is implemented.
-- **Reachability is a heuristic** (import graph + symbol references), not a call graph. npm
-  advisories rarely carry function-level data in structured form.
-- **Starter Rego policies are untested**, and the bundled popular-package list was written
-  from general knowledge, not from download statistics.
-- **`scripts/setup_tools.sh` relies on Homebrew** for the scanner binaries; without it, install
-  from each tool's release page.
-- **Research notes contain unverified items**, each marked in the note.
+- **No end-to-end validation yet.** Every plan needs a human approval before validation; none
+  has been given on the demo run. The validation machinery was probed on an unmodified clone
+  (`npm ci --ignore-scripts` 141 s, rescan reproduces the same 370 findings) and the logic is
+  unit-tested, but the closed loop (fail → diagnose → new plan → approve → validate) has not been
+  run end to end.
+- **The container build and the HTTP smoke test are not implemented** (docker was not installed on
+  the build machine, so they were never built); validation reports them "not run" and the best
+  possible verdict is "partial". Installing docker alone does not change this.
+- **No live AI run.** No model key was configured; every agent step is "skipped". Agent behaviour
+  is tested only with a fake model. Model ids in `guardian.toml` (`gemini-2.5-flash`,
+  `gemini-2.5-pro`) are unverified until `python -m guardian doctor` lists them. Agent cost is not
+  estimated (tokens are counted).
+- **Hold-out seeds, a second application, an automatic scorecard: not built.** The 7/7 detection
+  result is measured against seeds the rules were developed with; it says little about
+  generality.
+- **No NiceGUI UI, replay mode, event stream, or Playwright UI test.** The UI is two HTML files.
+- **conftest, syft, grype, osv-scanner, cosign, trivy are not installed.** Policy runs on a Python
+  port of `policy/guardian.rego` (the Rego file itself is still untested); there is no second
+  scanner to cross-check OSV.
+- **No self-SBOM / `tools.lock`** for Guardian itself; tool versions are listed in the README.
+- **VEX** follows the OpenVEX v0.2.0 structure but is not validated with official tooling.
 
-## Found during the build
+## Detection limits
 
-- _(add here)_
+- **npm only** (lockfile v2/v3). The Docker and CI rules are generic.
+- **326 bundled install paths** (packages shipped inside another package, no `resolved` field)
+  are not matched against OSV; they show "not evaluated".
+- **Install scripts of registry packages are not opened** (tarballs are not downloaded); they are
+  reported as "content not inspected" at medium risk.
+- **Static text rules can be evaded** by obfuscated code; size-growth and large-file rules are
+  the backstop.
+- **The unused-import rule** matches `var|let|const x = require('pkg')` in first-party JS files only
+  (destructuring and ES `import` are not covered by this rule).
+- **Image digest and action SHA pinning are not evaluated** (no Docker Hub / GitHub lookups); fix
+  candidates restore the base image tag or delete the introduced workflow instead.
+- **The dependency path shown is the shortest one**; longer routes exist.
+
+## Scoring limits
+
+- **Reachability is a heuristic.** R2 matches members the app uses against words in the advisory
+  text (can over-match generic names such as mongoose `Schema`); R3 requires the call and request
+  data on the same line (no data-flow tracking); transitive packages are capped at R1.
+- **Anomaly rubric values** are our choices (documented in `docs/ARCHITECTURE.md` §6); several
+  rows extend the research rubric and are marked as such.
+- **Exploit/PoC references in advisories do not raise exploitability** yet.
+- **Predicted findings after a fix are not re-scored**; their band comes from OSV severity.
+
+## Process limits
+
+- **One validation takes ~3 minutes** (mostly `npm ci`), above the 2-minute target.
+- **The policy "plan gate"** is our addition: the full gate (rules of the Rego file) fails on both
+  head and every fixed state while unrelated pre-existing violations (e.g. KEV-listed jquery)
+  remain; plans are judged on their target and on what they introduce.
+- **Work clones can be hard to delete on Windows** while VS Code's Git extension watches them.
+- **On Windows, `scripts/make_demo_target.sh` needs three workarounds** (python3 alias, autocrlf,
+  folder lock) documented in `fastpath/README.md`.
+- **Self-description filter is a keyword list.** A refutation whose only checked quotes contain words
+  such as "harmless", "demo", "safe" or "do not worry" is treated as inconclusive
+  (`guardian/agents/runner.py::SELF_DESCRIPTION`); other phrasings of a self-description are not caught.
+- **Agent result cache.** With a cache hit (`.cache/agents/`), tool outputs are re-minted as evidence
+  from the cached file without re-running the tool; the cache is local and git-ignored, but an edited
+  or stale cache file would become evidence. Use `analyse --fresh` to bypass it.
+- **A checked quote is not a checked conclusion.** Code confirms that cited text exists, not that
+  the agent's reasoning follows from it; that is why AI claims are never shown as facts.
+
+## Known before the build (kit notes), with their status
+
+| Kit note | Status |
+|---|---|
+| Tool commands not verified when the kit was written | OSV, EPSS, KEV and npm were probed before wrapping (`docs/tool-notes/epss-kev.md`); scanners were never installed |
+| Container build not tested | still not tested (no docker); `npm ci --ignore-scripts` of the full tree works (141 s) |
+| Seeded packages say they are harmless | detectors ignore it; one adversarial unit test covers agents |
+| Starter Rego untested | still untested (Python port used) |
+| Popular-package list from general knowledge | unchanged |
+| goof ships no unit tests | unchanged; our checks are static start + rescan, smoke test needs docker |

@@ -94,6 +94,9 @@ def cmd_doctor(a):
         _p(f"  {t:12} {'found' if shutil.which(t) else 'MISSING'}")
     if not key_present("GEMINI_API_KEY"):
         return 1
+    if os.environ.get("GUARDIAN_OFFLINE") == "1":
+        _p("offline: Gemini model check skipped")
+        return 0
     req = urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models?pageSize=200",
                                  headers={"x-goog-api-key": os.environ["GEMINI_API_KEY"]})
     try:
