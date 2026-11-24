@@ -23,7 +23,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from . import audit, runs
+from . import audit, runs, scorecard
 
 KIT = Path(__file__).resolve().parents[1]
 SCHEMA = KIT / "schemas" / "guardian-report.schema.json"
@@ -326,11 +326,107 @@ def collect(run: Path) -> dict:
         "audit": {"chain_ok": chain_ok, "result": chain_msg, "events": len(events),
                   "by_actor": {a: sum(1 for e in events if e["actor"] == a) for a in sorted({e["actor"] for e in events})}},
         "not_evaluated": not_evaluated,
+        "scorecard": scorecard.score(pr["findings"]),
+        "agents": agents_view(pr, plans, run),
         "evidence_index": ev_index,
     }
 
 
 # ---------------------------------------------------------------------------------- render
+AGENT_INFO = [
+    ("change_detective", "Change Detective", "analyse — every suspicious change new since the baseline",
+     ("Reads the finding's evidence, then investigates with read-only tools: lists and reads files inside the "
+     "local package tarball, checks whether the app imports the package, reads the introducing commit, compares "
+     "with known incident patterns. Explains what the change appears to do and what it resembles."),
+     "AI assessment (INFERRED claims with checked quotes), 'resembles', a suggested risk",
+     "Shown in the AI column and the investigation record. Never changes the score (suggested risk is a proposal)."),
+    ("risk_analyst", "Risk Analyst", "analyse — vulnerabilities in the top N",
+     ("Reads the advisory text and the app's call sites; names the vulnerable function with the advisory sentence "
+     "as a quote and the call-site line as a second quote."),
+     "vulnerable symbols with quotes, app_reaches yes/no/unknown, call site",
+     ("A symbol counts only if its quote is a literal substring of the advisory. Code then recomputes reachability "
+     "from the app's real call sites (grade 'inferred') and re-scores. The agent never sets a number.")),
+    ("refuter", "Refuter", "analyse — top N findings; plan — reviews the chosen plan",
+     ("Argues against the finding or plan: wrong version range? dev-only? symbol never called? benign explanation "
+     "supported by evidence? (a different model from the analyst)"),
+     "verdict upheld / downgraded / refuted / inconclusive with reasons",
+     ("Fixed rules: upheld -> confidence +5; downgraded -> one factor's grade drops; refuted -> only a 'not affected "
+     "CANDIDATE' for a named human; no checked quote, or only the package's self-description -> inconclusive.")),
+    ("remediation_planner", "Remediation Planner", "plan",
+     "Reads the dry-run results that code produced for every fix candidate.",
+     "rationale, compatibility impact, what could go wrong, preferred candidate",
+     "Advisory only: code chooses the candidate by fixed ranking; a different preference is shown to the approver."),
+    ("diagnostician", "Diagnostician", "validate — only when a validation fails",
+     "Reads the failed checks and their logs.",
+     "root cause with log quotes, recommended next candidate",
+     "Accepted only if it names an alternative code already found eligible; the new plan needs a new human approval."),
+]
+
+
+def agents_view(pr: dict, plans: dict, run: Path) -> dict:
+    """What each agent produced in this run, and how its output was used by code."""
+    from .agents.runner import TOOLS
+    analysis = (pr.get("meta") or {}).get("analysis") or {}
+    by_role: dict = {}
+    for f in pr["findings"]:
+        for role, a in (f.get("agents") or {}).items():
+            row = {"finding": f["id"], "component": f["component"], "status": a.get("status"),
+                   "reason": a.get("reason"), "model": a.get("model")}
+            if a.get("status") == "ok":
+                row.update({k: a.get(k) for k in ("summary", "resembles", "suggested_risk", "confirmed_symbols",
+                                                  "app_reaches", "tier_change", "verdict", "effective_verdict",
+                                                  "applied") if a.get(k) is not None})
+                row["claims"] = [{"text": c["text"], "evidence_ids": c["evidence_ids"],
+                                  "support_checked": c["support_checked"]} for c in a.get("claims", [])][:6]
+                row["tool_calls"] = [f"{t['tool']}({', '.join(f'{k}={v}' for k, v in t['args'].items())}) -> {t['evidence_id']}"
+                                     for t in a.get("tool_calls", [])][:10]
+            by_role.setdefault(role, []).append(row)
+    for pid, p in plans.items():
+        ai = (p.get("rationale") or {}).get("ai") or {}
+        for role in ("remediation_planner", "refuter"):
+            a = ai.get(role) if isinstance(ai, dict) else None
+            if a is not None:
+                by_role.setdefault(role if role == "remediation_planner" else "refuter",
+                                   []).append({"plan": pid, "status": a.get("status"), "reason": a.get("reason"),
+                                               "model": a.get("model"), "preferred_candidate": a.get("preferred_candidate"),
+                                               "verdict": a.get("verdict"),
+                                               "claims": [{"text": c["text"], "support_checked": c["support_checked"]}
+                                                          for c in a.get("claims", [])][:4]})
+            elif ai.get("status"):
+                by_role.setdefault(role, []).append({"plan": pid, "status": ai.get("status"), "reason": ai.get("reason")})
+    for d in sorted((run / "validation").glob("*.diagnosis.json")) if (run / "validation").is_dir() else []:
+        x = json.loads(d.read_text(encoding="utf-8"))
+        by_role.setdefault("diagnostician", []).append({"plan": x["plan"], "status": (x.get("agent") or {}).get("status"),
+                                                        "reason": (x.get("agent") or {}).get("reason"),
+                                                        "recommended": x.get("recommended_candidate"),
+                                                        "decision": x.get("decision_note"),
+                                                        "code_root_cause": (x.get("deterministic") or {}).get("root_cause")})
+    agents = []
+    for key, name, when, method, output, applied in AGENT_INFO:
+        rows = by_role.get(key, [])
+        agents.append({"key": key, "name": name, "when": when, "method": method, "output": output,
+                       "how_code_uses_it": applied, "tools": TOOLS.get(key, ["(none: reads code-produced results)"]),
+                       "runs": {"ok": sum(1 for r in rows if r.get("status") == "ok"),
+                                "skipped": sum(1 for r in rows if r.get("status") != "ok")},
+                       "outputs": rows})
+    return {"provider": analysis.get("provider", "gemini"), "models": analysis.get("models"),
+            "mode": analysis.get("mode", "analyse not run"), "tokens": analysis.get("tokens", 0),
+            "quotes_kept": analysis.get("quotes_kept", 0), "quotes_dropped": analysis.get("quotes_dropped", 0),
+            "flow": [
+                ("Agents never message each other. A deterministic orchestrator (Guardian's code) calls each one with a "
+                "task built from the run's evidence, and writes its checked output back into the run directory."),
+                "1. scan + prioritise (code): findings, evidence ids, scores -> prioritised.json",
+                ("2. analyse: Change Detective, Risk Analyst and Refuter run in parallel on that shared state; their "
+                "tool outputs become evidence T<n>; code checks every claim and applies the fixed rules -> "
+                "prioritised.json (agents, re-scores), investigations.json"),
+                ("3. plan (code): candidates + dry runs; Remediation Planner and Refuter read the code's dry-run "
+                "results -> plans/P-xxxx.json (rationale.ai)"),
+                ("4. approve (human) -> validate (code); on failure the Diagnostician reads the checks and logs; code "
+                "creates a superseding plan that needs a new approval"),
+                "5. report (code) renders everything, labelled verified / derived / inferred (AI)."],
+            "agents": agents}
+
+
 def _md(rep: dict) -> str:
     r, s = rep["run"], rep["summary"]["counts"]
     L = [f"# Guardian Report — {r['target']} @ {r['head']} ({r['head_sha'][:7]})", "",
@@ -345,7 +441,36 @@ def _md(rep: dict) -> str:
           "|---|---|---|---|---|---|---|",
           (f"| {s['packages']} ({s['install_paths']} paths) | {s['findings']} | {s['need_attention']} | {s['remediated_verified']} | "
           f"{s['remediated_partial']} | {s['remaining_open_need_attention']} | {s['accepted_risk']} |"), "",
-          "## 2. Scope and method", "",
+          "## Test report: planted scenario vs results", "",
+          ("The demo target is the open-source app at a trusted baseline plus 4 commits that plant harmless replicas of "
+          "real attacks. Expected results come from demo/ground_truth.yaml; the comparison is computed by code."), "",
+          (f"Planted changes detected: **{rep['scorecard']['changes']['detected']}/{rep['scorecard']['changes']['total']}** · "
+          f"pre-existing risks: **{rep['scorecard']['preexisting']['detected']}/{rep['scorecard']['preexisting']['total']}** · "
+          f"negative controls respected: **{rep['scorecard']['negative_controls']['respected']}/"
+          f"{rep['scorecard']['negative_controls']['total']}** · missed: {', '.join(rep['scorecard']['missed']) or 'none'}"), "",
+          "| id | planted in commit | expected type | component | detected | finding (score, band, commit) |",
+          "|---|---|---|---|---|---|"]
+    L += [f"| {r['id']} | {r['commit_subject'] or ('(already in upstream)' if r['section'] == 'preexisting' else '')} | "
+          f"{_t(r['type'])} | {r['component']} | {'YES' if r['detected'] else '**MISSED**'} | "
+          + "; ".join(f"{x['id']} ({x['score']}, {x['band']}, {x['commit'] or '-'})" for x in r["findings"]) + " |"
+          for r in rep["scorecard"]["rows"]]
+    L += [f"| {c['id']} | negative control | must not be {', '.join(c['must_not_have'])} | {c['component']} | "
+          f"{'respected' if c['respected'] else '**VIOLATED**'} | {', '.join(c['violations'])} |" for c in rep["scorecard"]["controls"]]
+    L += ["", f"_{rep['scorecard']['note']}_", "", "## AI agents — who did what", ""] + [f"- {x}" for x in rep["agents"]["flow"]] + [""]
+    for a in rep["agents"]["agents"]:
+        L += [f"### {a['name']} ({a['when']})", "", f"- **Method:** {a['method']}", f"- **Tools it may call:** {', '.join(a['tools'])}",
+              f"- **Produces:** {a['output']}", f"- **How code uses it:** {a['how_code_uses_it']}",
+              f"- **This run:** {a['runs']['ok']} ran, {a['runs']['skipped']} skipped"]
+        for o in a["outputs"][:6]:
+            if o.get("status") == "ok":
+                L.append(f"  - {o.get('finding') or o.get('plan')}: " + "; ".join(
+                    f"{k}={o[k]}" for k in ("summary", "verdict", "effective_verdict", "applied", "confirmed_symbols",
+                                            "tier_change", "preferred_candidate", "recommended") if o.get(k)))
+                L += [f"    - *inferred*: {c['text']} (support checked: {c['support_checked']})" for c in o.get("claims", [])[:3]]
+            else:
+                L.append(f"  - {o.get('finding') or o.get('plan')}: skipped ({o.get('reason')})")
+        L.append("")
+    L += ["## 2. Scope and method", "",
           (f"Sample application: {r['sample_app']['repository']} ({r['sample_app']['licence']}), commit "
           f"`{r['sample_app']['commit'][:8]}`. Modifications: {r['sample_app']['modifications']}."), "",
           "Tools: " + ", ".join(f"{k} {v}" for k, v in rep["tools"].items()), "",
@@ -421,6 +546,72 @@ def _md(rep: dict) -> str:
     return "\n".join(L)
 
 
+def _html_tests_agents(rep: dict) -> str:
+    e = html.escape
+
+    def badge(text, kind):
+        return f'<span class="b b-{kind}">{e(text)}</span>'
+
+    sc = rep["scorecard"]
+    rows = []
+    for r in sc["rows"]:
+        where = r["commit_subject"] or ("(already in upstream)" if r["section"] == "preexisting" else "")
+        result = badge("detected", "passed") if r["detected"] else badge("MISSED", "FAILED")
+        hits = "; ".join(f"{x['id']} ({x['score']}, {x['band']}, {x['commit'] or '-'})" for x in r["findings"])
+        rows.append(f"<tr><td>{e(r['id'])}</td><td>{e(where)}</td><td>{e(_t(r['type']))}</td>"
+                    f"<td class=m>{e(r['component'])}</td><td>{result}</td><td>{e(hits)}</td></tr>")
+    for c in sc["controls"]:
+        result = badge("respected", "passed") if c["respected"] else badge("VIOLATED", "FAILED")
+        rows.append(f"<tr><td>{e(c['id'])}</td><td>negative control</td><td>must not be {e(', '.join(c['must_not_have']))}</td>"
+                    f"<td class=m>{e(c['component'])}</td><td>{result}</td><td>{e(', '.join(c['violations']))}</td></tr>")
+
+    ag = rep["agents"]
+    flow = "".join(f"<li>{e(x)}</li>" for x in ag["flow"])
+    keys = ("summary", "resembles", "suggested_risk", "verdict", "effective_verdict", "applied", "confirmed_symbols",
+            "app_reaches", "tier_change", "preferred_candidate", "recommended", "decision")
+    cards = []
+    for a in ag["agents"]:
+        outs = []
+        for o in a["outputs"][:8]:
+            who = e(str(o.get("finding") or o.get("plan") or ""))
+            if o.get("status") != "ok":
+                outs.append(f"<div class=c>{who}: skipped — {e(str(o.get('reason')))}</div>")
+                continue
+            facts = " · ".join(f"<b>{e(k)}</b>: {e(str(o[k]))}" for k in keys if o.get(k))
+            claim_items = []
+            for c in o.get("claims", [])[:3]:
+                state = {True: "quote checked", False: "quote dropped", None: "no quote"}[c["support_checked"]]
+                claim_items.append(f"<li>{badge('AI · ' + state, 'medium')} {e(c['text'])}</li>")
+            tool_items = "".join(f"<li class=m>{e(t)}</li>" for t in o.get("tool_calls", [])[:6])
+            block = f"<div class=card><b>{who}</b> <span class=c>{e(str(o.get('model') or ''))}</span><p>{facts}</p>"
+            if claim_items:
+                block += "<ul>" + "".join(claim_items) + "</ul>"
+            if tool_items:
+                block += f"<details><summary>tool calls</summary><ul>{tool_items}</ul></details>"
+            outs.append(block + "</div>")
+        body = (f"<details open><summary>outputs</summary>{''.join(outs)}</details>" if outs
+                else "<p class=c>no output in this run</p>")
+        cards.append(f"<section class=card><h3>{e(a['name'])}</h3><p class=c>{e(a['when'])}</p>"
+                     f"<p><b>Method:</b> {e(a['method'])}</p>"
+                     f"<p><b>Tools it may call:</b> <span class=m>{e(', '.join(a['tools']))}</span></p>"
+                     f"<p><b>Produces:</b> {e(a['output'])}</p><p><b>How code uses it:</b> {e(a['how_code_uses_it'])}</p>"
+                     f"<p><b>This run:</b> {a['runs']['ok']} ran, {a['runs']['skipped']} skipped</p>{body}</section>")
+
+    tiles = (f"<div class=st><div class=s><b>{sc['changes']['detected']}/{sc['changes']['total']}</b>"
+             f"<span>planted changes detected</span></div>"
+             f"<div class=s><b>{sc['preexisting']['detected']}/{sc['preexisting']['total']}</b><span>pre-existing risks</span></div>"
+             f"<div class=s><b>{sc['negative_controls']['respected']}/{sc['negative_controls']['total']}</b>"
+             f"<span>negative controls</span></div></div>")
+    return ("<h2>Test report: planted scenario vs results</h2><p>The demo target is the open-source app at a trusted "
+            "baseline plus 4 commits that plant harmless replicas of real attacks. Expected results come from "
+            "<span class=m>demo/ground_truth.yaml</span>; the comparison is computed by code.</p>" + tiles
+            + "<table><tr><th>id</th><th>planted in commit</th><th>expected</th><th>component</th><th>result</th>"
+            "<th>finding (score, band, commit)</th></tr>" + "".join(rows) + f"</table><p class=c>{e(sc['note'])}</p>"
+            + f"<h2>AI agents — who did what</h2><p>Provider {e(str(ag['provider']))} · mode {e(str(ag['mode']))} · "
+            f"models {e(str(ag['models']))} · tokens {ag['tokens']} · quotes kept {ag['quotes_kept']} / dropped "
+            f"{ag['quotes_dropped']}</p><ul>{flow}</ul>" + "".join(cards))
+
+
 def _html(rep: dict, md: str) -> str:
     e = html.escape
     r, s = rep["run"], rep["summary"]["counts"]
@@ -475,6 +666,7 @@ table{{border-collapse:collapse;width:100%;background:var(--p)}} td,th{{border-b
 <p class=c>Run {e(r['run_id'])} · {e(r['generated'])} · scan mode {e(str(r['mode']))} · agents: {e(str(rep['data_sources']['agent_mode']))} · baseline {e(r['base'])} ({e(r['base_sha'][:7])}) · rendered by code from the run directory; no model wrote this text</p>
 <p class=note><b>verified</b> = read from tool output · <b>derived</b> = computed by code · <b>inferred (AI)</b> = model judgement · "unknown" never means safe</p>
 <h2>1. Executive summary</h2><div class=st>{stat}</div><ul>{summ}</ul>
+{_html_tests_agents(rep)}
 <h2>2. Not evaluated</h2><ul>{ne}</ul>
 <h2>3. Ranked findings (top 40 of {len(rep['findings'])})</h2>
 <table><tr><th>id</th><th>score</th><th>type</th><th>component</th><th>title / advisory</th><th>status</th><th>conf.</th></tr>{rows}</table>
