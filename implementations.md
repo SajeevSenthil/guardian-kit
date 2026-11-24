@@ -660,3 +660,53 @@ blocked the assistant from doing that, as it blocked direct approvals. Run it yo
    `python -m guardian report`, `bash scripts/record_demo.sh`.
 3. Optionally `python -m pytest -q -m e2e -s`, and a live agent run after `python -m guardian doctor`.
 4. Two more timed rehearsals with the team (the phase asks for three; one was done).
+
+---
+
+## Final checkpoint (2026-11-24) and fixes 1–4
+
+`/checkpoint final` ran the requirements auditor and the skeptic reviewer.
+
+- **Requirements:** 28 met, 24 partial, 2 missing (S-3 provenance, S-6 monitoring). Most partial
+  rows are the approval → validation → rescan → after-SBOM chain, which has not run end to end
+  (human approval pending), plus tools that are not installed.
+- **Scorecard (by hand):** planted changes 7/7; pre-existing 2/4 (**GT-P3** `latest` ranges in
+  `package.json` and **GT-P4** `mongo:3` / `mysql:5` in `docker-compose.yml` are **missed**);
+  negative controls 3/3.
+- **Lint:** clean on `guardian/` and `tests/`; repo-wide ruff reports ~94 mostly-style issues in
+  `fastpath/build.py` and `scripts/`, which were never in the lint scope.
+
+The skeptic's four most serious items were fixed (the user asked for 1–4):
+
+1. **Validation could count unknown as fixed.** If the rescan's OSV lookup did not run, every
+   vulnerability "disappeared" and was counted as resolved (and could reach VEX as `fixed`).
+   Now (`guardian/validate.py::compare`): vulnerability findings are never counted as resolved
+   without an evaluated rescan; `rescan`, `new_findings` and `policy` become "not run" in that
+   case; the result records `osv_evaluated`; VEX emits no `fixed` statement from such a validation.
+   Tests: `test_unknown_vulnerabilities_are_never_counted_as_fixed`,
+   `test_no_fixed_vex_when_the_rescan_did_not_evaluate_vulnerabilities`.
+2. **The approval hash did not match the patch file.** Patches were written with `write_text`, so
+   on Windows every line became CRLF and `sha256(file) != plan_hash`; CR-only edits passed; plan
+   fields were not covered. Now: patches are written as bytes; `patch_sha256` = sha256 of the file
+   bytes (reproducible with `sha256sum`); `plan_hash` = sha256 of the canonical decision record
+   (chosen candidate, prediction, alternatives, policy, rollback, rationale, patch hash). Approval
+   binds `plan_hash`; any edit to the patch bytes or a hashed field voids it.
+   Tests: `test_patch_hash_is_reproducible_from_the_file_bytes`, `test_any_edit_after_approval_voids_it`
+   (CRLF-only edit and plan-field edit).
+3. **Code wrote a false rationale** ("C1 ranked first") for explicitly chosen candidates. Now:
+   "C1 chosen explicitly (operator choice); code ranked C2 first."
+4. **Stale demo text.** README and runbook use generic plan ids; the runbook's loop line is marked
+   "only after the approval run has actually happened".
+
+**New demo run `runs/20261124T053859Z-8e1c`** with clean plans: P-0001 C2 (ranked look-alike fix,
+4 files), **P-0002 C1** (explicit "dependency bot" plan for the loop, 2 files), P-0003 U1 (strfmt
+pin back), P-0004 V3 (lodash 4.18.1). For all four: `sha256(file) == patch_sha256`, and
+`git apply --check` on a fresh clone of the target succeeds. Older runs' plans are refused by
+`approve` (hash scheme changed), as intended.
+
+Tests: `python -m pytest -q` → **72 passed**, 1 deselected (e2e); ruff clean on `guardian/` and `tests/`.
+
+Not fixed yet (skeptic items 5–10): the GT-P3/P4 misses; dashboard shows "not evaluated" nodes in
+the "clean" colour; Refuter "upheld" adds confidence without a checked quote; two rubric constants
+graded "verified"; the report hard-codes the demo app's URL; minor items (reachability skips a
+`guardian/` folder, model-controlled excerpt size, commit subject outside data delimiters).

@@ -91,6 +91,16 @@ def _key(f: dict) -> tuple:
     return (f["type"], f["component"], f.get("advisory") or f.get("title", "")[:80])
 
 
+def compare(before: list[dict], after: list[dict], osv_ok: bool) -> tuple[list[str], list[dict]]:
+    """(ids of findings resolved, findings that are new). Unknown is never fixed: when the rescan could
+    not evaluate vulnerabilities, their absence afterwards proves nothing, so none counts as resolved."""
+    ak = {_key(f) for f in after}
+    bk = {_key(f) for f in before}
+    gone = [f["id"] for f in before if _key(f) not in ak and (osv_ok or f["type"] != "known_vulnerability")]
+    new = [f for f in after if _key(f) not in bk and f["type"] not in ("new_dependency", "changed_dependency")]
+    return gone, new
+
+
 def validate(run: Path, plan_id: str) -> dict:
     ctx = remediate.Ctx(run)
     plan = runs.read_json(run, f"plans/{plan_id}.json")
@@ -183,8 +193,12 @@ def validate(run: Path, plan_id: str) -> dict:
     t0 = time.time()
     after = _rescan(ctx, root, vdir / "after", branch)
     before = runs.read_json(run, "findings.json")["findings"]
-    checks.append(_check("rescan", True, f"Day-1 pipeline on {branch} vs {ctx.meta['base']}: "
-                         f"{len(after['findings'])} findings (before: {len(before)})", t0=t0))
+    osv_ok = (after.get("meta", {}).get("osv") or {}).get("status") == "evaluated"
+    checks.append(_check("rescan", True if osv_ok else None,
+                         f"Day-1 pipeline on {branch} vs {ctx.meta['base']}: {len(after['findings'])} findings "
+                         f"(before: {len(before)})" + ("" if osv_ok else
+                         "; known vulnerabilities NOT evaluated (OSV unavailable): none can be counted as fixed"),
+                         t0=t0))
     t0 = time.time()
     sb_after = json.loads((vdir / "after" / "sbom.head.cdx.json").read_text(encoding="utf-8"))
     sdiff = ctx.fp.lsd.diff(ctx.head_sbom, sb_after)
@@ -192,14 +206,13 @@ def validate(run: Path, plan_id: str) -> dict:
     checks.append(_check("sbom_diff", True, f"components {sdiff['counts']['old']} -> {sdiff['counts']['new']}: "
                          f"added {len(sdiff['added'])}, removed {len(sdiff['removed'])}",
                          evidence=[f"+ {a['purl']}" for a in sdiff["added"]] + [f"- {x}" for x in sdiff["removed"]], t0=t0))
-    bk = {_key(f) for f in before}
-    new = [f for f in after["findings"] if _key(f) not in bk and f["type"] not in ("new_dependency", "changed_dependency")]
+    gone, new = compare(before, after["findings"], osv_ok)
     bad = [f for f in new if f["risk"] in ("critical", "high")]
-    checks.append(_check("new_findings", not bad, f"{len(new)} new finding(s), {len(bad)} critical/high",
+    checks.append(_check("new_findings", False if bad else (True if osv_ok else None),
+                         f"{len(new)} new finding(s), {len(bad)} critical/high"
+                         + ("" if osv_ok else "; new vulnerabilities could not be checked (OSV unavailable)"),
                          evidence=[f"{f['risk']} {f['type']} {f['component']} {f.get('advisory', '')}" for f in new][:10]))
-    ak = {_key(f) for f in after["findings"]}
     target = ctx.byid[plan["finding"]]
-    gone = [f["id"] for f in before if _key(f) not in ak]
 
     # 10 policy on the actual result
     after_nodes = json.loads((vdir / "after" / "graph.json").read_text(encoding="utf-8"))["nodes"]
@@ -208,7 +221,9 @@ def validate(run: Path, plan_id: str) -> dict:
     head_policy = remediate.policy_state(ctx, ctx.findings, ctx.nodes, ctx.head_src)
     actual_policy = remediate.policy_state(ctx, act, after_nodes, root)
     gate = policy.plan_gate(head_policy, actual_policy, remediate.target_tokens(target))
-    checks.append(_check("policy", gate["pass"], gate["reason"], evidence=gate["remaining_on_target"] + gate["introduced"]))
+    checks.append(_check("policy", gate["pass"] if osv_ok else None,
+                         gate["reason"] if osv_ok else "not evaluable: the KEV / critical-finding rules need vulnerability "
+                         "data, which the rescan could not get", evidence=gate["remaining_on_target"] + gate["introduced"]))
 
     # 11 prediction vs outcome
     pred = plan["prediction"]
@@ -225,7 +240,7 @@ def validate(run: Path, plan_id: str) -> dict:
     verdict = "failed" if any(c["passed"] is False for c in vc) else "verified" if all(c["passed"] for c in vc) else "partial"
     return done(verdict, {"branch": branch, "commit": sha, "work_dir": root.relative_to(run).as_posix(),
                           "target_resolved": target["id"] in gone, "findings_resolved": len(gone),
-                          "resolved_ids": gone, "sbom_after": f"validation/{plan_id}/sbom.after.cdx.json",
+                          "resolved_ids": gone, "osv_evaluated": osv_ok, "sbom_after": f"validation/{plan_id}/sbom.after.cdx.json",
                           "sbom_diff": {"added": [a["purl"] for a in sdiff["added"]], "removed": sdiff["removed"]},
                           "new_findings": [_key(f) for f in new],
                           "risk": {"target_before": target["priority"]["score"],

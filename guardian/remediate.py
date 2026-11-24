@@ -528,7 +528,7 @@ def make_plan(run: Path, finding_id: str, force_candidate: str | None = None, su
     if chosen is None:
         raise KeyError(f"no candidate {force_candidate}; have {[c['id'] for c in cands]}")
     patch = chosen["prediction"].get("patch", "")
-    (run / "plans" / f"{pid}.patch").write_text(patch, encoding="utf-8")
+    (run / "plans" / f"{pid}.patch").write_bytes(patch.encode("utf-8"))   # bytes: no newline translation
     plan = {
         "id": pid, "finding": f["id"], "finding_type": f["type"], "component": f["component"],
         "title": f.get("title"), "advisory": f.get("advisory"), "state": "pending_approval",
@@ -546,11 +546,13 @@ def make_plan(run: Path, finding_id: str, force_candidate: str | None = None, su
                                     for c in cands if c is not chosen],
         "policy_entries": chosen.get("policy_entries", []),
         "policy_head": {k: head_policy[k] for k in ("engine", "pass", "deny", "warn")},
-        "patch_file": f"plans/{pid}.patch", "plan_hash": hashlib.sha256(patch.encode("utf-8")).hexdigest(),
+        "patch_file": f"plans/{pid}.patch",
         "rollback": "Nothing to roll back in ./target (never modified). Discard the plan by deleting "
                     f"{chosen['prediction'].get('work_dir', 'its work clone')}. If the patch is later merged by a "
                     "human: `git revert <commit>` and `npm ci --ignore-scripts` from the restored lockfile.",
-        "rationale": {"deterministic": f"{chosen['id']} ranked first: resolves the target="
+        "rationale": {"deterministic": (f"{chosen['id']} chosen explicitly ({chosen_by or 'operator choice'}); code ranked "
+                                        f"{ranked[0]['id']} first. {chosen['id']}: " if force_candidate
+                                        else f"{chosen['id']} ranked first: ") + "resolves the target="
                                        f"{chosen['prediction'].get('target_resolved')}, plan gate="
                                        f"{chosen['prediction'].get('plan_gate', {}).get('pass')}, "
                                        f"new vulnerabilities={len(chosen['prediction'].get('new_vulnerabilities', []))}, "
@@ -559,6 +561,7 @@ def make_plan(run: Path, finding_id: str, force_candidate: str | None = None, su
     }
     if planner:
         plan["rationale"]["ai"] = planner(ctx, plan, cands)
+    plan["patch_sha256"], plan["plan_hash"] = compute_plan_hash(run, plan)
     runs.write_json(run, f"plans/{pid}.json", plan)
     audit.append(run, "guardian", "plan.created", pid, {"finding": f["id"], "candidate": chosen["id"],
                                                          "plan_hash": plan["plan_hash"], "supersedes": supersedes})
@@ -574,15 +577,31 @@ def _short(p: dict) -> dict:
 
 
 # ---------------------------------------------------------------------------------- approval
+# Everything an approver relies on. `state`, `created` and later annotations are not part of the decision.
+HASHED_FIELDS = ("id", "finding", "finding_type", "component", "advisory", "supersedes", "chosen", "chosen_by",
+                 "deterministic_best", "prediction", "alternatives_considered", "policy_entries", "policy_head",
+                 "patch_file", "rollback", "rationale")
+
+
+def compute_plan_hash(run: Path, plan: dict) -> tuple[str, str]:
+    """(sha256 of the patch file's bytes, sha256 of the canonical decision record incl. that patch hash).
+
+    `sha256sum plans/P-xxxx.patch` reproduces the first value; any edit to the patch bytes or to a
+    hashed plan field changes the second, which is what an approval is bound to."""
+    patch_sha = hashlib.sha256((run / plan["patch_file"]).read_bytes()).hexdigest()
+    core = {k: plan.get(k) for k in HASHED_FIELDS} | {"patch_sha256": patch_sha}
+    canon = json.dumps(core, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return patch_sha, hashlib.sha256(canon).hexdigest()
+
+
 def approve(run: Path, plan_id: str, approver: str, reject: bool = False, comment: str = "") -> dict:
     if not approver or not approver.strip():
         raise ValueError("an approver name is required")
     plan = runs.read_json(run, f"plans/{plan_id}.json")
     if plan["state"] != "pending_approval":
         raise ValueError(f"{plan_id} is {plan['state']}; only a plan pending approval can be approved or rejected")
-    current = hashlib.sha256((run / plan["patch_file"]).read_text(encoding="utf-8").encode("utf-8")).hexdigest()
-    if current != plan["plan_hash"]:
-        raise ValueError("the plan's patch changed after it was created; re-plan instead of approving")
+    if compute_plan_hash(run, plan)[1] != plan.get("plan_hash"):
+        raise ValueError("the plan or its patch changed after it was created; re-plan instead of approving")
     rec = {"plan": plan_id, "plan_hash": plan["plan_hash"], "approver": approver.strip(),
            "decision": "rejected" if reject else "approved", "comment": comment,
            "at": dt.datetime.now(dt.UTC).isoformat(timespec="seconds")}
@@ -619,8 +638,8 @@ def check_approval(run: Path, plan_id: str) -> tuple[bool, str]:
     a = _read_json(ap)
     if a["decision"] != "approved":
         return False, f"{plan_id} was {a['decision']} by {a['approver']}"
-    current = hashlib.sha256((run / plan["patch_file"]).read_text(encoding="utf-8").encode("utf-8")).hexdigest()
-    if current != a["plan_hash"] or plan["plan_hash"] != a["plan_hash"]:
+    current = compute_plan_hash(run, plan)[1]
+    if current != a["plan_hash"] or plan.get("plan_hash") != a["plan_hash"]:
         return False, (f"{plan_id} changed after approval (approved hash {a['plan_hash'][:12]}, current "
                        f"{current[:12]}): a new approval is required")
     return True, f"{plan_id} approved by {a['approver']} at {a['at']} for hash {a['plan_hash'][:12]}"

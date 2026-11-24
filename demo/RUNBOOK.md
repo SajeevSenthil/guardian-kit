@@ -7,7 +7,7 @@ here matches what is built (see `implementations.md`); do not say more than this
 
 1. "Facts on screen are written by code from tool output: file, line, commit or API response.
    Anything an AI says is labelled as inference, and its quotes are checked against the evidence."
-2. "The first fix was what a dependency bot would do: delete the package from the manifest. Guardian
+2. *(Only after the approval run has actually happened.)* "The first fix was what a dependency bot would do: delete the package from the manifest. Guardian
    caught that the code still requires it, worked out why, proposed a better fix, and a human had
    to approve again. Nothing was pushed or merged; the target repository was never modified."
 3. "Unknown is never zero. When a lookup cannot run, the report says *not evaluated*."

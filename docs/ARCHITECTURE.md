@@ -31,7 +31,7 @@ guardian/evidence.py, env.py, agents/{llm,tools,runner,planner}.py, agents/promp
 guardian/remediate.py, policy.py, audit.py                                 phase 10
 guardian/validate.py, loop.py                                             phase 11
 guardian/report.py, schemas/guardian-report.schema.json                   phase 12
-tests/unit/                                62 tests, no network, no docker
+tests/unit/                                72 tests, no network, no docker
 ```
 
 ## 1. One-paragraph description

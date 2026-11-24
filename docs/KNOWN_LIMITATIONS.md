@@ -28,8 +28,9 @@ Frank list, kept current. Status as of 2026-11-24. Details and measurements: `im
 
 - **The end-to-end test (`tests/e2e/`) has not been run** by the assistant (it records test approvals);
   run `python -m pytest -q -m e2e -s`.
-- **Plan P-0004 in the demo run has a defective patch** (line-ending churn, fixed in code since; see
-  implementations.md phase 15): withdraw it and use P-0005.
+- **Use the demo run `runs/20261124T053859Z-8e1c`.** Plans in older runs were made before the patch and
+  hash fixes of the final checkpoint (CRLF churn, newline-translated patch files) and are refused by
+  `approve` ("the plan or its patch changed"), which is the intended behaviour.
 
 ## Detection limits
 

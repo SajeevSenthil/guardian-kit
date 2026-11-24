@@ -59,3 +59,8 @@ def test_unknown_vulnerabilities_are_never_reported_as_zero():
 def test_docker_sentence_says_not_implemented():
     assert "not implemented" in report.docker_sentence(True) and "not installed" not in report.docker_sentence(True)
     assert "not installed" in report.docker_sentence(False)
+
+
+def test_no_fixed_vex_when_the_rescan_did_not_evaluate_vulnerabilities():
+    v = {**val("partial", ["F1"]), "osv_evaluated": False}
+    assert report.build_vex("r", FINDINGS, {"P-0001": v}, {}, "head")["statements"] == []

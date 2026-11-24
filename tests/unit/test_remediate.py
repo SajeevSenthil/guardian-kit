@@ -84,10 +84,10 @@ def test_plan_gate():
 # ---- approval bound to the plan hash ------------------------------------------------------
 def make_run(tmp_path):
     (tmp_path / "plans").mkdir(parents=True)
-    patch = "From abc\n--- a/package.json\n+++ b/package.json\n"
-    (tmp_path / "plans" / "P-0001.patch").write_text(patch, encoding="utf-8")
+    (tmp_path / "plans" / "P-0001.patch").write_bytes(b"From abc\n--- a/package.json\n+++ b/package.json\n")
     plan = {"id": "P-0001", "patch_file": "plans/P-0001.patch", "state": "pending_approval",
-            "plan_hash": hashlib.sha256(patch.encode()).hexdigest()}
+            "chosen": {"id": "C2"}, "prediction": {"target_resolved": True}}
+    plan["patch_sha256"], plan["plan_hash"] = remediate.compute_plan_hash(tmp_path, plan)
     (tmp_path / "plans" / "P-0001.json").write_text(json.dumps(plan), encoding="utf-8")
     return tmp_path
 
@@ -144,3 +144,24 @@ def test_only_pending_plans_can_be_approved_and_withdrawn_plans_never(tmp_path):
 def test_expected_paths(tmp_path):
     ops = [("remove_dep", "x"), ("delete", "vendor/x.tgz"), ("remove_lines", [("routes/a.js", 3, "var y = require('x');")])]
     assert remediate.expected_paths(tmp_path, ops) == {"package.json", "package-lock.json", "vendor/x.tgz", "routes/a.js"}
+
+
+def test_patch_hash_is_reproducible_from_the_file_bytes(tmp_path):
+    run = make_run(tmp_path)
+    plan = json.loads((run / "plans/P-0001.json").read_text())
+    assert plan["patch_sha256"] == hashlib.sha256((run / "plans/P-0001.patch").read_bytes()).hexdigest()
+
+
+@pytest.mark.parametrize("edit", ["crlf_only", "plan_field"])
+def test_any_edit_after_approval_voids_it(tmp_path, edit):
+    run = make_run(tmp_path)
+    remediate.approve(run, "P-0001", "Test Approver")
+    if edit == "crlf_only":
+        p = run / "plans" / "P-0001.patch"
+        p.write_bytes(p.read_bytes().replace(b"\n", b"\r\n"))
+    else:
+        pj = run / "plans" / "P-0001.json"
+        d = json.loads(pj.read_text())
+        d["prediction"]["target_resolved"] = False
+        pj.write_text(json.dumps(d))
+    assert not remediate.check_approval(run, "P-0001")[0]

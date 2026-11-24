@@ -53,12 +53,12 @@ start fastpath/out/guardian.html              # the dashboard (macOS: open, Linu
 python -m guardian prioritise                 # ranked list with scores
 python -m guardian explain F162               # factor table for one finding
 python -m guardian analyse                    # AI agents (needs GEMINI_API_KEY in .env; else "skipped")
-python -m guardian plan --finding F359        # fix candidates, dry runs, policy gate -> P-0001
-python -m guardian approve P-0001 --approver "Your Name"
-python -m guardian validate P-0001            # on failure: diagnosis + superseding plan (approve again)
+python -m guardian plan --finding F359        # fix candidates, dry runs, policy gate -> prints the plan id (P-a)
+python -m guardian approve P-a --approver "Your Name"
+python -m guardian validate P-a               # on failure: diagnosis + superseding plan P-b (approve again)
 python -m guardian report                     # runs/<run_id>/report/guardian-report.html
 python -m guardian audit-verify
-python -m guardian withdraw P-0004 --reason "..."   # make a defective pending plan unapprovable
+python -m guardian withdraw P-x --reason "..."      # make a pending plan unapprovable (e.g. a bad patch)
 ```
 
 Finding ids depend on the run; use `python -m guardian prioritise` to see them.
@@ -84,11 +84,11 @@ configured models it can use.
 3. **What matters?** lodash `merge` advisory: **R3** (the app calls `_.merge(…, req.body…)`),
    score 79, ranks above the higher-CVSS `defaultsDeep` advisory (72). Packages nothing loads
    are capped at 39. tj-actions' CVE-2025-30066 is in CISA KEV → 90.
-4. **Fix it safely.** Plan P-0001 removes the look-alike package, its tarball and its unused
+4. **Fix it safely.** The ranked plan removes the look-alike package, its tarball and its unused
    `require()`; the manifest-only alternative is rejected because code would still require the
    package. A human approves the exact patch hash.
 5. **Prove it** *(expected; not yet run end to end — it needs a human approval)*. Validation in a
-   throwaway clone; the "manifest-only bot" plan (P-0004) should fail the static start check, the
+   throwaway clone; the "manifest-only bot" plan (`plan --finding F359 --candidate C1`) should fail the static start check, the
    diagnosis should recommend the full removal, and the new plan needs a new approval.
 6. **Report.** HTML / Markdown / JSON / VEX with the audit chain verified.
 
@@ -212,7 +212,7 @@ time; npm uses its own cache.
 ## Tests
 
 ```bash
-python -m pytest -q                                    # 67 passed, no network, no docker (e2e deselected)
+python -m pytest -q                                    # 72 passed, no network, no docker (e2e deselected)
 python -m pytest -q -m e2e -s                          # end-to-end loop, ~10 min, real npm installs (not yet run)
 uvx ruff check guardian tests/unit --line-length 110   # clean
 ```

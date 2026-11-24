@@ -92,8 +92,8 @@ def build_vex(run_id: str, findings: dict, validations: dict, decisions: dict, h
     stmts = []
     seen = set()
     for pid, v in validations.items():
-        if v.get("verdict") not in ("verified", "partial"):
-            continue
+        if v.get("verdict") not in ("verified", "partial") or v.get("osv_evaluated") is False:
+            continue   # no "fixed" statement unless the rescan actually evaluated vulnerabilities
         for fid in v.get("resolved_ids", []):
             f = findings.get(fid)
             if not f or f["type"] != "known_vulnerability" or (f["advisory"], f["component"]) in seen:

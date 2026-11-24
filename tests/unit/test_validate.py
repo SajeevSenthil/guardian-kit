@@ -61,3 +61,12 @@ def test_diagnosis_escalates_when_nothing_is_eligible():
 def test_agent_recommendation_must_be_eligible():
     allowed = {a["id"] for a in loop._eligible(PLAN, [c for c in result("static_start")["checks"] if c["passed"] is False])}
     assert allowed == {"C2"}      # C9 leaves a dangling require, E escalates
+
+
+def test_unknown_vulnerabilities_are_never_counted_as_fixed():
+    before = [{"id": "F1", "type": "known_vulnerability", "component": "pkg:npm/a@1", "advisory": "GHSA-1"},
+              {"id": "F2", "type": "typosquat", "component": "pkg:npm/x@1", "title": "look-alike"}]
+    gone, new = validate.compare(before, [], osv_ok=False)        # OSV down: every vuln "disappears"
+    assert gone == ["F2"] and new == []
+    gone, _ = validate.compare(before, [], osv_ok=True)
+    assert gone == ["F1", "F2"]
