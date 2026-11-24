@@ -292,7 +292,8 @@ flowchart TB
     class HA human
     class T,EXT,LLM,STORE data
     style D1 fill:#f8fdf9,stroke:#1e8e3e,stroke-width:2px
-    style D2 fill:#f8fdf9,stroke:#1e8e3e,stroke-width:2px```
+    style D2 fill:#f8fdf9,stroke:#1e8e3e,stroke-width:2px
+```
 
 Agents never write facts, scores, plans or verdicts: their output is INFERRED and every quote is
 checked against the evidence by code. The diagram's "Validate" box has no container build or smoke
