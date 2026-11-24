@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://guardian.invalid/schemas/guardian-report.schema.json",
+  "title": "Guardian report",
+  "description": "Machine-readable Guardian report (guardian/report.py). Every value is rendered by code from a run directory; inferred_claims are model output and are labelled as such.",
+  "type": "object",
+  "required": ["schema", "run", "tools", "data_sources", "summary", "inventory", "changes", "findings", "plans",
+               "remaining", "before_after", "confidence", "audit", "not_evaluated", "evidence_index"],
+  "properties": {
+    "schema": {"const": "guardian-report/1.0"},
+    "run": {"type": "object", "required": ["run_id", "target", "base", "base_sha", "head", "head_sha", "generated"],
+            "properties": {"base_sha": {"type": "string", "minLength": 7}, "head_sha": {"type": "string", "minLength": 7}}},
+    "tools": {"type": "object", "additionalProperties": {"type": "string"}},
+    "data_sources": {"type": "object", "required": ["osv", "epss", "kev"]},
+    "summary": {"type": "object", "required": ["counts", "sentences"],
+      "properties": {
+        "counts": {"type": "object", "required": ["packages", "install_paths", "findings", "need_attention",
+                    "remediated_verified", "remediated_partial", "remaining_open_need_attention", "accepted_risk", "not_affected"],
+                   "additionalProperties": true},
+        "sentences": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["text", "cites"],
+                      "properties": {"text": {"type": "string"}, "cites": {"type": "array", "items": {"type": "string"}}}}}}},
+    "inventory": {"type": "object", "required": ["direct", "transitive", "origins", "sbom_files", "path_examples"]},
+    "changes": {"type": "array", "items": {"type": "object", "required": ["sha", "subject", "findings"]}},
+    "findings": {"type": "array", "items": {"$ref": "#/$defs/finding"}},
+    "plans": {"type": "array", "items": {"$ref": "#/$defs/plan"}},
+    "remaining": {"type": "object", "required": ["open_by_band", "accepted_risks", "not_affected", "not_affected_candidates"]},
+    "before_after": {"type": "object", "required": ["need_attention_open_before", "need_attention_open_after", "validated_plans"]},
+    "confidence": {"type": "object", "required": ["overall", "basis", "drivers"]},
+    "audit": {"type": "object", "required": ["chain_ok", "result", "events", "by_actor"],
+              "properties": {"chain_ok": {"type": "boolean"}}},
+    "not_evaluated": {"type": "array", "items": {"type": "object", "required": ["item", "why", "effect"]}},
+    "evidence_index": {"type": "array", "items": {"type": "object", "required": ["id", "source", "type", "sha256"],
+                       "properties": {"type": {"enum": ["verified", "derived"]}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}}}
+  },
+  "$defs": {
+    "grade": {"enum": ["verified", "heuristic", "inferred", "unknown"]},
+    "finding": {
+      "type": "object",
+      "required": ["id", "type", "component", "score", "band", "range", "confidence", "factors", "guardrails", "status",
+                   "verified_claims", "inferred_claims"],
+      "properties": {
+        "score": {"type": "integer", "minimum": 0, "maximum": 100},
+        "band": {"enum": ["critical", "high", "medium", "low", "info"]},
+        "range": {"type": "array", "items": {"type": "integer"}, "minItems": 2, "maxItems": 2},
+        "confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+        "status": {"enum": ["open", "fix_planned", "remediated_verified", "remediated_partial", "accepted_risk",
+                            "not_affected", "not_affected_candidate"]},
+        "factors": {"type": "object", "required": ["severity", "exploitability", "reachability", "exposure", "fix_availability"],
+                    "additionalProperties": {"type": "object", "required": ["value", "grade", "evidence"],
+                                             "properties": {"value": {"type": ["number", "null"]}, "grade": {"$ref": "#/$defs/grade"}}}},
+        "verified_claims": {"type": "array", "items": {"type": "object", "required": ["type", "evidence_id", "source", "excerpt"],
+                            "properties": {"type": {"enum": ["verified", "derived"]}}}},
+        "inferred_claims": {"type": "array", "items": {"type": "object", "required": ["type", "agent", "model", "text", "evidence_ids"],
+                            "properties": {"type": {"const": "inferred"}}}}
+      }
+    },
+    "plan": {
+      "type": "object",
+      "required": ["id", "finding", "state", "action", "alternatives", "prediction", "policy", "rollback", "plan_hash", "approval", "validation"],
+      "properties": {
+        "plan_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "approval": {"type": ["object", "null"], "required": ["approver", "decision", "at", "plan_hash"]},
+        "validation": {"type": ["object", "null"], "required": ["verdict", "checks"],
+                       "properties": {"verdict": {"enum": ["verified", "partial", "failed", "refused"]}}}
+      }
+    }
+  }
+}

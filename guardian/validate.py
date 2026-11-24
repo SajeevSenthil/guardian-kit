@@ -223,6 +223,8 @@ def validate(run: Path, plan_id: str) -> dict:
     verdict = "failed" if any(c["passed"] is False for c in vc) else "verified" if all(c["passed"] for c in vc) else "partial"
     return done(verdict, {"branch": branch, "commit": sha, "work_dir": root.relative_to(run).as_posix(),
                           "target_resolved": target["id"] in gone, "findings_resolved": len(gone),
+                          "resolved_ids": gone, "sbom_after": f"validation/{plan_id}/sbom.after.cdx.json",
+                          "sbom_diff": {"added": [a["purl"] for a in sdiff["added"]], "removed": sdiff["removed"]},
                           "new_findings": [_key(f) for f in new],
                           "risk": {"target_before": target["priority"]["score"],
                                    "target_after": 0 if target["id"] in gone else target["priority"]["score"],

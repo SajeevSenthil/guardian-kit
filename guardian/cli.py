@@ -215,6 +215,30 @@ def cmd_audit(a):
     return 0 if ok else 4
 
 
+def cmd_report(a):
+    from . import report, runs
+    run = runs.resolve(a.run)
+    res = report.render(run)
+    rep, s = res["report"], res["report"]["summary"]["counts"]
+    _p(f"report written to {res['dir']}")
+    for f in sorted(res["dir"].iterdir()):
+        _p(f"  {f.name:32} {f.stat().st_size:>9} bytes")
+    _p(f"JSON schema: valid ({report.SCHEMA.relative_to(report.KIT).as_posix()})")
+    _p(f"VEX statements: {len(res['vex']['statements'])} "
+       f"(fixed: {sum(1 for x in res['vex']['statements'] if x['status'] == 'fixed')}, "
+       f"not_affected: {sum(1 for x in res['vex']['statements'] if x['status'] == 'not_affected')})")
+    _p(f"summary: {s}")
+    for x in rep["summary"]["sentences"]:
+        _p(f"  - {x['text']}")
+    _p(f"audit chain: {rep['audit']['result']}")
+
+
+def cmd_accept(a):
+    from . import report, runs
+    rec = report.accept(runs.resolve(a.run), a.finding, a.as_, a.by, a.reason)
+    _p(f"{rec['finding']} recorded as {rec['decision']} by {rec['by']} at {rec['at']}")
+
+
 def _not_built(name):
     def f(a):
         _p(f"`{name}` is not built yet (see implementations.md)")
@@ -271,8 +295,16 @@ def main(argv=None):
     s = sub.add_parser("audit-verify", help="verify the hash-chained audit log")
     s.add_argument("--run")
     s.set_defaults(fn=cmd_audit)
-    for name in ("report",):
-        sub.add_parser(name).set_defaults(fn=_not_built(name))
+    s = sub.add_parser("report", help="render the Guardian report (HTML, Markdown, JSON, VEX, SBOMs)")
+    s.add_argument("--run")
+    s.set_defaults(fn=cmd_report)
+    s = sub.add_parser("accept", help="record a human decision on a finding: not-affected or accepted-risk")
+    s.add_argument("finding")
+    s.add_argument("--as", dest="as_", required=True, choices=["not-affected", "accepted-risk"])
+    s.add_argument("--by", required=True, help="name of the human taking the decision")
+    s.add_argument("--reason", required=True)
+    s.add_argument("--run")
+    s.set_defaults(fn=cmd_accept)
     from .env import load_dotenv
     load_dotenv()
     a = ap.parse_args(argv)

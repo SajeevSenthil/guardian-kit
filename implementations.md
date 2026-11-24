@@ -428,3 +428,80 @@ When a verdict check fails, the plan becomes `validation_failed` and `loop.close
 - P-0004's "why not chosen" text for C2 says "ranked lower…"; that wording was wrong for an
   explicitly chosen plan and has been fixed for new plans (it now says C2 was ranked best by code
   and not used because of the explicit choice). P-0004 is a record and was not rewritten.
+
+---
+
+## Phase 12 — Report, exports, decisions (2026-11-24) — done (UI page = the HTML report)
+
+**Brief items:** Day 2 item 5 (verify & report) and the "Guardian Report" deliverable.
+
+### What was built
+
+| File | Purpose |
+|---|---|
+| `guardian/report.py` | collects everything from the run directory only; renders JSON, Markdown, HTML; builds OpenVEX; `accept()` for human decisions |
+| `schemas/guardian-report.schema.json` | documented JSON Schema (draft 2020-12); the report is validated against it on every render (`jsonschema` 4.26) |
+| CLI | `python -m guardian report`; `python -m guardian accept F-ID --as not-affected|accepted-risk --by "Name" --reason "..."` |
+| `guardian/validate.py` | now records `resolved_ids`, the after-SBOM path and the SBOM diff on each validation (needed by the report and VEX) |
+
+Outputs in `runs/<id>/report/`: `guardian-report.json`, `guardian-report.md`,
+`guardian-report.html` (one self-contained file), `vex.openvex.json`, `sbom.before.cdx.json`,
+and `sbom.after.<plan>.cdx.json` for each validated plan.
+
+### Rules
+
+- **No model text in the report.** The executive summary is a template filled by code; every
+  sentence carries the finding / plan ids it is based on.
+- **Claims keep their type:** `verified_claims` (evidence id, source, line, excerpt; `derived` for
+  computed evidence) and `inferred_claims` (agent, model, support_checked) are separate arrays.
+- **VEX** (`build_vex`): `fixed` only for vulnerabilities resolved by a plan whose validation
+  verdict is verified or partial (a partial verdict says in `status_notes` that build and tests were
+  not run); `not_affected` **only** after `guardian accept --as not-affected` by a named human,
+  with the name and reason in `impact_statement`. Refuter "not affected" candidates are listed in
+  the report and never written to VEX.
+- **Accepted risk / not affected** need a name and a reason; each is an audit event with actor
+  `human:<name>`.
+- Finding status: open · fix_planned (the target or a predicted-resolved finding of a pending
+  plan) · remediated_verified · remediated_partial · accepted_risk · not_affected ·
+  not_affected_candidate.
+
+### Brief checklist (Day 2 item 5 and the Guardian-report deliverable)
+
+| Required content | Where |
+|---|---|
+| Component inventory and dependency paths | §3 + `inventory` (counts, origins, SBOM files, path examples) and every finding's `path` |
+| Findings and supporting evidence | §5 + `findings[].verified_claims / inferred_claims`, `evidence_index` (sha256 of each excerpt) |
+| Risk ranking and recommended actions | §5 ranking with factor tables; §6 plans |
+| Original finding and supporting evidence | §6 per plan (finding id → §5) |
+| Recommended and approved action (who, when, plan hash) | §6 `approval` |
+| Build and test results | §7 per validation (checks with passed / FAILED / not run) |
+| Before-and-after risk status | §8 + `before_after` |
+| Remaining or accepted risks | §9 + `remaining` |
+| Final confidence and audit trail | §10 + `confidence`, `audit` (chain verification result, events by actor) |
+| Not-evaluated list | §2 + `not_evaluated` |
+
+### Verified (run 20261123T224752Z-3b42)
+
+- `python -m guardian report` writes all files; **JSON valid against the schema**; audit chain OK.
+- Current state is reported honestly: 4 plans, **0 approved, 0 validated**, VEX with 0 statements,
+  80 critical/high items open, status `fix_planned` on the 8 findings the pending plans would
+  resolve; "not evaluated" lists docker, 326 bundled install paths, registry install scripts,
+  digest/SHA pinning, conftest, syft/grype/osv-scanner, agent steps, 1 CVE without EPSS.
+- HTML checked in headless Chrome: summary tiles, cited sentences, not-evaluated list, ranked table
+  with band and status badges, plans with alternatives and approval state.
+- `python -m pytest -q tests/unit` → **62 passed** (5 new in `test_report.py`): VEX `fixed` only
+  for verified/partial validations and only for CVE findings; `not_affected` only with a human
+  decision (name in the statement); a refuter candidate alone never reaches VEX; `accept` refuses
+  a missing name, a blank reason or an unknown decision; a decision is an audit event.
+- `uvx ruff check guardian tests/unit --line-length 110` → clean.
+
+### Not done / limitations
+
+- **VEX validation:** structure follows OpenVEX v0.2.0 (`@context`, `@id`, `author`,
+  `timestamp`, `version`, `statements[].vulnerability/products/status`) but it is **not
+  validated against the official OpenVEX schema or tooling** (vexctl not installed).
+- **UI:** no NiceGUI app; the Day-2 "page" is the self-contained HTML report. The Day-1 dashboard
+  (`fastpath/out/guardian.html`) does not show scores, plans or validations. No Playwright UI test
+  (`tests/ui/` not written; Playwright not installed).
+- With no approvals yet, sections 6–8 show plans as "not approved / not validated". Re-run
+  `python -m guardian report` after approving and validating to fill them.
