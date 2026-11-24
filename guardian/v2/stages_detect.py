@@ -210,7 +210,8 @@ def merge(records: list[dict], comps: list[dict], tools_ran: dict) -> list[dict]
 
 
 def _vkey(v: str):
-    return [int(x) if x.isdigit() else x for x in re.split(r"[.\-+]", v or "")]
+    """Sortable version key; numeric parts compare as numbers, text parts (beta, rc) sort before them."""
+    return [(1, int(x), "") if x.isdigit() else (0, 0, x) for x in re.split(r"[.\-+]", (v or "").lstrip("v"))]
 
 
 # ---------------------------------------------------------------- stage 4: vulns

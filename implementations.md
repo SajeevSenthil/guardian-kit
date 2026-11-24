@@ -776,3 +776,48 @@ Screenshots: `docs/screenshots/v2/`.
 Notes:
 - C: was full during this work, so pytest needs `--basetemp` on another drive.
 - The CLAUDE.md scope line is **not changed yet**; it is waiting for the human's yes.
+
+## v2 — M2 + M3 (branch `v2-any-repo`)
+
+- **M2, stages 4–7:**
+  - **OSV-Scanner** (one `-L` per lockfile/manifest, because directory scanning fails on Windows) and
+    **Grype** (on the Syft CycloneDX SBOM, DB in `.cache/grype`), plus v1 OSV for npm. Rows are merged
+    per (package, advisory) by alias union, with a per-tool ✓ / ✗ / not run column. EPSS and KEV
+    enrichment.
+  - Signals: v1 npm rules, generic Docker/CI rules, and manifest rules (unpinned versions,
+    URL/VCS/path sources, custom index, missing lockfile).
+  - Prioritise: v1 scoring for npm (reachability) and the same formula for other ecosystems through
+    an adapter (reachability **unknown**, never 0). Code-written "why", "vs next" and
+    "published vs ours" text, plus a demoted list.
+  - Investigate: the v1 agents on the npm layer; other ecosystems show "skipped" honestly.
+- **M3, stages 8–10:**
+  - Remedies: one plan per package, moving to the lowest version that fixes all of its advisories.
+    Edits: the `requirements*.txt` pin, the `package.json` dependency, or npm `overrides` for
+    transitive packages. The patch is built in a throwaway clone; plans are hash-bound
+    (`plan_hash`).
+  - Per-plan **Approve / Reject / Defer only through the HTTP route** (`routes_fix.py`), audited;
+    then "Send to sandbox" freezes `approved_set.json` and starts verify.
+  - Verify, on a fresh clone:
+    - hash check, then apply;
+    - lockfile refresh (npm `--package-lock-only --ignore-scripts`);
+    - tests are **not run without docker**;
+    - rescan with OSV-Scanner + Syft/Grype, then before/after per plan, new vulnerabilities and
+      remaining ones;
+    - verdict VERIFIED / PARTIAL / FAILED, computed by code.
+  - Report: stage coverage, top risks, plans, verdict, audit-chain check, downloads.
+- **Any https repo is allowed** (`[sources] allow = ["*"]`); consent is still required and audited.
+- `pytest.ini` now limits collection to `tests/`. Pytest had imported test files from a cloned
+  repo in `workspaces/`: that was code from an analysed repo, and it is now blocked.
+
+Measured on dvpwa @ 5ee2dc2 (Python): 72 advisories, OSV-Scanner and Grype agree on all 72;
+4 plans (aiohttp → 3.14.4 fixes 62). On the npm demo app: 317 rows from 3 tools; 10 plans.
+
+Tests: 95 passed; ruff clean.
+
+Not done:
+- container tests (docker missing);
+- deps.dev scorecard signals;
+- agents for non-npm ecosystems;
+- Remediation Planner / Diagnostician in v2;
+- the plan does not check whether the target version has advisories of its own; the rescan
+  catches this as "new".
