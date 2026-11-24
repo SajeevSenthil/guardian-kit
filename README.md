@@ -2,47 +2,171 @@
 
 **Know what you build. Trust what you ship.**
 
-Guardian compares a trusted version of an application with the version under review, finds known
-vulnerabilities and supply-chain sabotage (look-alike packages, hijacked updates, loosened Docker
-and CI settings), and backs every claim with the file, line, commit or API response that proves
-it. It then ranks what matters for this application, proposes a fix that a **named human must
-approve**, and proves the fix in a throwaway clone before reporting it. Facts, scores and pass/fail
-are computed by code; AI agents only add labelled, evidence-checked inferences.
+Guardian analyses **any repository** (npm, pip, Go, Maven/Gradle, Cargo, Ruby, PHP, .NET) in a web UI,
+one stage at a time:
+- a standard **SBOM** (Syft), then a **dependency graph** with evidence for every edge;
+- **vulnerabilities** from two independent scanners (OSV-Scanner + Grype), merged and cross-checked;
+- **supply-chain risks that have no CVE**, then a **prioritised risk report** with a reason for every
+  rank;
+- an investigation by **5 AI agents**, capped at 2 minutes;
+- **fixes that a named human approves in the UI**, then a **sandbox proof** that rescans the patched
+  copy and runs the tests in an isolated container.
 
-Built for the Bosch "Software Supply Chain Guardian" hackathon. Phase-by-phase build log with
-measured results: [`implementations.md`](implementations.md).
+Facts, scores and verdicts are computed by code. AI agents only add labelled, evidence-checked
+inferences. Anything that was not checked says **not run**, never "safe".
 
-![Dependency graph tracing a transitive package six levels deep](docs/screenshots/dashboard-transitive-trace.png)
+Built for the Bosch "Software Supply Chain Guardian" hackathon. The build log with measured results
+is [`implementations.md`](implementations.md). The full v2 documentation is
+**[`docs/V2_ARCHITECTURE.md`](docs/V2_ARCHITECTURE.md)**.
 
 ---
 
-## Guardian v2: any repository, stage by stage in a web UI (current approach)
-
-Paste a Git URL (or upload a zip, or give a folder) and run 10 stages:
-- intake, then a **Syft** SBOM, then a dependency graph with evidence;
-- vulnerabilities from **OSV-Scanner + Grype**, then supply-chain signals, then a prioritised risk
-  report, then **5 AI agents** (2-minute cap);
-- remedies that **a human approves in the UI**, then a sandbox proof, then a report.
-
-Works for npm, pip, Go, Maven/Gradle, Cargo, Ruby, PHP and .NET.
+## Quick start
 
 ```powershell
-python scripts/setup_tools.py   # once: Syft, OSV-Scanner, Grype (SHA-256 verified)
-python -m guardian ui           # http://127.0.0.1:8080
+pip install fastapi uvicorn python-multipart httpx pyyaml   # Python 3.12
+python scripts/setup_tools.py      # once: Syft, OSV-Scanner, Grype into toolsin (SHA-256 verified)
+python -m guardian doctor          # tools and keys (Gemini keys in .env as GEMINI_API_KEY_1, _2, ...)
+python -m guardian ui              # open http://127.0.0.1:8080, then "+ New analysis"
 ```
+
+Or without the UI:
+
+```powershell
+python -m guardian ws create --kind git --value https://github.com/anxolerd/dvpwa --ref 5ee2dc2 --by "Your Name"
+python -m guardian stage remedies --ws <id> --until     # runs stages 1–8
+python -m guardian ws status --id <id>
+python -m pytest -q                                      # unit tests
+```
+
+The sandbox's test step needs **Docker**. Without it, the tests are reported as *not run* and the
+best verdict is PARTIAL.
+
+---
+
+## Architecture (v2)
 
 ![Guardian v2 architecture](docs/architecture_v2.png)
 
-**Full documentation: [`docs/V2_ARCHITECTURE.md`](docs/V2_ARCHITECTURE.md)**. It covers the
-approach, each stage (what / how / built with / output file), the agents, the code map and the
-limitations.
+<details><summary>Diagram source (Mermaid)</summary>
 
-The sections below describe v1: the two-version comparison engine that v2 reuses for npm
-repositories.
+```mermaid
+flowchart TB
+  U(["<b>User</b> · browser<br/>Git URL · .zip · local folder · consent"])
+
+  subgraph UI["Web UI · guardian/api/static/"]
+    direction LR
+    P["10 pages, one per stage<br/>pages/s01_ingest.js … s10_report.js"]
+    HLP["shared helpers + style<br/>app.js · styles.css"]
+  end
+
+  subgraph API["API · FastAPI · guardian/api/"]
+    direction LR
+    RW["routes_workspaces.py<br/>create · run stage · status · files"]
+    RA["routes_approval.py<br/>approve · reject · defer · send to sandbox"]
+  end
+
+  subgraph CORE["Pipeline core · guardian/v2/"]
+    direction LR
+    RUN["runner.py<br/>stage order · dependencies · stale marking"]
+    WS[("workspace.py · workspaces/ID/<br/>src/ · stages/*/result.json<br/>audit.jsonl (SHA-256 chain)")]
+    BR["bridge.py<br/>v1 engine for npm<br/>(line evidence · reachability)"]
+  end
+
+  subgraph DIS["① Discover · guardian/v2/stages/"]
+    direction TB
+    S1["<b>s01 ingest</b><br/>git clone (hooks off) · safe unzip"]
+    S2["<b>s02 SBOM</b><br/>Syft → CycloneDX + SPDX"]
+    S3["<b>s03 graph</b><br/>Syft + deps.dev + v1 · BFS paths"]
+    S1 --> S2 --> S3
+  end
+
+  subgraph DET["② Detect & investigate"]
+    direction TB
+    S4["<b>s04 vulns</b><br/>OSV-Scanner + Grype · merged by alias"]
+    S5["<b>s05 signals</b><br/>rules: manifests · Docker · CI"]
+    S6["<b>s06 prioritise</b><br/>formula + EPSS + CISA KEV"]
+    S7["<b>s07 investigate</b><br/>5 AI agents (Gemini) · 2-min cap"]
+    S4 --> S5 --> S6 --> S7
+  end
+
+  subgraph FIX["③ Fix & prove"]
+    direction TB
+    S8["<b>s08 remedies</b><br/>one hash-bound plan per package"]
+    H{{"<b>Human approves</b><br/>each plan in the UI"}}
+    S9["<b>s09 verify</b><br/>clone · lockfile · Docker tests<br/>rescan · before / after"]
+    S10["<b>s10 report</b><br/>downloads · audit check"]
+    S8 --> H --> S9 --> S10
+  end
+
+  U --> UI --> API --> CORE
+  RUN --> DIS
+  S3 --> S4
+  S7 --> S8
+  RA -.-> H
+
+  classDef code fill:#eef3ff,stroke:#2f5bea,color:#16191f
+  classDef ai fill:#f3edfb,stroke:#7a4cc2,stroke-dasharray:5 4,color:#16191f
+  classDef human fill:#e7f5ee,stroke:#1e7f4f,color:#16191f
+  classDef store fill:#fdf6e3,stroke:#b7791f,color:#16191f
+  class S1,S2,S3,S4,S5,S6,S8,S9,S10,RUN,BR,RW,RA,P,HLP code
+  class S7 ai
+  class H,U human
+  class WS store
+```
+</details>
+
+### The approach in six rules
+1. **Tools first:** Syft, OSV-Scanner, Grype, deps.dev, EPSS and CISA KEV do the detection; our
+   code merges, scores and explains.
+2. **Code decides, AI explains:** agents investigate and challenge. Their claims are labelled
+   *inferred*, and their quotes are checked word for word.
+3. **A human approves every fix:** a click in the UI, bound to the plan's SHA-256 hash and recorded
+   in a hash-chained audit log.
+4. **Nothing from the repository runs on the host:** git hooks are off, `npm --ignore-scripts`
+   is always used, and the tests run only in Docker with `--network none`.
+5. **Unknown is never zero:** a tool that did not run shows *not run*.
+6. **Everything is a file:** every number in the UI links to the JSON file it came from.
+
+### The 10 stages: one backend file and one page each
+
+| # | Stage | What it does | Built with | Backend · Page |
+|---|---|---|---|---|
+| 1 | Start & intake | Safe copy of the repo; detects ecosystems, Dockerfiles and CI; records consent | git (hooks off, depth 50, size cap), safe unzip | `stages/s01_ingest.py` · `pages/s01_ingest.js` |
+| 2 | Inventory & SBOM | Every package; direct/transitive; dev; CycloneDX + SPDX | **Syft** (+ v1 parser cross-check for npm) | `s02_sbom` |
+| 3 | Dependency graph | Why each package is installed: paths, depth, fan-in, evidence per edge | Syft relationships, **deps.dev**, v1 lockfile lines, BFS | `s03_graph` |
+| 4 | Vulnerabilities | Advisories merged by alias; tool agreement; EPSS + KEV | **OSV-Scanner**, **Grype**, OSV.dev, FIRST EPSS, CISA KEV | `s04_vulns` |
+| 5 | Supply-chain signals | Unpinned versions, URL sources, custom index, floating images, `curl \| sh`, unpinned actions | Rules over files (+ v1 rules) | `s05_signals` |
+| 6 | Prioritised risk | `30·severity + 25·exploitability + 20·reachability + 15·exposure + 10·fix`, guardrails, reasons | Deterministic scoring | `s06_prioritise` |
+| 7 | Agent investigation | 5 agents: Change Detective, Risk Analyst, Refuter, Remediation Planner, Diagnostician (2-minute cap, key rotation) | Gemini API, quote checker, JSON schema | `s07_investigate` |
+| 8 | Remedies | One hash-bound upgrade plan per package; **Approve / Reject / Defer in the UI** | git, SHA-256, audit log | `s08_remedies` |
+| 9 | Sandbox verification | Fresh clone → apply → lockfile → Docker tests → rescan → before/after → verdict | git, npm, Docker, Syft, Grype, OSV-Scanner | `s09_verify` |
+| 10 | Report | Coverage, top risks, plans, verdict, audit check, downloads | own code | `s10_report` |
+
+Backend modules live in `guardian/v2/stages/`; pages live in `guardian/api/static/pages/`.
+
+### Where the code is
+
+| Folder / file | Role |
+|---|---|
+| `guardian/api/app.py`, `routes_workspaces.py`, `routes_approval.py` | FastAPI server; `routes_approval.py` is the only place a plan can be approved |
+| `guardian/api/static/` (`index.html`, `app.js`, `styles.css`, `pages/`) | The web UI (plain JS, vis-network for graphs) |
+| `guardian/v2/workspace.py`, `runner.py`, `bridge.py`, `tools.py`, `proc.py`, `identity.py` | Workspaces, stage order, the v1 bridge, tool lookup, shared helpers |
+| `guardian/v2/stages/s01…s10` | The 10 stages |
+| `guardian/agents/` | The AI agents (Gemini client with key rotation and a time budget) |
+| `guardian/*.py`, `fastpath/build.py` | The v1 engine, reused for npm (reachability, scoring, plans) |
+| `tests/unit/test_v2_*.py` | Tests for v2 |
+| `docs/V2_ARCHITECTURE.md` | Full documentation; `docs/planning/` holds the build plans |
 
 ---
 
-## Status (honest, 2026-11-24)
+# The v1 engine (two-version comparison, reused by v2 for npm repositories)
+
+The sections below describe v1. It compares a trusted baseline of the demo application with a
+tampered version, and v2 calls it through `guardian/v2/bridge.py` for npm repositories (lockfile
+line evidence, reachability).
+
+## v1 status (honest, 2026-11-24)
 
 | Capability | Status | Where |
 |---|---|---|
@@ -61,7 +185,7 @@ repositories.
 
 ---
 
-## Quick start
+## v1 quick start (CLI)
 
 Prerequisites: Python ≥ 3.11.4 (3.12.1 tested), git, Node + npm (22 / 10 tested), Git Bash on
 Windows. Optional: a Gemini API key (agents). Docker is not used: the container build and smoke
@@ -99,7 +223,7 @@ configured models it can use.
 
 ---
 
-## Demo scenario
+## v1 demo scenario
 
 1. **What is in it?** 982 packages (1,276 install paths), 37 direct; the graph traces any
    transitive package to the direct dependency that brings it in.
@@ -120,7 +244,7 @@ configured models it can use.
 
 ---
 
-## Architecture
+## v1 architecture
 
 ```mermaid
 flowchart TB
