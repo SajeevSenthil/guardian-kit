@@ -28,6 +28,7 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -353,7 +354,9 @@ def dry_run(ctx: Ctx, plan_id: str, cand: dict, target: dict, head_policy: dict)
     log, need_npm = _apply(root, cand["ops"])
     npm = None
     if need_npm:
-        r = _sh([_npm(), "install", "--package-lock-only", "--ignore-scripts", "--no-audit", "--no-fund"], root, NPM_TIMEOUT)
+        offline = ["--offline"] if os.environ.get("GUARDIAN_OFFLINE") == "1" else []   # npm cache only
+        r = _sh([_npm(), "install", "--package-lock-only", "--ignore-scripts", "--no-audit", "--no-fund", *offline],
+                root, NPM_TIMEOUT)
         npm = {"exit": r.returncode, "tail": r.stdout.decode("utf-8", "replace")[-400:] + r.stderr.decode("utf-8", "replace")[-600:]}
         if r.returncode == 0:
             _normalise_file_paths(root / "package-lock.json")
