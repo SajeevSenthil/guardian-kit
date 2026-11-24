@@ -99,3 +99,10 @@ def test_test_plan_detection(tmp_path):
     assert sf.test_plan(tmp_path) is None
     (tmp_path / "package.json").write_text('{"scripts": {"test": "mocha"}}', encoding="utf-8")
     assert sf.test_plan(tmp_path)["eco"] == "npm"
+
+
+def test_major_upgrade_detection():
+    assert sf._major("0.2.24") != sf._major("0.3.31")   # 0.x minor bumps are breaking
+    assert sf._major("4.17.4") == sf._major("4.18.0")
+    assert sf._major("3.5.3") == sf._major("3.14.4")
+    assert sf._major("2.10") != sf._major("3.1.6")

@@ -7,7 +7,7 @@ G.page("verify", {
     if (!r) { G.html(el, `<div class="note">${ctx.status === "running" ? "Running: applying the approved fixes and rescanning…" : 'Nothing verified yet. Approve plans on the <a href="#/remedies">Remedies</a> page and press <b>Send to the sandbox</b>.'}</div>`); return; }
     const tone = { VERIFIED: "ok", PARTIAL: "med", FAILED: "crit" }[r.verdict];
     G.card(el, { tone, body: `<div class="row"><span class="badge tone-${tone}" style="font-size:20px;padding:6px 16px">${G.esc(r.verdict)}</span><b style="font-size:16px">${G.esc(r.headline)}</b></div><p class="muted" style="margin-top:8px">${G.esc(r.why_verdict)}</p>` });
-    const st = { pass: ["ok", "pass"], fail: ["crit", "FAIL"], "not-run": ["info", "not run"] };
+    const st = { pass: ["ok", "pass"], fail: ["crit", "FAIL"], warn: ["med", "warning"], "not-run": ["info", "not run"] };
     G.card(el, {
       title: "Checks (in order)",
       body: r.checks.map((c) => `<div class="row" style="margin:6px 0">${G.badge(st[c.status][1], st[c.status][0])} <b style="min-width:170px">${G.esc(c.name.replace(/_/g, " "))}</b><span>${G.esc(c.detail)}</span>${c.log ? ` <a href="${G.fileUrl(c.log)}" target="_blank" rel="noopener">log</a>` : ""}</div>`).join(""),

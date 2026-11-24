@@ -4,7 +4,7 @@
   const G = (window.G = {});
   const PAGES = {};
   const GROUPS = { ingest: "Discover", vulns: "Detect & investigate", remedies: "Fix & prove" };
-  let META = null, WS = null, WSMETA = null, CURRENT = null, LAST_STATUS = {};
+  let META = null, WS = null, WSMETA = null, CURRENT = null, LAST_STATUS = {}, SHOWN = null;
 
   // ---------- basics ----------
   G.esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -114,6 +114,7 @@
       try { ctx = { ...(await G.api(`/api/ws/${WS}/stages/${stage}`)), wsId: WS }; } catch (e) { ctx.error = e.message; }
     }
     ctx.isNew = isNew;
+    SHOWN = isNew ? null : { stage, status: ctx.status };  // what the page currently displays
     el.innerHTML = "";
     const p = PAGES[stage];
     if (!p) {
@@ -141,7 +142,9 @@
     // re-render the open page when its stage finishes
     if (WSMETA) {
       const now = (WSMETA.stages[CURRENT] || {}).status;
-      if (LAST_STATUS[CURRENT] && LAST_STATUS[CURRENT] !== now && LAST_STATUS[CURRENT] === "running") render();
+      // re-render whenever the stage status differs from what is on screen (covers stages that finish
+      // faster than one poll, e.g. the report in 0.1 s, which used to leave "Running…" on screen)
+      if (SHOWN && SHOWN.stage === CURRENT && now && now !== SHOWN.status) { SHOWN.status = now; render(); }
       for (const [k, v] of Object.entries(WSMETA.stages)) LAST_STATUS[k] = v.status;
     }
   }

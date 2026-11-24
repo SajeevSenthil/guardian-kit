@@ -106,6 +106,12 @@ def _npm_edit(src: Path, name: str, new: str) -> dict | None:
             "note": f"transitive dependency: npm overrides forces {name}@{new} wherever it is required"}
 
 
+def _major(v: str) -> tuple:
+    """Semver 'major' part: the first number, or the first two for 0.x versions (0.2 -> 0.3 is breaking)."""
+    nums = [x[1] for x in det._vkey(v or "0") if x[0] == 1] or [0]
+    return tuple(nums[:2]) if nums[0] == 0 else (nums[0],)
+
+
 def _pick_version(installed: str | None, rows: list[dict]) -> tuple[str | None, list[str]]:
     """Lowest version that is >= a fix of every advisory with a fix; advisories without a fix are listed."""
     need, nofix = None, []
@@ -180,6 +186,10 @@ def run_remedies(ws: Workspace, opts: dict) -> dict:
                        + (f"; no fix exists yet for {', '.join(nofix)}" if nofix else "") + "." if to else
                        f"Ranked #{it['rank']}; no fixed version published.")
         plan["rollback"] = "revert the patch (git revert) or restore the previous version pin"
+        plan["major_upgrade"] = bool(to and ver and _major(to) != _major(ver))
+        if plan["major_upgrade"]:
+            plan["breaking_risk"] = (f"major version change {ver} → {to}: APIs may have changed; expect code changes "
+                                     "and rely on the sandbox tests")
         plan["plan_hash"] = plan_hash(plan)
         plans.append(plan)
     result = {"plans": plans, "sent": False, "approved_set": None,
@@ -356,11 +366,25 @@ def run_verify(ws: Workspace, opts: dict) -> dict:
         if not npm:
             checks.append(_check("lockfile", "not-run", "npm not installed"))
         else:
-            r = _run([npm, "install", "--package-lock-only", "--ignore-scripts", "--no-audit", "--no-fund"], cwd=clone, timeout=900)
-            (out / "npm-lock.log").write_text(r.stdout + "\n" + r.stderr, encoding="utf-8")
-            checks.append(_check("lockfile", "pass" if r.returncode == 0 else "fail",
-                                 "package-lock.json regenerated with --package-lock-only --ignore-scripts (no code run)"
-                                 if r.returncode == 0 else f"npm exit {r.returncode}", ws.rel(out / "npm-lock.log")))
+            base = [npm, "install", "--package-lock-only", "--ignore-scripts", "--no-audit", "--no-fund"]
+            r = _run(base, cwd=clone, timeout=900)
+            log = r.stdout + "\n" + r.stderr
+            if r.returncode and "ERESOLVE" in log:
+                # peer-dependency conflict (typical after a major upgrade): resolve anyway, but say so
+                r2 = _run(base + ["--legacy-peer-deps"], cwd=clone, timeout=900)
+                log += "\n\n$ retry with --legacy-peer-deps\n" + r2.stdout + "\n" + r2.stderr
+                conflict = re.search(r"Conflicting peer dependency: (\S+)", log)
+                (out / "npm-lock.log").write_text(log, encoding="utf-8")
+                checks.append(_check(
+                    "lockfile", "warn" if r2.returncode == 0 else "fail",
+                    (f"resolved only by ignoring a peer-dependency conflict ({conflict.group(1) if conflict else 'see log'}): "
+                     "the upgrade may be incompatible; only the tests can confirm it") if r2.returncode == 0
+                    else f"npm could not resolve the upgraded versions (exit {r2.returncode})", ws.rel(out / "npm-lock.log")))
+            else:
+                (out / "npm-lock.log").write_text(log, encoding="utf-8")
+                checks.append(_check("lockfile", "pass" if r.returncode == 0 else "fail",
+                                     "package-lock.json regenerated with --package-lock-only --ignore-scripts (no code run)"
+                                     if r.returncode == 0 else f"npm exit {r.returncode}", ws.rel(out / "npm-lock.log")))
     else:
         checks.append(_check("lockfile", "pass", "requirements pins are the lock; nothing to regenerate"))
     # 3. tests: the ONLY place repository code runs, and only inside an isolated container
@@ -439,15 +463,15 @@ def run_verify(ws: Workspace, opts: dict) -> dict:
     else:
         checks.append(_check("targets_fixed", "not-run", "no scanner ran on the patched clone: cannot claim anything is fixed"))
     statuses = [c["status"] for c in checks]
-    verdict = "FAILED" if "fail" in statuses else "PARTIAL" if "not-run" in statuses else "VERIFIED"
+    verdict = "FAILED" if "fail" in statuses else "PARTIAL" if ("not-run" in statuses or "warn" in statuses) else "VERIFIED"
     result = {"verdict": verdict, "checks": checks, "per_plan": per_plan, "new_vulnerabilities": new,
               "remaining": remaining, "approved_set": res.get("approved_set"), "tools": tools,
               "headline": (f"Targeted vulnerabilities fixed: {fixed} of {total} · new: {len(new)} · tests: "
                            f"{next(c['status'] for c in checks if c['name'] == 'tests').replace('-', ' ')} · "
                            f"remaining (not covered by an approved plan): {len(remaining)}"),
               "why_verdict": {"VERIFIED": "every check passed, including the tests in a container",
-                              "PARTIAL": "every check that ran passed, but at least one check did not run: "
-                                         + ", ".join(c["name"] for c in checks if c["status"] == "not-run"),
+                              "PARTIAL": "nothing failed, but these checks did not run or passed only with a warning: "
+                                         + ", ".join(c["name"] for c in checks if c["status"] in ("not-run", "warn")),
                               "FAILED": "at least one check failed: " + ", ".join(c["name"] for c in checks if c["status"] == "fail")}[verdict],
               "clone": ws.rel(clone / ".git" / "HEAD") if (clone / ".git" / "HEAD").exists() else None}
     ws.write("verify", result)

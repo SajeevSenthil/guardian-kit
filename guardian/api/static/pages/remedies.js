@@ -40,6 +40,7 @@ G.page("remedies", {
             ${p.kind === "manual" ? G.badge("manual", "med") : G.badge(d.status, tone[d.status])}</div>
           <p></p><div><b>Why:</b> ${G.esc(p.why)}</div>
           ${p.reason ? `<div class="note">${G.esc(p.reason)}</div>` : ""}
+          ${p.breaking_risk ? `<div class="note">${G.badge("major upgrade", "high")} ${G.esc(p.breaking_risk)}</div>` : ""}
           ${p.edits.map((e) => `<div><b>Change:</b> <span class="mono">${G.esc(e.file)}</span> · ${G.esc(e.note || (e.kind === "replace_line" ? `line ${e.line}: ${e.old.trim()} → ${e.new.trim()}` : ""))}</div>`).join("")}
           ${p.lockfile_note ? `<div class="muted">${G.esc(p.lockfile_note)}</div>` : ""}
           <div class="muted">Rollback: ${G.esc(p.rollback)}</div>
