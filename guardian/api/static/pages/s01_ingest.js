@@ -1,4 +1,4 @@
-/* Stage 1 page: Start & intake (M1). */
+/* Stage 1 page: Start & intake (M1). Backend: guardian/v2/stages/s01_ingest.py */
 G.page("ingest", {
   title: "Start & intake",
   async render(el, ctx) {

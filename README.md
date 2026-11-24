@@ -16,6 +16,32 @@ measured results: [`implementations.md`](implementations.md).
 
 ---
 
+## Guardian v2: any repository, stage by stage in a web UI (current approach)
+
+Paste a Git URL (or upload a zip, or give a folder) and run 10 stages:
+- intake, then a **Syft** SBOM, then a dependency graph with evidence;
+- vulnerabilities from **OSV-Scanner + Grype**, then supply-chain signals, then a prioritised risk
+  report, then **5 AI agents** (2-minute cap);
+- remedies that **a human approves in the UI**, then a sandbox proof, then a report.
+
+Works for npm, pip, Go, Maven/Gradle, Cargo, Ruby, PHP and .NET.
+
+```powershell
+python scripts/setup_tools.py   # once: Syft, OSV-Scanner, Grype (SHA-256 verified)
+python -m guardian ui           # http://127.0.0.1:8080
+```
+
+![Guardian v2 architecture](docs/architecture_v2.png)
+
+**Full documentation: [`docs/V2_ARCHITECTURE.md`](docs/V2_ARCHITECTURE.md)**. It covers the
+approach, each stage (what / how / built with / output file), the agents, the code map and the
+limitations.
+
+The sections below describe v1: the two-version comparison engine that v2 reuses for npm
+repositories.
+
+---
+
 ## Status (honest, 2026-11-24)
 
 | Capability | Status | Where |

@@ -1,4 +1,4 @@
-/* Stage 6 page: Prioritised risk report (M2). */
+/* Stage 6 page: Prioritised risk report (M2). Backend: guardian/v2/stages/s06_prioritise.py */
 G.page("prioritise", {
   title: "Prioritised risk",
   async render(el, ctx) {

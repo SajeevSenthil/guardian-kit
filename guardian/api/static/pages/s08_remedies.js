@@ -1,4 +1,4 @@
-/* Stage 8 page: Remedies, the human gate (M3). */
+/* Stage 8 page: Remedies, the human gate (M3). Backend: guardian/v2/stages/s08_remedies.py */
 G.page("remedies", {
   title: "Remedies (approval)",
   async render(el, ctx) {

@@ -1,4 +1,4 @@
-/* Stage 10 page: Report (M3). */
+/* Stage 10 page: Report (M3). Backend: guardian/v2/stages/s10_report.py */
 G.page("report", {
   title: "Report",
   async render(el, ctx) {

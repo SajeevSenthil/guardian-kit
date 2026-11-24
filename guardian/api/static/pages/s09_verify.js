@@ -1,4 +1,4 @@
-/* Stage 9 page: Sandbox verification, the proof (M3). */
+/* Stage 9 page: Sandbox verification, the proof (M3). Backend: guardian/v2/stages/s09_verify.py */
 G.page("verify", {
   title: "Sandbox verification",
   async render(el, ctx) {

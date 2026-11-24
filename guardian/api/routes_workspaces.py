@@ -1,4 +1,4 @@
-"""Core endpoints (M1): workspaces, stage runs, status, files, upload (contract §6)."""
+"""Workspace endpoints: create (git / zip / path), list, status, run a stage, run up to a stage, read a file."""
 
 from __future__ import annotations
 

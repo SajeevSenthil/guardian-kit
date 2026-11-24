@@ -1,4 +1,4 @@
-/* Stage 2 page: Inventory & SBOM (M1). */
+/* Stage 2 page: Inventory & SBOM (M1). Backend: guardian/v2/stages/s02_sbom.py */
 G.page("sbom", {
   title: "Inventory & SBOM",
   async render(el, ctx) {

@@ -1,4 +1,4 @@
-/* Stage 3 page: Dependency graph (M1). */
+/* Stage 3 page: Dependency graph (M1). Backend: guardian/v2/stages/s03_graph.py */
 G.page("graph", {
   title: "Dependency graph",
   async render(el, ctx) {

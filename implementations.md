@@ -821,3 +821,25 @@ Not done:
 - Remediation Planner / Diagnostician in v2;
 - the plan does not check whether the target version has advisories of its own; the rescan
   catches this as "new".
+
+## v2: modular layout, agents view, documentation
+
+- **One file per stage, same name front and back:**
+  - `guardian/v2/stages/s01_ingest.py … s10_report.py` (each exposes `run_<name>`) pair with
+    `guardian/api/static/pages/s01_ingest.js … s10_report.js`;
+  - shared helpers: `guardian/v2/proc.py` (subprocess, offline, now) and `guardian/v2/identity.py`
+    (name, version and purl normalisation);
+  - API routes renamed to `routes_workspaces.py` and `routes_approval.py`.
+
+  Code was moved verbatim with an AST script; behaviour is unchanged.
+- **Agents view:** a count of AI agents and of those used in the run, an overview table, and one
+  tab per agent with only its outputs (agents that ran come first).
+- **Cleanup:** planning documents moved to `docs/planning/`; an unused 1.5 MB scanner fixture was
+  deleted.
+- **Docs:** `docs/V2_ARCHITECTURE.md` (approach, stages, agents, code map, run, limitations) and the
+  diagram `docs/architecture_v2.mmd` / `.png`; a v2 section added to the README.
+
+Checks:
+- `python -m pytest -q` → 99 passed; ruff clean;
+- browser smoke test: 10 pages × 4 workspaces, no render errors;
+- the approval route still refuses a wrong hash (409).

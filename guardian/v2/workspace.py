@@ -62,7 +62,7 @@ class Workspace:
         if not consent or not (consent_by or "").strip():
             raise ValueError("consent is required: your name and 'I am authorised to analyse this repository'")
         if kind == "git":
-            from .stages_discover import check_git_url
+            from .stages.s01_ingest import check_git_url
             check_git_url(value)  # refuse early, before anything is written
         ws_id = dt.datetime.now(dt.UTC).strftime("%Y%m%dT%H%M%SZ") + "-" + secrets.token_hex(2)
         ws = cls(root() / ws_id)

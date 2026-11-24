@@ -9,7 +9,8 @@ import zipfile
 import pytest
 
 from guardian.v2 import runner
-from guardian.v2 import stages_discover as sd
+from guardian.v2.stages import s01_ingest as sd
+from guardian.v2.stages import s02_sbom
 from guardian.v2.workspace import Workspace
 
 
@@ -93,7 +94,7 @@ def test_ingest_from_path_detects_ecosystems(wsroot):
 def test_direct_deps_parsing(wsroot):
     d = _repo(wsroot)
     found = sd.detect(d)
-    dd = sd.direct_deps(d, found)
+    dd = s02_sbom.direct_deps(d, found)
     assert dd[("pypi", "flask")]["line"] == 1 and dd[("pypi", "requests")]["spec"] == ">=2"
     assert dd[("npm", "lodash")]["dev"] is False and dd[("npm", "mocha")]["dev"] is True
 

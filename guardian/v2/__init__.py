@@ -1,1 +1,4 @@
-"""Guardian v2: any-repo, stage-by-stage pipeline (workspace + runner + stages). See docs/V2_TEAM_CONTRACT.md."""
+"""Guardian v2: any-repo, stage-by-stage pipeline (workspace + runner + stages).
+
+Documentation: docs/V2_ARCHITECTURE.md. Build plans: docs/planning/ (historical).
+"""

@@ -1,4 +1,4 @@
-/* Stage 7 page: Agent investigation (M2). */
+/* Stage 7 page: Agent investigation (M2). Backend: guardian/v2/stages/s07_investigate.py */
 G.page("investigate", {
   title: "Agent investigation",
   async render(el, ctx) {
@@ -27,6 +27,8 @@ G.page("investigate", {
     if (!r) { G.html(el, '<div class="note">Not run yet. Choose the number of items and a mode above (needs stage 6).</div>'); return; }
     G.tiles(el, [
       { label: "mode", value: r.mode, tone: r.mode === "live" ? "ok" : "info" }, { label: "items investigated", value: r.top },
+      { label: "AI agents in Guardian", value: r.agents.length, tone: "info" },
+      { label: "agents used in this run", value: r.agents.filter((a) => (a.outputs || []).length).length },
       { label: "agent runs ok", value: r.agents.reduce((a, x) => a + x.runs.ok, 0), tone: "ok" },
       { label: "skipped (shown, not hidden)", value: r.agents.reduce((a, x) => a + x.runs.skipped, 0), tone: "med" },
       { label: "quotes kept / dropped", value: r.quotes_kept !== undefined ? `${r.quotes_kept} / ${r.quotes_dropped}` : null },
@@ -34,9 +36,29 @@ G.page("investigate", {
     ]);
     if (r.models) G.html(el, `<div class="note">Provider ${G.esc(r.provider)} · models ${G.esc(JSON.stringify(r.models))} · tokens ${G.esc(r.tokens)}</div>`);
     (r.flow || []).slice(0, 1).forEach((f) => G.html(el, `<p class="muted">${G.esc(f)}</p>`));
-    r.agents.forEach((a) => {
+    // overview: one row per agent, then one tab per agent with only that agent's outputs
+    const ov = G.html(el, `<div class="section"><h2>The ${r.agents.length} agents</h2></div>`);
+    G.table(ov, [
+      { key: "name", label: "Agent", render: (a) => `<b>${G.esc(a.name)}</b>` },
+      { key: "when", label: "When it runs", render: (a) => `<span class="muted">${G.esc(a.when)}</span>` },
+      { key: "output", label: "What it produces", render: (a) => G.esc(a.output) },
+      { key: "ok", label: "Ran", render: (a) => G.badge(a.runs.ok, a.runs.ok ? "ok" : "info") },
+      { key: "skipped", label: "Skipped", render: (a) => (a.runs.skipped ? G.badge(a.runs.skipped, "med") : "0") },
+    ], r.agents, { search: false, pageSize: 10 });
+    const tabsHost = G.html(el, '<div class="section"><h2>Each agent\'s output</h2></div>');
+    const pane = G.html(el, "<div></div>");
+    const label = (a) => `${a.name} (${a.runs.ok}/${a.runs.ok + a.runs.skipped})`;
+    // agents that produced something in this run come first, so the first tab is never empty when output exists
+    const rankOf = (a) => (a.runs.ok > 0 ? 2 : (a.outputs || []).length > 0 ? 1 : 0);  // ran ok > skipped only > unused
+    const ordered = [...r.agents].sort((x, y) => rankOf(y) - rankOf(x));
+    G.tabs(tabsHost, ordered.map(label), (t) => {
+      pane.innerHTML = "";
+      drawAgent(pane, r.agents.find((a) => label(a) === t));
+    });
+
+    function drawAgent(host, a) {
       const outs = a.outputs || [];
-      const card = G.card(el, {
+      const card = G.card(host, {
         title: `${a.name}  ·  ${a.runs.ok} ran, ${a.runs.skipped} skipped`,
         body: `<div class="muted">${G.esc(a.when)}</div>
           <div class="split"><div><div><b>Method:</b> ${G.esc(a.method)}</div><div><b>Produces:</b> ${G.esc(a.output)}</div></div>
@@ -54,7 +76,7 @@ G.page("investigate", {
         G.html(box, `<div class="ai-box"><div class="row">${who} <span class="muted">${G.esc(o.model || "")}</span></div>${facts}${claims ? `<ul>${claims}</ul>` : ""}
           ${(o.tool_calls || []).length ? `<details><summary>tool calls (${o.tool_calls.length})</summary>${o.tool_calls.map((t) => `<div class="mono">${G.esc(t)}</div>`).join("")}</details>` : ""}</div>`);
       });
-    });
+    }
     G.sources(el, [{ label: "stages/investigate/result.json", path: "stages/investigate/result.json" }, { label: "investigations.json", path: r.investigations }, { label: "v1 prioritised.json (agent fields)", path: r.v1_prioritised }]);
   },
 });

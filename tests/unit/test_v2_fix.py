@@ -7,7 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from guardian.v2 import runner, stages_fix as sf
+from guardian.v2 import runner
+from guardian.v2.stages import s08_remedies, s09_verify
 from guardian.v2.workspace import Workspace
 
 
@@ -27,7 +28,7 @@ def ws(tmp_path, monkeypatch):
 
 
 def test_plan_edits_the_exact_pin_and_waits_for_a_human(ws):
-    s = sf.run_remedies(ws, {})
+    s = s08_remedies.run_remedies(ws, {})
     assert s == {"plans": 1, "actionable": 1, "decided": 0, "approved": 0}
     p = ws.read("remedies")["plans"][0]
     assert p["to_version"] == "5.4" and p["edits"][0]["new"] == "pyyaml==5.4"
@@ -38,24 +39,24 @@ def test_plan_edits_the_exact_pin_and_waits_for_a_human(ws):
 
 
 def test_hash_mismatch_and_empty_approver_refused(ws):
-    sf.run_remedies(ws, {})
+    s08_remedies.run_remedies(ws, {})
     with pytest.raises(PermissionError):
-        sf.record_decision(ws, "P-0001", "approve", "alice", "0" * 64)
+        s08_remedies.record_decision(ws, "P-0001", "approve", "alice", "0" * 64)
     h = ws.read("remedies")["plans"][0]["plan_hash"]
     with pytest.raises(ValueError):
-        sf.record_decision(ws, "P-0001", "approve", " ", h)
+        s08_remedies.record_decision(ws, "P-0001", "approve", " ", h)
     with pytest.raises(ValueError):
-        sf.freeze_approved(ws)  # nothing decided yet
+        s08_remedies.freeze_approved(ws)  # nothing decided yet
 
 
 def test_verify_offline_is_partial_never_verified(ws):
-    sf.run_remedies(ws, {})
+    s08_remedies.run_remedies(ws, {})
     h = ws.read("remedies")["plans"][0]["plan_hash"]
-    sf.record_decision(ws, "P-0001", "approve", "alice", h)
-    sf.freeze_approved(ws)
+    s08_remedies.record_decision(ws, "P-0001", "approve", "alice", h)
+    s08_remedies.freeze_approved(ws)
     with pytest.raises(PermissionError):
-        sf.record_decision(ws, "P-0001", "reject", "alice", h)  # frozen after send
-    s = sf.run_verify(ws, {})
+        s08_remedies.record_decision(ws, "P-0001", "reject", "alice", h)  # frozen after send
+    s = s09_verify.run_verify(ws, {})
     r = ws.read("verify")
     assert s["verdict"] == "PARTIAL"
     st = {c["name"]: c["status"] for c in r["checks"]}
@@ -67,42 +68,42 @@ def test_verify_offline_is_partial_never_verified(ws):
 
 
 def test_tampered_plan_after_approval_fails_verify(ws):
-    sf.run_remedies(ws, {})
+    s08_remedies.run_remedies(ws, {})
     h = ws.read("remedies")["plans"][0]["plan_hash"]
-    sf.record_decision(ws, "P-0001", "approve", "alice", h)
-    sf.freeze_approved(ws)
+    s08_remedies.record_decision(ws, "P-0001", "approve", "alice", h)
+    s08_remedies.freeze_approved(ws)
     res = ws.read("remedies")
     res["plans"][0]["to_version"] = "9.9"  # edited after approval
     ws.write("remedies", res)
-    sf.run_verify(ws, {})
+    s09_verify.run_verify(ws, {})
     assert ws.read("verify")["verdict"] == "FAILED"
 
 
 def test_only_the_http_route_records_decisions():
     root = Path(__file__).resolve().parents[2] / "guardian"
     callers = [p for p in root.rglob("*.py") if re.search(r"record_decision\(|freeze_approved\(", p.read_text(encoding="utf-8"))]
-    assert {p.name for p in callers} == {"stages_fix.py", "routes_fix.py"}
+    assert {p.name for p in callers} == {"s08_remedies.py", "routes_approval.py"}
     agents = (root / "agents").rglob("*.py")
-    assert not any("stages_fix" in p.read_text(encoding="utf-8") for p in agents)
+    assert not any("s08_remedies" in p.read_text(encoding="utf-8") for p in agents)
 
 
 def test_container_command_is_isolated(tmp_path):
-    cmd = sf.docker_cmd("docker", tmp_path, "python:3.12-slim", "pytest", network=False)
+    cmd = s09_verify.docker_cmd("docker", tmp_path, "python:3.12-slim", "pytest", network=False)
     assert "--network" in cmd and cmd[cmd.index("--network") + 1] == "none"
     assert "-e" not in cmd and "--env" not in cmd and "--privileged" not in cmd
     assert cmd.count("-v") == 1 and cmd[cmd.index("-v") + 1].endswith(":/app")
-    assert "--network" not in sf.docker_cmd("docker", tmp_path, "x", "install", network=True)
+    assert "--network" not in s09_verify.docker_cmd("docker", tmp_path, "x", "install", network=True)
 
 
 def test_test_plan_detection(tmp_path):
     (tmp_path / "package.json").write_text('{"scripts": {"test": "echo \\"Error: no test specified\\" && exit 1"}}', encoding="utf-8")
-    assert sf.test_plan(tmp_path) is None
+    assert s09_verify.test_plan(tmp_path) is None
     (tmp_path / "package.json").write_text('{"scripts": {"test": "mocha"}}', encoding="utf-8")
-    assert sf.test_plan(tmp_path)["eco"] == "npm"
+    assert s09_verify.test_plan(tmp_path)["eco"] == "npm"
 
 
 def test_major_upgrade_detection():
-    assert sf._major("0.2.24") != sf._major("0.3.31")   # 0.x minor bumps are breaking
-    assert sf._major("4.17.4") == sf._major("4.18.0")
-    assert sf._major("3.5.3") == sf._major("3.14.4")
-    assert sf._major("2.10") != sf._major("3.1.6")
+    assert s08_remedies._major("0.2.24") != s08_remedies._major("0.3.31")   # 0.x minor bumps are breaking
+    assert s08_remedies._major("4.17.4") == s08_remedies._major("4.18.0")
+    assert s08_remedies._major("3.5.3") == s08_remedies._major("3.14.4")
+    assert s08_remedies._major("2.10") != s08_remedies._major("3.1.6")

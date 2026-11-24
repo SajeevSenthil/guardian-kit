@@ -1,4 +1,4 @@
-/* Stage 4 page: Vulnerabilities (M2). */
+/* Stage 4 page: Vulnerabilities (M2). Backend: guardian/v2/stages/s04_vulns.py */
 G.page("vulns", {
   title: "Vulnerabilities",
   async render(el, ctx) {

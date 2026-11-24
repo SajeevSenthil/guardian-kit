@@ -1,6 +1,7 @@
 """v2 detection (M2): merge across tools by alias, not-run never counted as clean, explanation templates."""
 
-from guardian.v2 import stages_detect as sd
+from guardian.v2.stages import s04_vulns as sd
+from guardian.v2.stages import s06_prioritise as sp
 
 COMPS = [{"id": "pkg:pypi/aiohttp@3.5.3", "ecosystem": "pypi", "name": "aiohttp", "version": "3.5.3",
           "purl": "pkg:pypi/aiohttp@3.5.3", "direct": True, "dev": False}]
@@ -42,21 +43,21 @@ def _item(rank, score, conf, contribs):
     w = {"severity": 30, "exploitability": 25, "reachability": 20, "exposure": 15, "fix_availability": 10}
     return {"rank": rank, "score": score, "confidence": conf, "title": f"t{rank}", "band": "high", "guardrails": [],
             "initial_severity": "high",
-            "factor_rows": [{"factor": k, "label": sd.FACTOR_LABEL[k], "weight": w[k], "value": c / w[k], "grade": "verified",
+            "factor_rows": [{"factor": k, "label": sp.FACTOR_LABEL[k], "weight": w[k], "value": c / w[k], "grade": "verified",
                              "evidence": "e", "contribution": c} for k, c in zip(keys, contribs)]}
 
 
 def test_vs_next_names_the_deciding_factor():
     a, b = _item(1, 80, 76, [22.5, 22.5, 10, 15, 10]), _item(2, 71, 76, [25, 10, 10, 15, 10])
-    assert "exploitability adds +12.5" in sd.vs_next_text(a, b)
-    assert sd.vs_next_text(a, None) is None
+    assert "exploitability adds +12.5" in sp.vs_next_text(a, b)
+    assert sp.vs_next_text(a, None) is None
 
 
 def test_reachability_unknown_for_non_npm_never_zero():
     from guardian.config import load
     row = {"cvss_score": 7.5, "severity_source": "CVSS v3 vector", "severity": "high", "cves": [], "ecosystem": "pypi",
            "dev": False, "version": "3.5.3", "fixed": ["3.9.2"]}
-    f, rails = sd._generic_vuln_factors(row, {}, {"status": "not evaluated"}, None, load())
+    f, rails = sp._generic_vuln_factors(row, {}, {"status": "not evaluated"}, None, load())
     assert f["reachability"]["value"] is None and f["reachability"]["grade"] == "unknown"
 
 

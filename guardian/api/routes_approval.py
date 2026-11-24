@@ -1,12 +1,13 @@
-"""Fix routes (M3): the human gate. The ONLY way a plan gets approved is an HTTP request from the UI."""
+"""Approval endpoints: the human gate. The ONLY way a plan gets approved is an HTTP request from the UI."""
 
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from ..v2 import runner, stages_fix
-from .routes_core import _ws, submit
+from ..v2 import runner
+from ..v2.stages import s08_remedies
+from .routes_workspaces import _ws, submit
 
 router = APIRouter(prefix="/api")
 
@@ -22,7 +23,7 @@ class DecisionIn(BaseModel):
 def decide(ws_id: str, plan_id: str, body: DecisionIn):
     ws = _ws(ws_id)
     try:
-        plan = stages_fix.record_decision(ws, plan_id, body.decision, body.approver, body.plan_hash, body.note)
+        plan = s08_remedies.record_decision(ws, plan_id, body.decision, body.approver, body.plan_hash, body.note)
     except LookupError as e:
         raise HTTPException(404, str(e)) from None
     except PermissionError as e:
@@ -36,7 +37,7 @@ def decide(ws_id: str, plan_id: str, body: DecisionIn):
 def send(ws_id: str):
     ws = _ws(ws_id)
     try:
-        aset = stages_fix.freeze_approved(ws)
+        aset = s08_remedies.freeze_approved(ws)
     except ValueError as e:
         raise HTTPException(400, str(e)) from None
     submit(ws, runner.run_stage, ws, "verify", {})

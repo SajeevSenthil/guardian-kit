@@ -1,0 +1,62 @@
+flowchart TB
+  U(["<b>User</b> · browser<br/>Git URL · .zip · local folder · consent"])
+
+  subgraph UI["Web UI · guardian/api/static/"]
+    direction LR
+    P["10 pages, one per stage<br/>pages/s01_ingest.js … s10_report.js"]
+    HLP["shared helpers + style<br/>app.js · styles.css"]
+  end
+
+  subgraph API["API · FastAPI · guardian/api/"]
+    direction LR
+    RW["routes_workspaces.py<br/>create · run stage · status · files"]
+    RA["routes_approval.py<br/>approve · reject · defer · send to sandbox"]
+  end
+
+  subgraph CORE["Pipeline core · guardian/v2/"]
+    direction LR
+    RUN["runner.py<br/>stage order · dependencies · stale marking"]
+    WS[("workspace.py · workspaces/ID/<br/>src/ · stages/*/result.json<br/>audit.jsonl (SHA-256 chain)")]
+    BR["bridge.py<br/>v1 engine for npm<br/>(line evidence · reachability)"]
+  end
+
+  subgraph DIS["① Discover · guardian/v2/stages/"]
+    direction TB
+    S1["<b>s01 ingest</b><br/>git clone (hooks off) · safe unzip"]
+    S2["<b>s02 SBOM</b><br/>Syft → CycloneDX + SPDX"]
+    S3["<b>s03 graph</b><br/>Syft + deps.dev + v1 · BFS paths"]
+    S1 --> S2 --> S3
+  end
+
+  subgraph DET["② Detect & investigate"]
+    direction TB
+    S4["<b>s04 vulns</b><br/>OSV-Scanner + Grype · merged by alias"]
+    S5["<b>s05 signals</b><br/>rules: manifests · Docker · CI"]
+    S6["<b>s06 prioritise</b><br/>formula + EPSS + CISA KEV"]
+    S7["<b>s07 investigate</b><br/>5 AI agents (Gemini) · 2-min cap"]
+    S4 --> S5 --> S6 --> S7
+  end
+
+  subgraph FIX["③ Fix & prove"]
+    direction TB
+    S8["<b>s08 remedies</b><br/>one hash-bound plan per package"]
+    H{{"<b>Human approves</b><br/>each plan in the UI"}}
+    S9["<b>s09 verify</b><br/>clone · lockfile · Docker tests<br/>rescan · before / after"]
+    S10["<b>s10 report</b><br/>downloads · audit check"]
+    S8 --> H --> S9 --> S10
+  end
+
+  U --> UI --> API --> CORE
+  RUN --> DIS
+  S3 --> S4
+  S7 --> S8
+  RA -.-> H
+
+  classDef code fill:#eef3ff,stroke:#2f5bea,color:#16191f
+  classDef ai fill:#f3edfb,stroke:#7a4cc2,stroke-dasharray:5 4,color:#16191f
+  classDef human fill:#e7f5ee,stroke:#1e7f4f,color:#16191f
+  classDef store fill:#fdf6e3,stroke:#b7791f,color:#16191f
+  class S1,S2,S3,S4,S5,S6,S8,S9,S10,RUN,BR,RW,RA,P,HLP code
+  class S7 ai
+  class H,U human
+  class WS store

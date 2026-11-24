@@ -1,4 +1,4 @@
-/* Stage 5 page: Supply-chain signals (M2). */
+/* Stage 5 page: Supply-chain signals (M2). Backend: guardian/v2/stages/s05_signals.py */
 G.page("signals", {
   title: "Supply-chain signals",
   async render(el, ctx) {

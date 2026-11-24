@@ -16,16 +16,16 @@ from .workspace import Workspace
 
 ORDER = ["ingest", "sbom", "graph", "vulns", "signals", "prioritise", "investigate", "remedies", "verify", "report"]
 REGISTRY = {
-    "ingest": "guardian.v2.stages_discover:run_ingest",
-    "sbom": "guardian.v2.stages_discover:run_sbom",
-    "graph": "guardian.v2.stages_discover:run_graph",
-    "vulns": "guardian.v2.stages_detect:run_vulns",
-    "signals": "guardian.v2.stages_detect:run_signals",
-    "prioritise": "guardian.v2.stages_detect:run_prioritise",
-    "investigate": "guardian.v2.stages_detect:run_investigate",
-    "remedies": "guardian.v2.stages_fix:run_remedies",
-    "verify": "guardian.v2.stages_fix:run_verify",
-    "report": "guardian.v2.stages_fix:run_report",
+    "ingest": "guardian.v2.stages.s01_ingest:run_ingest",
+    "sbom": "guardian.v2.stages.s02_sbom:run_sbom",
+    "graph": "guardian.v2.stages.s03_graph:run_graph",
+    "vulns": "guardian.v2.stages.s04_vulns:run_vulns",
+    "signals": "guardian.v2.stages.s05_signals:run_signals",
+    "prioritise": "guardian.v2.stages.s06_prioritise:run_prioritise",
+    "investigate": "guardian.v2.stages.s07_investigate:run_investigate",
+    "remedies": "guardian.v2.stages.s08_remedies:run_remedies",
+    "verify": "guardian.v2.stages.s09_verify:run_verify",
+    "report": "guardian.v2.stages.s10_report:run_report",
 }
 TITLES = {"ingest": "Start & intake", "sbom": "Inventory & SBOM", "graph": "Dependency graph",
           "vulns": "Vulnerabilities", "signals": "Supply-chain signals", "prioritise": "Prioritised risk",
