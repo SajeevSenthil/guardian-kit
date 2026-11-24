@@ -669,9 +669,16 @@ def run_investigate(ws: Workspace, opts: dict) -> dict:
     pri = ws.read("prioritise") or {"items": []}
     out = {"mode": mode, "top": top, "agents": [], "items": [], "provider": "gemini", "keys_configured": len(gemini_keys())}
     if ws.v1_run and (ws.v1_run / "prioritised.json").exists():
+        from ..agents import llm
         from ..agents.runner import analyse
-        with bridge.use_target(ws):
-            stats = analyse(ws.v1_run, mode=mode, top_n=top)
+        budget = float(opts.get("budget_s") or 115)  # results on screen within 2 minutes
+        llm.set_deadline(budget if mode == "live" else None)
+        try:
+            with bridge.use_target(ws):
+                stats = analyse(ws.v1_run, mode=mode, top_n=top)
+        finally:
+            llm.set_deadline(None)
+        out["time_budget_s"] = budget if mode == "live" else None
         pr = json.loads((ws.v1_run / "prioritised.json").read_text(encoding="utf-8"))
         view = agents_view(pr, {}, ws.v1_run)
         out.update({"analysis": stats, "agents": view["agents"], "flow": view["flow"], "models": view["models"],

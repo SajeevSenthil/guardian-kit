@@ -58,3 +58,33 @@ def test_reachability_unknown_for_non_npm_never_zero():
            "dev": False, "version": "3.5.3", "fixed": ["3.9.2"]}
     f, rails = sd._generic_vuln_factors(row, {}, {"status": "not evaluated"}, None, load())
     assert f["reachability"]["value"] is None and f["reachability"]["grade"] == "unknown"
+
+
+def test_deadline_stops_calls_and_slow_key_rotates(monkeypatch):
+    from guardian.agents import llm
+    calls = []
+
+    def slow(url, body, key, timeout=None):
+        calls.append(key)
+        raise TimeoutError("slow")
+
+    monkeypatch.setattr(llm, "_http_post", slow)
+    monkeypatch.setattr("guardian.env.gemini_keys", lambda: ["k1", "k2", "k3"])
+    g = llm.Gemini("m")
+    g.transport = llm._http_post
+    llm.set_deadline(60)
+    try:
+        try:
+            g.generate("s", [])
+        except llm.AgentUnavailable:
+            pass
+        assert len(set(calls)) == 3  # rotated through every key on timeouts
+        llm.set_deadline(1)  # less than 3 s left: no call at all
+        calls.clear()
+        try:
+            g.generate("s", [])
+        except llm.AgentUnavailable as e:
+            assert "time budget" in str(e)
+        assert calls == []
+    finally:
+        llm.set_deadline(None)

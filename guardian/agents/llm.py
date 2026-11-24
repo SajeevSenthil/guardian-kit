@@ -78,6 +78,17 @@ def validate(value, schema: dict, path: str = "$") -> list[str]:
 
 
 _KEY_STATE = {"i": 0}   # index of the key currently in use, shared across agent runs
+_DEADLINE = {"t": None}  # optional wall-clock budget shared by every agent call (set_deadline)
+REQUEST_TIMEOUT = 30     # seconds per call while a deadline is active; a slow key is rotated out
+
+
+def set_deadline(seconds: float | None) -> None:
+    """Give all agent calls from now on a shared time budget (None = no budget)."""
+    _DEADLINE["t"] = None if seconds is None else time.monotonic() + seconds
+
+
+def _remaining() -> float | None:
+    return None if _DEADLINE["t"] is None else _DEADLINE["t"] - time.monotonic()
 
 
 class Gemini:
@@ -108,13 +119,32 @@ class Gemini:
             body["generationConfig"]["thinkingConfig"] = {"thinkingBudget": 0}
         delay = 4
         tried = 0
+
+        def rotate() -> bool:
+            if len(self.keys) > 1 and tried < len(self.keys) - 1:
+                _KEY_STATE["i"] = (_KEY_STATE["i"] + 1) % len(self.keys)
+                self.key = self.keys[_KEY_STATE["i"]]
+                self.key_switches += 1
+                return True
+            return False
+
         for attempt in range(7 + 2 * len(self.keys)):
+            left = _remaining()
+            if left is not None and left < 3:
+                raise AgentUnavailable("time budget used up (results are shown within 2 minutes)")
             try:
-                resp = self.transport(API.format(model=self.model), body, self.key)
+                if self.transport is _http_post:
+                    t = 120 if left is None else max(3, min(REQUEST_TIMEOUT, left))
+                    resp = self.transport(API.format(model=self.model), body, self.key, timeout=t)
+                else:
+                    resp = self.transport(API.format(model=self.model), body, self.key)
                 self.tokens += (resp.get("usageMetadata") or {}).get("totalTokenCount", 0)
                 return resp
             except urllib.error.HTTPError as e:
                 detail = e.read().decode("utf-8", "replace") if hasattr(e, "read") and e.fp else ""
+                if left is not None and e.code in (500, 502, 503, 504) and rotate():
+                    tried += 1   # overloaded under a deadline: try the next key at once instead of waiting
+                    continue
                 if e.code in (401, 403, 429) and len(self.keys) > 1 and tried < len(self.keys) - 1:
                     # key-specific failure (invalid / unsupported key type / rate limit): move to the next
                     # configured key at once; the choice is shared by later agent runs
@@ -126,11 +156,18 @@ class Gemini:
                 tried = 0
                 if e.code in (429, 500, 502, 503, 504) and attempt < 6:
                     m = re.search(r'"retryDelay":\s*"(\d+)', detail)        # Gemini says how long to wait
-                    time.sleep(min(int(m.group(1)) + 1, 65) if m else delay)
+                    wait = min(int(m.group(1)) + 1, 65) if m else delay
+                    left = _remaining()
+                    if left is not None and wait > left - 5:
+                        raise AgentUnavailable(f"Gemini HTTP {e.code}; waiting {wait}s would exceed the time budget")
+                    time.sleep(wait)
                     delay = min(delay * 2, 60)
                     continue
                 raise AgentUnavailable(f"Gemini HTTP {e.code}: {redact(detail[:300])}") from None
             except (urllib.error.URLError, TimeoutError, OSError) as e:
+                if _remaining() is not None and rotate():
+                    tried += 1   # slow or unreachable key under a deadline: rotate to the next key
+                    continue
                 raise AgentUnavailable(f"Gemini unreachable: {type(e).__name__}") from None
         raise AgentUnavailable("Gemini: retries exhausted")
 

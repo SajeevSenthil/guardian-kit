@@ -3,7 +3,7 @@
 [run]
 default_mode = "live"            # live | replay | offline
 top_n_for_agents = 5            # findings sent to Risk Analyst + Refuter
-agent_concurrency = 1
+agent_concurrency = 4         # parallel agent calls (keys rotate on slow/overloaded responses)
 
 [models]                         # UNUSED (original Claude design); runtime agents use [agents.gemini] below
 change_detective = "sonnet"
