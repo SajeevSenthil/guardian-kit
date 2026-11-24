@@ -25,9 +25,28 @@ guardian/report.py (render) and guardian/review.py (sec_remedies).
 Until M1's skeleton lands (about T+30), develop against the fake workspace in contract §7,
 using runs/20261124T053859Z-8e1c (it already has 4 plans).
 
+IMPORTANT: Guardian v2 supports ANY ecosystem (pip, npm, Go, Maven, Cargo…); read contract §0.
+ws.v1_run is None for non-npm repos, and every stage must still work.
+
 1. run_remedies(ws, opts):
-   - with bridge.use_target(ws): do what cmd_plan does (candidates in throwaway clones, policy
-     gate, Remediation Planner if live) for the prioritised top items;
+   - npm with ws.v1_run: with bridge.use_target(ws), do what cmd_plan does (candidates in
+     throwaway clones, policy gate, Remediation Planner if live) for the prioritised top npm
+     items;
+   - other ecosystems: generic "bump to fixed version" plans from M2's prioritised rows (fixed
+     versions come from the advisories):
+     - choose the lowest fixed version that fixes ALL advisories of that package; ask OSV
+       (querybatch, already in v1) whether that version has its own advisories, and if so go
+       higher;
+     - edit the exact line in the manifest that pins it: requirements*.txt `pkg==x` → `pkg==y`;
+       pyproject (poetry/PEP 621); go.mod `require`; Cargo.toml; pom.xml `<version>`. If the
+       lockfile also pins it (poetry.lock, Cargo.lock, go.sum…), say "lockfile must be
+       regenerated in the sandbox". We never run the resolver outside the container;
+     - a transitive-only package (not in any manifest): plan kind "add a constraint/override"
+       where the ecosystem supports it (pip constraints line, npm overrides, Cargo [patch]), or
+       else "manual: upgrade parent <x>". Honest;
+     - produce the patch with `git diff` in a throwaway clone. patch_sha256 and plan_hash use
+       remediate.compute_plan_hash with the same fields as npm plans; prediction = {resolves:
+       the advisory ids, new_vulns_on_fix_version: from OSV, breaking: "not computed"};
    - result.json: per plan the id, finding, title, chosen candidate + why, edits, prediction
      (resolves, new vulnerabilities on the fix version, dangling requires), policy gate, rejected
      alternatives with reasons, rollback, patch path, patch_sha256, plan_hash, and decision
@@ -58,23 +77,32 @@ using runs/20261124T053859Z-8e1c (it already has 4 plans).
 
 3. run_verify(ws, opts), the proof:
    - read approved_set.json; re-check every plan hash (a mismatch stops with FAILED);
-   - with bridge.use_target(ws), for each approved plan run guardian.validate.validate(run,
-     plan_id). It already does: approval check, apply in a throwaway clone, `npm ci
-     --ignore-scripts`, static start, rescan, SBOM diff, new findings, policy, prediction.
-     Collect its checks.
+   - npm plans: with bridge.use_target(ws), for each approved npm plan run
+     guardian.validate.validate(run, plan_id). It already does: approval check, apply in a
+     throwaway clone, `npm ci --ignore-scripts`, static start, rescan, SBOM diff, new findings,
+     policy, prediction. Collect its checks.
+   - Every plan of every ecosystem then goes into the combined proof below.
    - Combined proof on ONE clone with ALL approved patches applied together: clone ws.src into
      ws.dir/work/verify-<n>/ with `git clone -c core.autocrlf=false --no-hardlinks`, then
-     `git am` / `git apply` each patch in order, then `npm ci --ignore-scripts`.
-   - Repo tests: only if docker is available (validate._docker()):
-     `docker run --rm --network none --memory 2g --cpus 2 --pids-limit 512 -v <clone>:/app -w
-     /app node:20-bookworm-slim sh -c "npm rebuild && npm test"`, with a 600 s timeout and no
-     environment passthrough;
-     - parse passing/failing counts when recognisable (mocha/jest/tap), otherwise use the exit
-       code;
-     - no "test" script → "not run (repo has no test script)";
+     `git apply` each patch in order (a patch that fails to apply → FAILED);
+     for npm also `npm ci --ignore-scripts`.
+   - Install and tests: a per-ecosystem table in stages_fix.py, only if docker is available
+     (validate._docker()). There are two container steps:
+     (1) install, with network, no secrets: python `python:3.12-slim` → `pip install -r
+         requirements.txt` (or `pip install .` / `poetry install`), then regenerate the
+         lockfile if the plan says so; node `node:20-bookworm-slim` → `npm ci`; go
+         `golang:1.22` → `go mod download`;
+     (2) tests, with `--network none`: python `pytest -q` (or `python -m unittest`); node
+         `npm test`; go `go test ./...`.
+     Both steps use `--memory 2g --cpus 2 --pids-limit 512`, the clone mounted at /app, no -e
+     flags and a 600 s timeout. Other ecosystems → "not run (no test runner configured for
+     <eco>)".
+     - parse the pass/fail counts when recognisable (pytest, mocha/jest/tap, go test),
+       otherwise use the exit code;
+     - no tests found → "not run (repo has no tests)";
      - no docker → "not run (docker not installed)". Never "passed".
-   - Rescan the combined clone with the same v1 fast path (bridge.scan logic on the clone) and,
-     if present, the tools from stage 4 (M2's run_vulns helpers can be imported read-only).
+   - Rescan the combined clone with the same tools as stage 4: Syft → OSV-Scanner + Grype (M2's
+     run_vulns helpers, imported read-only), and the v1 fast path too for npm.
    - Before/after per approved plan: targeted advisories gone/still present; new advisories
      (must be 0); SBOM diff (added/removed/changed); remaining advisories not covered by any
      approved plan (listed, never hidden).
@@ -130,7 +158,9 @@ using runs/20261124T053859Z-8e1c (it already has 4 plans).
    - the source tree hash is unchanged after verify;
    - the no-approval-from-code grep test.
 
-Acceptance (T+75, integration 1):
+Acceptance (T+75, integration 1), on BOTH team repos (npm and Python):
+- Python: a pypi plan edits the requirements line, gets approved in the UI and is verified by
+  the OSV-Scanner rescan, with the advisory gone and 0 new.
 - On M1's workspace (after M2's stages 4–6), run Remedies from the UI → awaiting approval.
 - Approve one plan, reject one, defer the rest → Send to sandbox → the Sandbox tab runs live
   and ends in a verdict with every check shown. Without docker it is PARTIAL with "tests: not

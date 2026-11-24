@@ -25,25 +25,36 @@ Until M1's skeleton lands (about T+30), develop against the fake workspace in co
 using runs/20261124T053859Z-8e1c. Put pure logic in helpers that take dicts, so tests need no
 network.
 
-1. run_vulns(ws, opts), writing stages/vulns/result.json:
-   - from ws.v1_run/findings.json, every finding with a vulnerability type (OSV / GitHub
-     advisories): package, version, purl, advisory ids + aliases, severity (CVSS score/vector,
-     GitHub severity), fixed versions, summary, direct/transitive, dev/prod, introduced_via;
-   - extra tools, only if the binary exists in tools/bin (M1's setup script downloads them):
-     - osv-scanner: `osv-scanner scan source --lockfile=<src>/package-lock.json --format json`
-       (osv-scanner v2 syntax; check `osv-scanner --version` and adjust, then write the exact
-       command to docs/tool-notes/osv-scanner.md);
-     - grype: `grype sbom:<stages/sbom/syft.cdx.json or the v1 SBOM> -o json`;
-     - exit code 1 with results means "found", not "failed";
-     - save the raw outputs under stages/vulns/;
-   - merge rows by (purl, alias set). reported_by = {osv_api: true/false, osv_scanner:
-     true/false/"not-run", grype: true/false/"not-run"}; disagreement = a tool that ran did not
-     report it;
-   - summary: counts by severity, unique advisories, affected packages, tools {name: ran|not-run,
-     version}, agreement {all, some, one}.
+IMPORTANT: Guardian v2 supports ANY ecosystem (pip, npm, Go, Maven, Cargo…); read contract §0.
+Tools do the detection; our code merges and scores. ws.v1_run is None for non-npm repos, and
+every stage must still work.
+
+1. run_vulns(ws, opts), writing stages/vulns/result.json. Tools first, for every ecosystem:
+   - osv-scanner (required): `osv-scanner scan source -r <src> --format json` (v2 syntax; it
+     finds every lockfile and manifest: requirements.txt, poetry.lock, Pipfile.lock, uv.lock,
+     package-lock.json, go.mod, Cargo.lock, pom.xml, Gemfile.lock, composer.lock…). Probe it once
+     and write the exact command, version and JSON paths to docs/tool-notes/osv-scanner.md;
+   - grype (recommended): `grype sbom:<stages/sbom/syft.cdx.json> -o json` (M1 writes that
+     file). Probe it and write docs/tool-notes/grype.md;
+   - v1 OSV findings from ws.v1_run/findings.json, if npm (these add reachability-ready
+     fields);
+   - exit code 1 with results means "found", not "failed". A missing tool → "not-run".
+     Save the raw outputs under stages/vulns/;
+   - unpinned components (version null from the SBOM) are listed as "version not pinned, can't
+     be matched", never as clean;
+   - merge rows by (purl, alias set: CVE/GHSA/PYSEC/GO/RUSTSEC/OSV ids). Per row: ecosystem,
+     package, version, purl, advisory ids + aliases, severity (CVSS score/vector, database
+     severity), fixed versions, summary, direct/transitive and introduced_via (from M1's graph
+     result), dev where known;
+   - reported_by = {osv_scanner: true/false/"not-run", grype: ..., v1_osv:
+     ... | "not-applicable"}; disagreement = a tool that ran did not report it;
+   - EPSS + KEV enrichment for CVE aliases with guardian/enrich.py (cached; "unknown" if
+     offline);
+   - summary: counts by severity and by ecosystem, unique advisories, affected packages, tools
+     {name: ran|not-run, version}, agreement {all, some, one}.
    pages/vulns.js:
    - G.header;
-   - severity tiles;
+   - severity tiles, plus a per-ecosystem breakdown and an ecosystem filter;
    - a tools card: each tool with ran / not-run and its version, and the agreement counts;
    - a table with severity badge, package@version, advisory (linked to osv.dev), CVSS, fixed-in,
      reported-by chips, direct/transitive, dev/prod;
@@ -51,9 +62,21 @@ network.
      root, raw tool links;
    - G.sources: findings.json, the raw tool outputs, result.json.
 
-2. run_signals(ws, opts): every finding that is not a vulnerability (supply-chain signals: install
-   scripts, name confusion, integrity/provenance, Dockerfile, CI workflow, curl|sh,
-   permissions…). Per signal: rule, title, component, grade (verified/heuristic), evidence lines
+2. run_signals(ws, opts) for every repo:
+   (a) npm deep layer: the v1 non-vulnerability findings, if ws.v1_run;
+   (b) generic repo rules (all repos): Dockerfile :latest / no digest / curl|sh; CI workflows
+       with unpinned actions, write-all, pull_request_target. Reuse the v1 rule logic
+       (fastpath/build.py), applied to ws.src;
+   (c) generic manifest rules (all ecosystems):
+       - unpinned or ranged versions;
+       - dependencies from git/URL/local path;
+       - pip `--extra-index-url` / `--index-url` (dependency confusion risk) and a custom
+         registry in .npmrc / pip.conf;
+       - a missing lockfile;
+       - name confusion against popular package names per ecosystem (heuristic);
+   (d) deps.dev, optional, per direct package: OpenSSF Scorecard score, deprecated versions,
+       and a very recent publish. Cached; offline → unknown.
+   Per signal: rule, title, component, grade (verified/heuristic), evidence lines
    (file:line + excerpt), why_it_matters (reuse the v1 wording in review.py sec_changes).
    pages/signals.js:
    - G.header;
@@ -63,8 +86,17 @@ network.
    - G.sources.
 
 3. run_prioritise(ws, opts):
-   - with bridge.use_target(ws): call the same v1 prioritise function cmd_prioritise calls,
-     on ws.v1_run;
+   - npm with ws.v1_run: with bridge.use_target(ws), call the same v1 prioritise function
+     cmd_prioritise calls (it has reachability);
+   - every other row (any ecosystem): an adapter that feeds merged vuln rows and signals into
+     the same formula and guardrails in guardian/scoring.py:
+     - severity from CVSS / database severity;
+     - exploitability from KEV / EPSS;
+     - reachability "unknown" (grade unknown, so confidence drops; never 0 or 1); R0 only if
+       the package is dev-only;
+     - exposure from dev/prod where known, otherwise unknown;
+     - fix from the fixed versions;
+   - one combined ranking across ecosystems;
    - then build result.json for the page: per item the rank, score, band, the 5 factors (value,
      weight, contribution, grade, source), guardrails fired, confidence + range;
    - add code-generated (template, no LLM) text:
@@ -83,8 +115,15 @@ network.
    - G.sources.
 
 4. run_investigate(ws, opts):
-   - with bridge.use_target(ws): call guardian.agents.runner.analyse(ws.v1_run,
-     mode=opts.get("mode", "live"), top_n=opts.get("top", 5));
+   - npm with ws.v1_run: with bridge.use_target(ws), call
+     guardian.agents.runner.analyse(ws.v1_run, mode=opts.get("mode", "live"),
+     top_n=opts.get("top", 5));
+   - non-npm top items: run the Risk Analyst and the Refuter through the same llm client,
+     prompts, JSON schema and EvidenceIndex.check_claim (guardian/agents/runner.py,
+     guardian/evidence.py), with evidence = the advisory text plus `grep` hits of the package's
+     import name in ws.src (a read-only tool you add in stages_detect.py). If that is too much
+     by T+75, mark those items "skipped — agents for <ecosystem> not built yet". Honest, not
+     hidden;
    - honour GUARDIAN_OFFLINE=1 → offline mode;
    - result.json: per agent (Change Detective, Risk Analyst, Refuter) and per item: status,
      model, claims (text, quotes kept/dropped, support_checked, evidence ids), tool calls,
@@ -103,7 +142,10 @@ network.
    - G.sources.
 
 5. tests/unit/test_v2_detect.py:
-   - merge-by-alias (three tool rows for one issue give one row);
+   - merge-by-alias (three tool rows for one issue give one row), including a PYSEC+CVE+GHSA
+     pypi case;
+   - the scoring adapter gives reachability unknown for non-npm (never 0);
+   - an unpinned component is never "clean";
    - disagreement flag;
    - not-run tool never counted as 0;
    - the why / vs_next templates on fixture factor dicts;
@@ -111,6 +153,9 @@ network.
    - investigate result building from a fixture prioritised.json with skipped and ok agents.
 
 Acceptance (T+75, integration 1):
+- On the team's Python repo: OSV-Scanner and Grype rows for pypi packages, the prioritised list
+  with reachability "unknown" and lower confidence, and generic signals (unpinned, index-url,
+  Docker/CI).
 - On M1's workspace from a small npm repo, run stages 4–7 from the UI.
 - Vulns: rows with reported-by chips; tools that aren't installed show "not run".
 - Prioritised: the formula, the top 20 with why / vs next, the demoted list.

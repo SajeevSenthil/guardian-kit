@@ -11,6 +11,49 @@ adds:
 
 Anything in `new_plan.md` that isn't in this file is **out of scope for today**.
 
+## 0. Any ecosystem, not only npm
+
+Guardian v2 analyses **any repo**: Python (pip `requirements*.txt`, `pyproject.toml`,
+`poetry.lock`, `Pipfile.lock`, `uv.lock`), npm/yarn/pnpm, Go, Maven/Gradle, Cargo, Ruby, PHP
+Composer, .NET, and whatever else the tools support. It works in two layers:
+
+| Layer | Ecosystems | Who does the work |
+|---|---|---|
+| **Generic, the default for every repo** | all that Syft / OSV-Scanner / Grype support | **Syft** makes the SBOM (components + dependency relationships where the lockfile has them); **OSV-Scanner** (`scan source -r`, every lockfile and manifest it finds) + **Grype** (on the Syft SBOM) find vulnerabilities; our code merges them, scores them and draws the graph |
+| **Deep, an extra layer** | npm with `package-lock.json` | the v1 fast path adds lockfile-line evidence per edge, reachability, install-script inspection, the v1 sabotage rules and npm fix prediction |
+
+Consequences everyone must respect:
+- **Syft and OSV-Scanner are required tools in v2** (Grype is recommended). M1's setup script
+  installs them in the first 15 minutes, and everyone runs it.
+- **One component schema for all ecosystems** (written by the sbom stage, read by everyone):
+  `{ecosystem, name, version, purl, direct: bool|null, dev: bool|null, locations: [file:line],
+  source_tool: [syft|v1], introduced_via: [paths]|null}`. Use null for "unknown", never false.
+- **Tools first, our code second.** The SBOM, the graph and vulnerability matching come from
+  tools and services; our code merges, cross-checks, scores and explains. Deterministic code is
+  kept only where no tool does the job (scoring, verdicts, approval checks).
+- **Graph edges, in this order of preference:**
+  1. Syft `artifactRelationships` (from lockfiles that carry dependencies);
+  2. v1 edges for npm;
+  3. the **deps.dev API** (`api.deps.dev/v3/systems/{pypi|npm|go|maven|cargo}/packages/{name}/versions/{version}:dependencies`)
+     for direct packages whose transitives the lockfile doesn't give (e.g. a plain
+     `requirements.txt`). Edges from deps.dev are labelled "resolved by deps.dev", because the
+     real install can differ.
+  It is cached under `.cache/`. Anything still unresolved shows a "not resolved" chip.
+  **We never run `pip install`, `setup.py` or any build to resolve dependencies outside the
+  sandbox container.**
+- **Unpinned requirements** (e.g. `requests>=2`) have no exact version. They are shown as
+  "version not pinned" and matched as unknown, never as safe.
+- **Scoring is the same formula for every ecosystem.** If reachability can't be computed
+  (anything that isn't npm today), the factor is **unknown**, so confidence goes down; it is
+  never set to 0 or 1.
+- **Remedies:** npm uses v1 planning. Other ecosystems get a generic "bump to the advisory's
+  fixed version" plan that edits the exact pinned line (`requirements*.txt` `==`,
+  `pyproject.toml`, `go.mod`, `pom.xml`, `Cargo.toml`…). Its fields are the same as an npm
+  plan; prediction is "not computed" where we can't compute it.
+- **Sandbox tests:** a per-ecosystem container image and command (node → `npm test`; python →
+  `pip install -r … && pytest`; go → `go test ./...`; others "not run" today), always with
+  `--network none` for the test step.
+
 ## 1. One branch, one workflow
 
 - **Branch:** `v2-any-repo`. Everyone works on it. No other branches, no force-push.
@@ -49,6 +92,11 @@ Anything in `new_plan.md` that isn't in this file is **out of scope for today**.
 Until the skeleton lands, M2 and M3 develop against the existing run
 `runs/20261124T053859Z-8e1c` (it has findings, a graph, prioritised.json, plans and a report).
 
+**Test repos for integration (everyone uses the same two):** one npm repo with a
+`package-lock.json` (a copy of `./target` as a local path), and one Python repo with pinned
+`requirements.txt` or `poetry.lock`. M1 picks the Python repo at T+0 and posts its path or URL
+to the team; it must be on the allow-list. **Both must run end to end at T+75 and T+100.**
+
 ## 3. File ownership (do not edit outside your column)
 
 | M1: foundation and discovery | M2: detection and investigation | M3: remedies, sandbox, report |
@@ -77,7 +125,8 @@ workspaces/<ws_id>/
 from guardian.v2.workspace import Workspace
 ws = Workspace.load(ws_id)          # or Workspace.create(source_kind, value, ref, consent_by)
 ws.id, ws.dir, ws.src               # Path objects
-ws.v1_run                           # Path to the v1 run dir (set by the "sbom" stage), or None
+ws.v1_run                           # Path to the v1 run dir (set by "sbom" only for npm repos), or None.
+                                    # Every stage must work when it is None (non-npm repo).
 ws.stage_dir("vulns")               # Path, created on demand
 ws.write("vulns", data)             # writes stages/vulns/result.json
 ws.read("vulns")                    # dict or None
@@ -89,7 +138,8 @@ ws.audit(event, **fields)           # append to the v1 run's hash-chained audit.
 (`guardian.runs.TARGET`, `fastpath/build.py TARGET/OUT`). M1's `guardian/v2/bridge.py` provides:
 ```python
 from guardian.v2 import bridge
-bridge.scan(ws, offline=False)      # v1 fast path on ws.src (base = head = snapshot), sets ws.v1_run
+bridge.has_npm_lock(ws) -> bool     # root (or chosen) package-lock.json present → the npm deep layer runs
+bridge.scan(ws, offline=False)      # v1 fast path on ws.src (base = head = snapshot), sets ws.v1_run; npm only
 with bridge.use_target(ws):         # points every v1 TARGET at ws.src while inside; global lock
     prioritise(...) / analyse(...) / remediate... / validate(...)
 ```
@@ -101,15 +151,15 @@ with bridge.use_target(ws):         # points every v1 TARGET at ws.src while ins
 
 | # | id | Owner | What it does (v1 function it wraps) |
 |---|---|---|---|
-| 1 | `ingest` | M1 | clone, unpack or copy into `src/`; list lockfiles, manifests, Dockerfiles, CI files |
-| 2 | `sbom` | M1 | `bridge.scan(ws)`: runs the v1 fast path with base = head = the chosen ref; copies SBOMs; also runs **Syft** if `tools/bin/syft` exists, with a parser-vs-Syft cross-check |
-| 3 | `graph` | M1 | from the v1 `graph.json`: nodes, edges, direct/transitive, paths, stats |
-| 4 | `vulns` | M2 | vulnerability findings from v1 (OSV) plus **OSV-Scanner** and **Grype** if they're in `tools/bin`; merged per advisory with a reported-by column |
-| 5 | `signals` | M2 | supply-chain findings from v1 that aren't CVEs (install scripts, typosquat, Docker, CI…) |
-| 6 | `prioritise` | M2 | `guardian.prioritise` (as `cmd_prioritise` in `guardian/cli.py` calls it) + reasons |
-| 7 | `investigate` | M2 | `guardian.agents.runner.analyse(run, mode, top_n)` → agent cards |
-| 8 | `remedies` | M3 | `cmd_plan` logic → plans; ends in `awaiting_approval` |
-| 9 | `verify` | M3 | for the approved set: `guardian.validate.validate` per plan + `npm test` in a container if docker + a before/after rescan; verdict |
+| 1 | `ingest` | M1 | clone, unpack or copy into `src/`; detect **every ecosystem**: manifests and lockfiles per ecosystem, plus Dockerfiles and CI files |
+| 2 | `sbom` | M1 | **Syft** on `src/` → the generic component list (schema in §0) for all ecosystems; plus `bridge.scan(ws)` (v1 fast path) **only if** there is an npm `package-lock.json`, with a Syft-vs-v1 cross-check for npm |
+| 3 | `graph` | M1 | nodes and edges from Syft relationships (all ecosystems) + v1 graph.json evidence (npm); direct/transitive, paths, stats; "not resolved" where unknown |
+| 4 | `vulns` | M2 | **OSV-Scanner** (all lockfiles) + **Grype** (Syft SBOM) + v1 OSV findings (npm); merged per (purl, advisory) with a reported-by column |
+| 5 | `signals` | M2 | v1 npm signals (if npm) + generic repo rules for every repo (Dockerfile, CI, curl\|sh) + generic manifest rules (unpinned versions, git/URL/local-path dependencies, extra or custom package index, missing lockfile) |
+| 6 | `prioritise` | M2 | v1 scoring (`guardian/scoring.py`) applied to the merged rows of **every** ecosystem through an adapter; reachability unknown outside npm; + reasons |
+| 7 | `investigate` | M2 | `guardian.agents.runner.analyse` (npm v1 run) + the same agents on non-npm top items through the same evidence check; agent cards |
+| 8 | `remedies` | M3 | npm: `cmd_plan` logic; other ecosystems: generic "bump to fixed version" plans; ends in `awaiting_approval` |
+| 9 | `verify` | M3 | for the approved set: apply all patches in one clone → rescan with OSV-Scanner/Grype (+ v1 for npm) → tests in a per-ecosystem container if docker; before/after; verdict |
 | 10 | `report` | M3 | `guardian.report.render` + `guardian.review.render`; links |
 
 **Stage function signature.** Everyone uses exactly this:
@@ -205,9 +255,11 @@ ws = SimpleNamespace(v1_run=run, src=Path("target"), dir=Path("workspaces/_dev")
 - Git URLs: allowed only if their host and owner are in `guardian.toml [sources] allow`.
   Cloning uses `--depth 50 --no-recurse-submodules -c core.hooksPath=` plus a size cap. Zip
   extraction rejects `..`, absolute paths and symlinks. A consent name is required and audited.
-- **Never run the repo's code, except `npm test` inside a `--network none` Docker container in
-  the verify stage.** No docker means "not run".
-- `npm` always runs with `--ignore-scripts` outside that container.
+- **Never run the repo's code, except the tests inside a Docker container in the verify stage**
+  (`--network none` for the test step). No docker means "not run".
+- Outside that container: `npm` only with `--ignore-scripts`; **never** `pip install`,
+  `python setup.py`, `go build`, `mvn`, `gradle` or any build command. Analysis is Syft,
+  OSV-Scanner and Grype, which only read files, plus our parsers.
 - **Approvals only come from a human click in the UI** (an HTTP POST with a typed name and the
   plan hash). No stage or agent code calls the approve function.
 - Never print or log API keys. Keys come from `.env` only.
