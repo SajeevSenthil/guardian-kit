@@ -131,7 +131,11 @@ ws.stage_dir("vulns")               # Path, created on demand
 ws.write("vulns", data)             # writes stages/vulns/result.json
 ws.read("vulns")                    # dict or None
 ws.set_status("vulns", status, summary=None, error=None)
-ws.audit(event, **fields)           # append to the v1 run's hash-chained audit.jsonl
+ws.audit(event, actor="guardian", **fields)  # append to workspaces/<id>/audit.jsonl (hash-chained, guardian.audit)
+                                    # (v1's remediate.approve still writes its own record to the v1 run's audit.jsonl)
+ws.rel(path) -> str                 # path to use in links / G.sources for a file you wrote; files inside the
+                                    # v1 run come back as "v1/<file>" (the file endpoint resolves that prefix)
+ws.meta / ws.update(**fields)       # read / atomically update workspace.json
 ```
 
 **Calling v1 code on a workspace (everyone).** v1 reads the repo path from module variables
@@ -144,6 +148,19 @@ with bridge.use_target(ws):         # points every v1 TARGET at ws.src while ins
     prioritise(...) / analyse(...) / remediate... / validate(...)
 ```
 **Wrap every v1 call that touches the repo in `bridge.use_target(ws)`.**
+
+**Built by M1 (as-built notes):**
+- v1 runs for a workspace live in `workspaces/<id>/v1runs/<run_id>/`, and v1's fast-path output in
+  `workspaces/<id>/v1out/`. `fastpath/out/` is no longer touched.
+- `guardian.v2.tools.find_tool(name)` / `tool_version(name)` locate syft, grype and osv-scanner
+  (tools/bin first, then PATH). Install them with `python scripts/setup_tools.py`.
+- The sbom result's `components[]` follow the §0 schema; `id` is the normalised purl (lowercase,
+  unquoted; pypi names PEP 503-normalised), or `"<eco>:<name>@?"` for unpinned ones. Graph node ids are
+  the same ids. **M2: key your vuln rows by `component_id` = this id** so the graph can colour them.
+- Graph nodes carry `paths` (up to 3 shortest paths from `root`), `depth`, `fan_in` and `direct`; edges
+  carry `sources` (syft | v1-lockfile | manifest | deps.dev | declared-in-file) and `evidence[]`.
+- The graph page colours nodes from the vulns / signals results: it reads `result.rows` (or `items`)
+  and matches `component_id` (or `purl`, or name + version).
 
 **Stage status values:** `not_run`, `running`, `ok`, `failed`, `stale`, `awaiting_approval`.
 

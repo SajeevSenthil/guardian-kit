@@ -262,6 +262,39 @@ def _not_built(name):
     return f
 
 
+def cmd_ui(a):
+    import uvicorn
+    _p(f"Guardian UI on http://127.0.0.1:{a.port}  (Ctrl+C to stop)")
+    uvicorn.run("guardian.api.app:app", host="127.0.0.1", port=a.port, log_level="warning")
+
+
+def cmd_ws(a):
+    from .v2.workspace import Workspace
+    if a.action == "list":
+        for w in Workspace.list():
+            _p(f"{w['id']}  {w['source']['kind']}  {w['source']['value']}")
+        return
+    if a.action == "create":
+        ws = Workspace.create(a.kind, a.value, a.ref, a.by, consent=bool(a.by))
+        _p(ws.id)
+        return
+    ws = Workspace.load(a.id)
+    for k, v in ws.meta.get("stages", {}).items():
+        _p(f"{k:12} {v.get('status'):18} {v.get('error') or v.get('summary') or ''}")
+
+
+def cmd_stage(a):
+    from .v2 import runner
+    from .v2.workspace import Workspace
+    ws = Workspace.load(a.ws)
+    res = runner.run_until(ws, a.name) if a.until else {a.name: runner.run_stage(ws, a.name, force=a.force)}
+    bad = 0
+    for k, v in res.items():
+        _p(f"{k:12} {v.get('status'):18} {v.get('error') or v.get('summary') or ''}")
+        bad |= v.get("status") not in ("ok", "awaiting_approval")
+    return 1 if bad else 0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="guardian")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -329,6 +362,24 @@ def main(argv=None):
     s.add_argument("--reason", required=True)
     s.add_argument("--run")
     s.set_defaults(fn=cmd_accept)
+    # ---- v2 (any repo, stage by stage) ----
+    s = sub.add_parser("ui", help="v2 web UI on http://127.0.0.1:8080")
+    s.add_argument("--port", type=int, default=8080)
+    s.set_defaults(fn=cmd_ui)
+    s = sub.add_parser("ws", help="v2 workspaces: create | status | list")
+    s.add_argument("action", choices=["create", "status", "list"])
+    s.add_argument("--kind", choices=["git", "zip", "path"], default="path")
+    s.add_argument("--value", help="git URL, zip file or local folder")
+    s.add_argument("--ref")
+    s.add_argument("--by", help="your name (recorded as consent)")
+    s.add_argument("--id")
+    s.set_defaults(fn=cmd_ws)
+    s = sub.add_parser("stage", help="v2: run one stage of a workspace (or --until to run the chain)")
+    s.add_argument("name")
+    s.add_argument("--ws", required=True)
+    s.add_argument("--until", action="store_true")
+    s.add_argument("--force", action="store_true")
+    s.set_defaults(fn=cmd_stage)
     from .env import load_dotenv
     load_dotenv()
     a = ap.parse_args(argv)

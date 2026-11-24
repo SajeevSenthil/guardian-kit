@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Supply Chain Guardian</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/standalone/umd/vis-network.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">Supply Chain Guardian <span>· any repo, stage by stage</span></div>
+      <div class="grow"></div>
+      <label for="ws-pick" class="muted">Workspace</label>
+      <select id="ws-pick"></select>
+      <a class="btn" href="#/ingest?new=1">+ New analysis</a>
+    </header>
+    <nav class="nav" id="nav"></nav>
+    <main class="page" id="page"></main>
+  </div>
+  <script src="/static/app.js"></script>
+  <!-- every stage page is loaded up front; a missing file simply shows "not built yet" -->
+  <script src="/static/pages/start.js"></script>
+  <script src="/static/pages/sbom.js"></script>
+  <script src="/static/pages/graph.js"></script>
+  <script src="/static/pages/vulns.js"></script>
+  <script src="/static/pages/signals.js"></script>
+  <script src="/static/pages/prioritise.js"></script>
+  <script src="/static/pages/investigate.js"></script>
+  <script src="/static/pages/remedies.js"></script>
+  <script src="/static/pages/verify.js"></script>
+  <script src="/static/pages/report.js"></script>
+  <script>G.boot();</script>
+</body>
+</html>

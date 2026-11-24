@@ -1,0 +1,4 @@
+# written by scripts/setup_tools.py
+syft 1.57.2 installed
+osv-scanner 2.7.1 installed
+grype 0.122.1 installed

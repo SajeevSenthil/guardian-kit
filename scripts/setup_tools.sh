@@ -9,6 +9,9 @@
 set -uo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
+# v2: pinned, SHA256-verified syft / osv-scanner / grype into tools/bin (works without Homebrew)
+(command -v python3 >/dev/null && python3 scripts/setup_tools.py) || python scripts/setup_tools.py
+
 have() { command -v "$1" >/dev/null 2>&1; }
 note() { printf '\n== %s\n' "$*"; }
 MISSING=()

@@ -710,3 +710,69 @@ Not fixed yet (skeptic items 5–10): the GT-P3/P4 misses; dashboard shows "not 
 the "clean" colour; Refuter "upheld" adds confidence without a checked quote; two rubric constants
 graded "verified"; the report hard-codes the demo app's URL; minor items (reachability skips a
 `guardian/` folder, model-controlled excerpt size, commit subject outside data delimiters).
+
+---
+
+## v2 — M1: foundation, intake, SBOM, dependency graph (branch `v2-any-repo`)
+
+Built to `docs/V2_TEAM_CONTRACT.md` (M1 column).
+
+- **Tools.** `scripts/setup_tools.py` (+ `.ps1`, `.sh` wrappers) downloads pinned **Syft 1.57.2,
+  OSV-Scanner 2.7.1, Grype 0.122.1** into `tools/bin/`, verifies each against the release's SHA256
+  checksums file, and writes `tools.lock`. `guardian/v2/tools.py` finds them.
+- **Workspaces** (`guardian/v2/workspace.py`): `workspaces/<id>/` with an atomic `workspace.json`,
+  `src/`, `stages/<stage>/result.json`, and a hash-chained `audit.jsonl`. Consent (a name plus the
+  "authorised" tick) is required and audited. The file resolver refuses traversal.
+- **Runner** (`guardian/v2/runner.py`):
+  - a fixed registry of all 10 stages, imported lazily, so a missing stage shows "not built yet";
+  - upstream checks, timing, and a one-line error per stage;
+  - downstream stages marked **stale** when a stage's output changes;
+  - `awaiting_approval` is respected;
+  - `run_until` runs the chain.
+- **Bridge** (`guardian/v2/bridge.py`):
+  - `use_target(ws)` points v1 (`runs.TARGET`, `runs.RUNS`, fastpath `TARGET`) at the workspace;
+  - `scan(ws)` runs the v1 fast path on the snapshot (base = head = HEAD), with its output redirected
+    into the workspace.
+- **Stage 1, ingest:**
+  - a git URL is accepted only if `guardian.toml [sources] allow` lists its host/owner. https only,
+    no credentials, hooks disabled, `--depth 50`, no submodules, a `max_mb` cap;
+  - a zip is extracted safely (no `..`, absolute paths or symlinks);
+  - a local folder is copied, then a snapshot is committed;
+  - it detects npm, pypi, go, maven/gradle, cargo, gem, composer and nuget manifests and lockfiles,
+    plus Dockerfiles and CI workflows.
+- **Stage 2, sbom:**
+  - Syft (dev dependencies included) produces syft-json, CycloneDX and SPDX for every ecosystem;
+  - the component schema follows contract §0, with direct/dev from the root manifests;
+  - unpinned requirements are listed, never dropped;
+  - npm with `package-lock.json` also runs v1, with a cross-check.
+- **Stage 3, graph:**
+  - edges come from Syft relationships, v1 lockfile edges (line evidence), manifest root edges,
+    the **deps.dev** resolver (for manifests without a lockfile; labelled, cached in
+    `.cache/depsdev/`), and "declared-in-file" for packages nothing depends on (e.g. CI actions);
+  - BFS depth, up to 3 shortest paths per node, fan-in, duplicate versions.
+- **API + UI** (`guardian/api/`, `python -m guardian ui` → http://127.0.0.1:8080):
+  - FastAPI with workspace, stage-run, status, upload and file endpoints, with stages running in the
+    background;
+  - the static UI with the shared `styles.css` and `app.js` (`G.*` helpers) and pages Start, SBOM
+    and Graph (vis-network, focus view, Direct/Transitive/Statistics tabs);
+  - M2/M3 routers and pages plug in without editing M1 files.
+- **CLI:** `ui`, `ws create|status|list`, `stage <name> --ws <id> [--until]`.
+
+**Measured:**
+
+| Repo | Ingest | SBOM | Graph |
+|---|---|---|---|
+| npm demo app (`./target` as a local path) | npm | 987 components; Syft 983 npm vs v1 982 unique, **982 agree** | 3,223 edges, depth 9; `qs` shows `target → express → qs` with `package-lock.json:9540` |
+| Python `github.com/anxolerd/dvpwa` (cloned) | pypi, `requirements.txt` all `==` | 20 pypi | 37 deps.dev edges |
+
+- Syft initially reported 568 npm packages vs v1's 982, because Syft skips npm dev dependencies by
+  default. `SYFT_JAVASCRIPT_INCLUDE_DEV_DEPENDENCIES=true` fixed it.
+- PyPI `3.20` and `3.20.0` were split into two nodes; fixed with PEP 440 trailing-zero
+  normalisation when matching.
+
+Tests: `tests/unit/test_v2_core.py` (11 tests). `python -m pytest -q` → **84 passed**; ruff clean.
+Screenshots: `docs/screenshots/v2/`.
+
+Notes:
+- C: was full during this work, so pytest needs `--basetemp` on another drive.
+- The CLAUDE.md scope line is **not changed yet**; it is waiting for the human's yes.
