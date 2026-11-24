@@ -299,7 +299,7 @@ def collect(run: Path) -> dict:
         "run": {"run_id": meta["run_id"], "target": meta["target"], "base": meta["base"], "base_sha": meta["base_sha"],
                 "head": meta["head"], "head_sha": meta["head_sha"], "mode": meta.get("mode"),
                 "generated": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
-                "sample_app": {"repository": "https://github.com/snyk-labs/nodejs-goof", "licence": "Apache-2.0",
+                "sample_app": {"repository": "https://github.com/SajeevSenthil/StudyHelper-Frontend", "licence": "Apache-2.0",
                                "commit": "add14ba59e98240d9e00a235dd7d42cd61ae9912",
                                "modifications": "scripts/make_demo_target.sh: baseline smoke test + vendored helper; "
                                                 "tampered branch with 4 simulated attack commits (local only)"}},
