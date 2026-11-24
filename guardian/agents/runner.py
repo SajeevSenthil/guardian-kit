@@ -169,7 +169,12 @@ def analyse(run: Path, mode: str = "live", top_n: int | None = None, fresh: bool
             status[role] = str(e)
             return None
 
-    jobs = [("change_detective", f) for f in change]
+    # one investigation per changed component (its highest-ranked finding); the result is shared with the
+    # component's other findings, so the same package is not investigated four times
+    cd_lead: dict = {}
+    for f in change:
+        cd_lead.setdefault(f.get("nodeId") or f["component"], f)
+    jobs = [("change_detective", f) for f in cd_lead.values()]
     jobs += [("risk_analyst", f) for f in top if f["type"] == "known_vulnerability"]
     jobs += [("refuter", f) for f in top]
     events: list = []
@@ -241,6 +246,11 @@ def analyse(run: Path, mode: str = "live", top_n: int | None = None, fresh: bool
             elif role == "refuter":
                 apply_refuter(f, rec, out, claims)
             f.setdefault("agents", {})[role] = rec
+
+    for f in change:
+        lead = cd_lead[f.get("nodeId") or f["component"]]
+        if lead is not f and "change_detective" in (lead.get("agents") or {}):
+            f.setdefault("agents", {})["change_detective"] = {**lead["agents"]["change_detective"], "shared_from": lead["id"]}
 
     # investigation records for non-CVE findings in the top N and every change finding
     inv = {}

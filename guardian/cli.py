@@ -87,18 +87,19 @@ def cmd_doctor(a):
     import urllib.request
 
     from .config import load
-    from .env import key_present
     cfg = load()
-    _p(f"GEMINI_API_KEY present: {'yes' if key_present('GEMINI_API_KEY') else 'no'} (value never shown)")
+    from .env import gemini_keys
+    keys = gemini_keys()
+    _p(f"GEMINI_API_KEY present: {'yes' if keys else 'no'} ({len(keys)} key(s) configured; values never shown)")
     for t in ("git", "node", "npm", "docker", "conftest", "syft", "grype", "osv-scanner"):
         _p(f"  {t:12} {'found' if shutil.which(t) else 'MISSING'}")
-    if not key_present("GEMINI_API_KEY"):
+    if not keys:
         return 1
     if os.environ.get("GUARDIAN_OFFLINE") == "1":
         _p("offline: Gemini model check skipped")
         return 0
     req = urllib.request.Request("https://generativelanguage.googleapis.com/v1beta/models?pageSize=200",
-                                 headers={"x-goog-api-key": os.environ["GEMINI_API_KEY"]})
+                                 headers={"x-goog-api-key": keys[0]})
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
             names = {m["name"].split("/")[-1] for m in json.load(r).get("models", [])
@@ -242,6 +243,12 @@ def cmd_report(a):
     _p(f"audit chain: {rep['audit']['result']}")
 
 
+def cmd_review(a):
+    from . import review, runs
+    out = review.render(runs.resolve(a.run))
+    _p(f"review page: {out}")
+
+
 def cmd_accept(a):
     from . import report, runs
     rec = report.accept(runs.resolve(a.run), a.finding, a.as_, a.by, a.reason)
@@ -312,6 +319,9 @@ def main(argv=None):
     s = sub.add_parser("report", help="render the Guardian report (HTML, Markdown, JSON, VEX, SBOMs)")
     s.add_argument("--run")
     s.set_defaults(fn=cmd_report)
+    s = sub.add_parser("review", help="render the jury review page (runs/<id>/report/review.html)")
+    s.add_argument("--run")
+    s.set_defaults(fn=cmd_review)
     s = sub.add_parser("accept", help="record a human decision on a finding: not-affected or accepted-risk")
     s.add_argument("finding")
     s.add_argument("--as", dest="as_", required=True, choices=["not-affected", "accepted-risk"])

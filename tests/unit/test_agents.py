@@ -163,3 +163,26 @@ def test_verbatim_self_description_quote_does_not_support_a_refutation():
     assert claims[0]["support_checked"] is True
     apply_refuter(f, rec, {"verdict": "refuted", "factor": "none"}, claims)
     assert rec["effective_verdict"] == "inconclusive" and "describing itself" in rec["applied"] and "status" not in f
+
+
+def test_rate_limit_switches_to_the_next_key_without_waiting(monkeypatch):
+    import io
+    import urllib.error
+    monkeypatch.setattr(llm, "_KEY_STATE", {"i": 0})
+    used = []
+
+    def transport(url, body, key):
+        used.append(key)
+        if key == "key-one-xxxx":
+            raise urllib.error.HTTPError(url, 429, "quota", {}, io.BytesIO(b'{"error": {"code": 429}}'))
+        return text("ok")
+    monkeypatch.setattr(llm.time, "sleep", lambda s: (_ for _ in ()).throw(AssertionError("must not wait")))
+    client = llm.Gemini("m", transport=transport)
+    client.keys, client.key = ["key-one-xxxx", "key-two-yyyy"], "key-one-xxxx"
+    client.generate("s", [])
+    assert used == ["key-one-xxxx", "key-two-yyyy"] and client.key_switches == 1
+
+
+def test_all_numbered_keys_are_redacted(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY_2", "numbered-secret-12345")
+    assert "numbered-secret" not in redact("x numbered-secret-12345 y")

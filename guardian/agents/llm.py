@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import re
 import time
 import urllib.error
@@ -78,11 +77,17 @@ def validate(value, schema: dict, path: str = "$") -> list[str]:
     return errs
 
 
+_KEY_STATE = {"i": 0}   # index of the key currently in use, shared across agent runs
+
+
 class Gemini:
     def __init__(self, model: str, key: str | None = None, transport: Callable | None = None,
-                 max_output_tokens: int = 2048):
+                 max_output_tokens: int = 8192):
         self.model = model
-        self.key = key if key is not None else (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))
+        from ..env import gemini_keys
+        self.keys = [key] if key is not None else gemini_keys()
+        self.key = self.keys[_KEY_STATE["i"] % len(self.keys)] if self.keys else None
+        self.key_switches = 0
         self.transport = transport or _http_post
         self.max_output_tokens = max_output_tokens
         self.tokens = 0
@@ -98,19 +103,33 @@ class Gemini:
         if schema:
             body["generationConfig"].update(responseMimeType="application/json",
                                             responseSchema=to_gemini_schema(schema))
+        if self.model.startswith("gemini-2.5"):
+            # 2.5 "thinking" tokens count against maxOutputTokens and can truncate the JSON answer
+            body["generationConfig"]["thinkingConfig"] = {"thinkingBudget": 0}
         delay = 4
-        for attempt in range(5):
+        tried = 0
+        for attempt in range(7 + 2 * len(self.keys)):
             try:
                 resp = self.transport(API.format(model=self.model), body, self.key)
                 self.tokens += (resp.get("usageMetadata") or {}).get("totalTokenCount", 0)
                 return resp
             except urllib.error.HTTPError as e:
-                if e.code in (429, 500, 502, 503, 504) and attempt < 4:
-                    time.sleep(delay)
-                    delay *= 2
+                detail = e.read().decode("utf-8", "replace") if hasattr(e, "read") and e.fp else ""
+                if e.code in (401, 403, 429) and len(self.keys) > 1 and tried < len(self.keys) - 1:
+                    # key-specific failure (invalid / unsupported key type / rate limit): move to the next
+                    # configured key at once; the choice is shared by later agent runs
+                    _KEY_STATE["i"] = (_KEY_STATE["i"] + 1) % len(self.keys)
+                    self.key = self.keys[_KEY_STATE["i"]]
+                    self.key_switches += 1
+                    tried += 1
                     continue
-                detail = e.read().decode("utf-8", "replace")[:300] if hasattr(e, "read") else ""
-                raise AgentUnavailable(f"Gemini HTTP {e.code}: {redact(detail)}") from None
+                tried = 0
+                if e.code in (429, 500, 502, 503, 504) and attempt < 6:
+                    m = re.search(r'"retryDelay":\s*"(\d+)', detail)        # Gemini says how long to wait
+                    time.sleep(min(int(m.group(1)) + 1, 65) if m else delay)
+                    delay = min(delay * 2, 60)
+                    continue
+                raise AgentUnavailable(f"Gemini HTTP {e.code}: {redact(detail[:300])}") from None
             except (urllib.error.URLError, TimeoutError, OSError) as e:
                 raise AgentUnavailable(f"Gemini unreachable: {type(e).__name__}") from None
         raise AgentUnavailable("Gemini: retries exhausted")

@@ -10,11 +10,10 @@
 
 from __future__ import annotations
 
-import os
 import re
 import threading
 
-from .env import SECRET_NAMES
+from .env import secret_env_items
 
 _PATTERNS = [
     re.compile(r"sk-ant-[A-Za-z0-9_-]{10,}"), re.compile(r"sk-[A-Za-z0-9]{20,}"),
@@ -30,9 +29,8 @@ def redact(text: str) -> str:
     """Mask configured secret values and well-known token shapes. Narrow patterns only."""
     if not text:
         return text
-    for name in SECRET_NAMES:
-        v = os.environ.get(name)
-        if v and len(v) >= 8:
+    for name, v in secret_env_items():
+        if len(v) >= 8:
             text = text.replace(v, f"[REDACTED:{name}]")
     for p in _PATTERNS:
         text = p.sub(lambda m: (m.group(1) if m.groups() else "") + "[REDACTED]", text)

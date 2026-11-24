@@ -2,8 +2,8 @@
 
 [run]
 default_mode = "live"            # live | replay | offline
-top_n_for_agents = 10            # findings sent to Risk Analyst + Refuter
-agent_concurrency = 3
+top_n_for_agents = 5            # findings sent to Risk Analyst + Refuter
+agent_concurrency = 1
 
 [models]                         # UNUSED (original Claude design); runtime agents use [agents.gemini] below
 change_detective = "sonnet"
@@ -28,7 +28,7 @@ exposure = 0.6
 fix_availability = 0.6
 
 [score.bands]
-critical = 85
+critical = 85  
 high = 65
 medium = 40
 low = 15
@@ -48,18 +48,18 @@ min_release_age_days = 7         # cool-down for brand-new versions
 [limits]
 tool_timeout_s = 180
 build_timeout_s = 600
-agent_max_turns = 12
+agent_max_turns = 8
 agent_max_budget_usd = 0.60     # UNUSED: no dollar cap is enforced; tokens are capped by [agents]
 
 [agents]                         # runtime agents (phase 9+). Provider: Gemini REST API (stdlib client).
 provider = "gemini"
-max_output_tokens = 2048
+max_output_tokens = 8192
 token_budget_per_agent = 120000
 
 [agents.gemini]                  # confirm with `python -m guardian doctor` (lists the models your key can use)
-default = "gemini-2.5-flash"
-change_detective = "gemini-2.5-flash"
-risk_analyst = "gemini-2.5-flash"
-refuter = "gemini-2.5-pro"       # deliberately a different model from the analyst
-remediation_planner = "gemini-2.5-flash"
-diagnostician = "gemini-2.5-flash"
+default = "gemini-3.8-flash"
+change_detective = "gemini-3.8-flash"
+risk_analyst = "gemini-3.8-flash"
+refuter = "gemini-3.5-flash-lite"   # a different model from the analyst (2.5 models return 404 for new keys)
+remediation_planner = "gemini-3.8-flash"
+diagnostician = "gemini-3.8-flash"

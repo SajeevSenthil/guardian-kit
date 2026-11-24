@@ -129,6 +129,7 @@ def collect(run: Path) -> dict:
     validations = {k: v for k, v in _all(run, "validation", "P-*.json").items() if "verdict" in v}
     decisions = _all(run, "decisions", "*.json")
     findings = {f["id"]: f for f in pr["findings"]}
+    gnodes = {n["id"]: n for n in graph["nodes"]}
     ranking = pr["ranking"]
     chain_ok, chain_msg = audit.verify(run)
     events = [json.loads(x) for x in (run / "audit.jsonl").read_text(encoding="utf-8").splitlines()] \
@@ -172,7 +173,12 @@ def collect(run: Path) -> dict:
         f = findings[fid]
         p = f["priority"]
         ver, inf = claims(f)
-        items.append({"id": fid, "type": f["type"], "title": f.get("title"), "component": f["component"],
+        node = gnodes.get(f.get("nodeId"), {})
+        items.append({"initial_risk": f.get("risk"), "aliases": f.get("aliases") or [], "cvss": f.get("cvss"),
+                      "fixed": f.get("fixed") or [], "github_severity": f.get("severity"),
+                      "reach_tier": (f.get("reachability") or {}).get("tier"), "direct": node.get("direct"),
+                      "dev": node.get("dev"), "signals": f.get("signals") or [], "rule": f.get("rule"),
+                      "id": fid, "type": f["type"], "title": f.get("title"), "component": f["component"],
                       "advisory": f.get("advisory"), "path": f.get("path"), "new_in_head": f.get("new_in_head"),
                       "commit": f.get("commit"), "score": p["score"], "band": p["band"], "range": p["range"],
                       "confidence": p["confidence"], "factors": {k: {"value": v["value"], "grade": v["grade"],
@@ -203,6 +209,8 @@ def collect(run: Path) -> dict:
                           "policy": {"head": p["policy_head"]["pass"], "predicted": p["prediction"]["policy"]["pass"],
                                      "plan_gate": p["prediction"]["plan_gate"]},
                           "policy_entries": p.get("policy_entries", []), "rollback": p["rollback"],
+                          "edits": p["prediction"].get("applied", []), "patch_sha256": p.get("patch_sha256"),
+                          "rationale_code": (p.get("rationale") or {}).get("deterministic"),
                           "plan_hash": p["plan_hash"],
                           "approval": {k: a[k] for k in ("approver", "decision", "at", "plan_hash", "comment")} if a else None,
                           "validation": {"verdict": v["verdict"], "not_run": v.get("not_run", []),
