@@ -84,3 +84,18 @@ def test_only_the_http_route_records_decisions():
     assert {p.name for p in callers} == {"stages_fix.py", "routes_fix.py"}
     agents = (root / "agents").rglob("*.py")
     assert not any("stages_fix" in p.read_text(encoding="utf-8") for p in agents)
+
+
+def test_container_command_is_isolated(tmp_path):
+    cmd = sf.docker_cmd("docker", tmp_path, "python:3.12-slim", "pytest", network=False)
+    assert "--network" in cmd and cmd[cmd.index("--network") + 1] == "none"
+    assert "-e" not in cmd and "--env" not in cmd and "--privileged" not in cmd
+    assert cmd.count("-v") == 1 and cmd[cmd.index("-v") + 1].endswith(":/app")
+    assert "--network" not in sf.docker_cmd("docker", tmp_path, "x", "install", network=True)
+
+
+def test_test_plan_detection(tmp_path):
+    (tmp_path / "package.json").write_text('{"scripts": {"test": "echo \\"Error: no test specified\\" && exit 1"}}', encoding="utf-8")
+    assert sf.test_plan(tmp_path) is None
+    (tmp_path / "package.json").write_text('{"scripts": {"test": "mocha"}}', encoding="utf-8")
+    assert sf.test_plan(tmp_path)["eco"] == "npm"

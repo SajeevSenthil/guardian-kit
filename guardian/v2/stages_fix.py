@@ -242,6 +242,78 @@ def freeze_approved(ws: Workspace) -> dict:
     return aset
 
 
+# ---------------------------------------------------------------- container tests
+IMAGES = {"npm": "node:20-bookworm-slim", "pypi": "python:3.12-slim", "golang": "golang:1.22"}
+LIMITS = ["--memory", "2g", "--cpus", "2", "--pids-limit", "512", "--security-opt", "no-new-privileges"]
+
+
+def _docker() -> str | None:
+    exe = find_tool("docker")
+    for cand in ("C:/Program Files/Docker/Docker/resources/bin/docker.exe",):
+        if not exe and Path(cand).exists():
+            exe = cand
+    return exe
+
+
+def test_plan(clone: Path) -> dict | None:
+    """Which ecosystem's tests to run and how: (install step with network, test step without)."""
+    pj = clone / "package.json"
+    if pj.exists():
+        t = (json.loads(pj.read_text(encoding="utf-8")).get("scripts") or {}).get("test", "")
+        if t and "no test specified" not in t:
+            return {"eco": "npm", "install": "npm ci || npm install", "test": "npm test"}
+    if any((clone / f).exists() for f in ("requirements.txt", "pyproject.toml", "setup.py")):
+        has_tests = any(clone.glob("test*/**/*.py")) or any(clone.glob("**/test_*.py")) or (clone / "pytest.ini").exists()
+        if has_tests:
+            req = "pip install -r requirements.txt" if (clone / "requirements.txt").exists() else "pip install ."
+            return {"eco": "pypi", "install": f"python -m venv /app/.gv && . /app/.gv/bin/activate && {req} && pip install pytest",
+                    "test": ". /app/.gv/bin/activate && python -m pytest -q"}
+    if (clone / "go.mod").exists():
+        return {"eco": "golang", "install": "GOMODCACHE=/app/.gomod go mod download",
+                "test": "GOMODCACHE=/app/.gomod GOFLAGS=-mod=mod go test ./..."}
+    return None
+
+
+def docker_cmd(docker: str, clone: Path, image: str, script: str, network: bool) -> list[str]:
+    """No env passthrough, no host mounts except the clone; the test step has no network."""
+    return [docker, "run", "--rm", *LIMITS, *([] if network else ["--network", "none"]),
+            "-v", f"{clone}:/app", "-w", "/app", image, "sh", "-c", script]
+
+
+def _counts(text: str) -> str | None:
+    pats = [r"(\d+) passed(?:, (\d+) failed)?", r"(\d+) passing(?:[\s\S]*?(\d+) failing)?", r"Tests:\s+(?:(\d+) failed, )?(\d+) passed"]
+    for p in pats:
+        m = re.search(p, text)
+        if m:
+            return " ".join(m.group(0).split())[:80]
+    return None
+
+
+def container_tests(clone: Path, approved: list, out: Path, ws: Workspace) -> dict:
+    plan = test_plan(clone)
+    if not plan:
+        return _check("tests", "not-run", "no test suite found in the repository (nothing to run)")
+    docker = _docker()
+    if not docker:
+        return _check("tests", "not-run", "docker is not installed: the repository's tests were NOT run "
+                      "(they run only inside an isolated container)")
+    if _run([docker, "info"], timeout=30).returncode:
+        return _check("tests", "not-run", "docker is installed but the daemon is not running (start Docker Desktop)")
+    image = IMAGES[plan["eco"]]
+    log = out / "tests.log"
+    r1 = _run(docker_cmd(docker, clone, image, plan["install"], network=True), timeout=1200)
+    r2 = _run(docker_cmd(docker, clone, image, plan["test"], network=False), timeout=1200) if r1.returncode == 0 else None
+    parts = [f"$ {plan['install']}", r1.stdout, r1.stderr]
+    if r2:
+        parts += [f"$ {plan['test']}  (network: none)", r2.stdout, r2.stderr]
+    log.write_text("\n".join(parts), encoding="utf-8")
+    if r1.returncode:
+        return _check("tests", "fail", f"dependencies did not install in the container (exit {r1.returncode})", ws.rel(log))
+    n = _counts(r2.stdout + r2.stderr)
+    return _check("tests", "pass" if r2.returncode == 0 else "fail",
+                  f"{plan['test']} in {image}, network none: exit {r2.returncode}" + (f" ({n})" if n else ""), ws.rel(log))
+
+
 # ---------------------------------------------------------------- stage 9: verify
 def _check(name, status, detail, log=None):
     return {"name": name, "status": status, "detail": detail, "log": log}
@@ -291,11 +363,8 @@ def run_verify(ws: Workspace, opts: dict) -> dict:
                                  if r.returncode == 0 else f"npm exit {r.returncode}", ws.rel(out / "npm-lock.log")))
     else:
         checks.append(_check("lockfile", "pass", "requirements pins are the lock; nothing to regenerate"))
-    # 3. tests: only inside a container
-    docker = find_tool("docker")
-    checks.append(_check("tests", "not-run", "docker is not installed: the repository's tests were NOT run "
-                         "(they run only inside an isolated container)") if not docker else
-                  _check("tests", "not-run", "container test runner not configured in this build"))
+    # 3. tests: the ONLY place repository code runs, and only inside an isolated container
+    checks.append(container_tests(clone, approved, out, ws))
     # 4. rescan with the same tools as stage 4
     after_records, tools = [], {}
     ing = ws.read("ingest") or {}
